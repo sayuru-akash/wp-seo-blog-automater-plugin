@@ -1,3 +1,4 @@
+<?php defined( 'ABSPATH' ) || exit; ?>
 <div class="wp-seo-wrap">
     <div class="wp-seo-header">
         <h1>Settings</h1>
@@ -21,6 +22,21 @@
                 <input type="text" id="gemini_model_id" name="gemini_model_id" class="wp-seo-input" value="<?php echo esc_attr( $model_id ); ?>" placeholder="gemini-pro">
                 <p class="description" style="margin-top: 0.5rem; color: var(--text-muted); font-size: 0.85rem;">
                     Enter the model version (e.g., <code>gemini-pro</code>, <code>gemini-1.5-pro</code>, or <code>gemini-3-flash</code>).
+                </p>
+            </div>
+        </div>
+
+        <div class="wp-seo-card">
+            <h2>Integrations</h2>
+            <div class="wp-seo-form-group">
+                <label class="wp-seo-label" for="seo_plugin">Active SEO Plugin</label>
+                <select id="seo_plugin" name="seo_plugin" class="wp-seo-input">
+                    <option value="auto" <?php selected( $seo_plugin, 'auto' ); ?>>Auto Detect (Recommended)</option>
+                    <option value="yoast" <?php selected( $seo_plugin, 'yoast' ); ?>>Yoast SEO</option>
+                    <option value="rankmath" <?php selected( $seo_plugin, 'rankmath' ); ?>>Rank Math</option>
+                </select>
+                <p class="description" style="margin-top: 0.5rem; color: var(--text-muted); font-size: 0.85rem;">
+                    Select which SEO plugin to populate metadata for. "Auto Detect" will check your active plugins.
                 </p>
             </div>
         </div>

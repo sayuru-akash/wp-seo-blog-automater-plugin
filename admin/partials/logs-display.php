@@ -1,3 +1,4 @@
+<?php defined( 'ABSPATH' ) || exit; ?>
 <div class="wp-seo-wrap">
     <div class="wp-seo-header">
         <h1>Activity Logs</h1>
@@ -26,14 +27,9 @@
                         echo '<td>' . esc_html( $log['date'] ) . '</td>';
                         echo '<td>' . esc_html( $log['topic'] ) . '</td>';
                         echo '<td><span class="wp-seo-badge ' . esc_attr( $badge_class ) . '">' . esc_html( ucfirst( $log['status'] ) ) . '</span></td>';
-                        echo '<td>' . esc_html( short_content( $log['details'], 50 ) ) . '</td>'; // Helper needed or just full text
+                        echo '<td>' . esc_html( mb_strimwidth( $log['details'], 0, 50, '...' ) ) . '</td>';
                         echo '</tr>';
                     }
-                }
-                
-                // Quick helper for length if needed, or just remove function call
-                function short_content($str, $len) {
-                    return strlen($str) > $len ? substr($str, 0, $len) . "..." : $str;
                 }
                 ?>
             </tbody>

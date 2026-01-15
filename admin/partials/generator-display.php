@@ -1,3 +1,4 @@
+<?php defined( 'ABSPATH' ) || exit; ?>
 <div class="wp-seo-wrap">
     <div class="wp-seo-header">
         <h1>Article Generator</h1>
@@ -30,8 +31,18 @@
             <h2>Generated Content Preview</h2>
             
             <div class="wp-seo-form-group">
-                <label class="wp-seo-label">Title</label>
+                <label class="wp-seo-label">Post Title (H1)</label>
                 <input type="text" id="result_title" class="wp-seo-input">
+            </div>
+
+            <div class="wp-seo-form-group">
+                <label class="wp-seo-label">SEO Meta Title (Yoast)</label>
+                <input type="text" id="result_meta_title" class="wp-seo-input">
+            </div>
+
+            <div class="wp-seo-form-group">
+                <label class="wp-seo-label">Meta Description (Yoast)</label>
+                <textarea id="result_meta_desc" class="wp-seo-textarea" rows="3"></textarea>
             </div>
 
                 <div class="wp-seo-input-group">

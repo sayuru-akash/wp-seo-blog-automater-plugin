@@ -58,6 +58,14 @@ jQuery(document).ready(function ($) {
             $("#result_schema").val(response.data.schema);
           }
 
+          // Populate Yoast Meta Fields
+          if (response.data.meta_title) {
+            $("#result_meta_title").val(response.data.meta_title);
+          }
+          if (response.data.meta_desc) {
+            $("#result_meta_desc").val(response.data.meta_desc);
+          }
+
           // Title Logic:
           // 1. Use extracted title from AI (H1) if present
           // 2. Fallback to Regex match (JS side)
@@ -95,6 +103,10 @@ jQuery(document).ready(function ($) {
     var finalContent = $("#result_content").val();
     var finalSchema = $("#result_schema").val();
 
+    // Get Yoast values
+    var finalMetaTitle = $("#result_meta_title").val();
+    var finalMetaDesc = $("#result_meta_desc").val();
+
     if (!finalTitle || !finalContent) {
       alert("Cannot publish empty content.");
       return;
@@ -112,6 +124,8 @@ jQuery(document).ready(function ($) {
         slug: finalSlug,
         content: finalContent,
         schema: finalSchema,
+        meta_title: finalMetaTitle,
+        meta_desc: finalMetaDesc,
       },
       success: function (response) {
         $("#btn-publish").text("Publish to WordPress").prop("disabled", false);
@@ -141,6 +155,8 @@ jQuery(document).ready(function ($) {
       $("#result_content").val("");
       $("#result_title").val("");
       $("#result_slug").val("");
+      $("#result_meta_title").val("");
+      $("#result_meta_desc").val("");
       $("#publish-message").html("");
     }
   });

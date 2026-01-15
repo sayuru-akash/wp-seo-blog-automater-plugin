@@ -59,9 +59,18 @@ class WP_SEO_Automater_Admin {
 		// Nuclear Regex: Match "Slug" -> anything -> colon -> optional tags -> optional quotes -> capture value
 		if ( preg_match( '/Slug.*?:\s*(?:<\/?[^>]+>)*\s*[`\'"]?([^`\'"<\n\r]+)/is', $html_content, $matches ) ) {
 			$slug = trim( strip_tags( $matches[1] ) );
-			self::log_activity( 'Debug Slug', "Found slug: $slug", 'info' );
-		} else {
-			self::log_activity( 'Debug Slug', "Regex failed to match slug in content start: " . substr($html_content, 0, 500), 'error' );
+		}
+
+		// 1b. Extract Meta Title
+		$meta_title = '';
+		if ( preg_match( '/Meta Title.*?:\s*(.+?)(?:<br|<\/p>|\n|$)/is', $html_content, $matches ) ) {
+			$meta_title = trim( strip_tags( $matches[1] ) );
+		}
+
+		// 1c. Extract Meta Description
+		$meta_desc = '';
+		if ( preg_match( '/Meta Description.*?:\s*(.+?)(?:<br|<\/p>|\n|$)/is', $html_content, $matches ) ) {
+			$meta_desc = trim( strip_tags( $matches[1] ) );
 		}
 
 		// 2. Extract Title from H1 (Handle attributes like class="x")
@@ -72,25 +81,15 @@ class WP_SEO_Automater_Admin {
 
 		// 3. Extract Schema (JSON-LD)
 		$extracted_schema = '';
-		// Regex to find <script type="application/ld+json">...</script>
-		// Or sometimes Gemini puts it in ```json ... ``` blocks at the end.
-		
 		// Priority 1: Script tag
 		if ( preg_match( '/<script type="application\/ld\+json">(.*?)<\/script>/is', $html_content, $matches ) ) {
 			$extracted_schema = trim( $matches[1] );
-			// Remove it from content
 			$html_content = str_replace( $matches[0], '', $html_content );
 		} 
-		// Priority 2: Code block with explicit JSON
+		// Priority 2: Code block
 		elseif ( preg_match( '/```json(.*?)```/is', $html_content, $matches ) ) {
-			// Only treat as schema if it looks like schema (contains "@context")
 			if ( strpos( $matches[1], '@context' ) !== false ) {
 				$extracted_schema = trim( $matches[1] );
-				// Clean any Markdown residue if needed, but trim usually handles it.
-				// Sometimes user output has `json` at start of block which regex captures if not careful.
-				// My regex: ```json(.*?)```. Group 1 matches inside.
-				// If the inner text starts with 'json', strip it. 
-				// Actually often ```json\n{...}```. The \n is captured. 
 				$html_content = str_replace( $matches[0], '', $html_content );
 			}
 		}
@@ -110,15 +109,19 @@ class WP_SEO_Automater_Admin {
 			}
 		}
 
-		// Final Cleanup: Remove any "Phase 4" or "Schema Markup" headers left over
-		$html_content = preg_replace( '/(Phase 4|Schema Markup|Output Management).*$/is', '', $html_content );
+		// Final Cleanup: Remove "Phase X" headers AND trailing separator lines (***, ---)
+		$html_content = preg_replace( '/(Phase \d+.*|Schema Markup|Output Management).*$/is', '', $html_content );
+		// Strip trailing horizontal rules or stars or dashes
+		$html_content = preg_replace( '/(\*\*\*|---|___|\&lt;hr\&gt;)\s*$/s', '', $html_content );
 		$html_content = trim( $html_content );
 
 		wp_send_json_success( array(
 			'content' => $html_content,
 			'slug'    => $slug,
 			'title'   => $extracted_title,
-			'schema'  => $extracted_schema
+			'schema'  => $extracted_schema,
+			'meta_title' => $meta_title,
+			'meta_desc'  => $meta_desc
 		));
 	}
 
@@ -134,15 +137,14 @@ class WP_SEO_Automater_Admin {
 
 		$title = sanitize_text_field( $_POST['title'] );
 		$slug  = sanitize_title( $_POST['slug'] );
-		// Allow HTML in content
-		$content = wp_kses_post( $_POST['content'] ); 
-		// Schema (Allow raw JSON/HTML but sanitize basic script tags logic if needed, but for JSON-LD we need structure)
-		// wp_kses_post might strip some JSON chars or script tags.
-		// Since we trust the AI output (and user is admin), we can be a bit more permissive or just save it.
-		// Ideally we validate JSON.
-		$schema = isset($_POST['schema']) ? trim($_POST['schema']) : '';
+		$content = wp_kses_post( $_POST['content'] );
 		
-		self::log_activity( 'Publish Start', "Attempting to publish post: '{$title}' with slug '{$slug}'...", 'info' );
+		// Metadata
+		$schema = isset($_POST['schema']) ? trim($_POST['schema']) : '';
+		$meta_title = isset($_POST['meta_title']) ? sanitize_text_field($_POST['meta_title']) : '';
+		$meta_desc = isset($_POST['meta_desc']) ? sanitize_text_field($_POST['meta_desc']) : '';
+		
+		self::log_activity( 'Publish Start', "Attempting to publish post: '{$title}'...", 'info' );
 
 		$post_id = wp_insert_post( array(
 			'post_title'   => $title,
@@ -153,9 +155,66 @@ class WP_SEO_Automater_Admin {
 			'post_type'    => 'post'
 		));
 		
-		if ( ! is_wp_error( $post_id ) && ! empty( $schema ) ) {
-			// Save Schema
-			update_post_meta( $post_id, '_wp_seo_schema_markup', $schema );
+		if ( ! is_wp_error( $post_id ) ) {
+			// 1. Schema
+			if ( ! empty( $schema ) ) {
+				// Validate JSON before saving to prevent frontend errors
+				if ( json_decode( $schema ) !== null ) {
+					update_post_meta( $post_id, '_wp_seo_schema_markup', $schema );
+				} else {
+					self::log_activity( 'Publish Warning', "Invalid JSON Schema detected. Skipped saving schema for Post ID: $post_id", 'warning' );
+				}
+			}
+
+			// 2. SEO Plugin Integration
+			$seo_plugin_setting = get_option( 'wp_seo_automater_seo_plugin', 'auto' );
+			$is_yoast_active = defined( 'WPSEO_VERSION' );
+			$is_rank_math_active = defined( 'RANK_MATH_VERSION' );
+
+			// Determine target system
+			$use_yoast = false;
+			$use_rank_math = false;
+
+			if ( $seo_plugin_setting === 'yoast' ) {
+				$use_yoast = true;
+			} elseif ( $seo_plugin_setting === 'rankmath' ) {
+				$use_rank_math = true;
+			} else {
+				// Auto-detect (Prioritize Rank Math if both? Or Yoast? Let's check definitions)
+				if ( $is_rank_math_active ) {
+					$use_rank_math = true;
+				} elseif ( $is_yoast_active ) {
+					$use_yoast = true;
+				}
+			}
+
+			// Save Keys
+			if ( $use_yoast ) {
+				if ( ! empty( $meta_title ) ) {
+					update_post_meta( $post_id, '_yoast_wpseo_title', $meta_title );
+					update_post_meta( $post_id, '_yoast_wpseo_opengraph-title', $meta_title );
+					update_post_meta( $post_id, '_yoast_wpseo_twitter-title', $meta_title );
+				}
+				if ( ! empty( $meta_desc ) ) {
+					update_post_meta( $post_id, '_yoast_wpseo_metadesc', $meta_desc );
+					update_post_meta( $post_id, '_yoast_wpseo_opengraph-description', $meta_desc );
+					update_post_meta( $post_id, '_yoast_wpseo_twitter-description', $meta_desc );
+				}
+				self::log_activity( 'Publish Info', "Saved metadata for Yoast SEO.", 'info' );
+			} 
+			elseif ( $use_rank_math ) {
+				if ( ! empty( $meta_title ) ) {
+					update_post_meta( $post_id, 'rank_math_title', $meta_title );
+					update_post_meta( $post_id, 'rank_math_facebook_title', $meta_title );
+					update_post_meta( $post_id, 'rank_math_twitter_title', $meta_title );
+				}
+				if ( ! empty( $meta_desc ) ) {
+					update_post_meta( $post_id, 'rank_math_description', $meta_desc );
+					update_post_meta( $post_id, 'rank_math_facebook_description', $meta_desc );
+					update_post_meta( $post_id, 'rank_math_twitter_description', $meta_desc );
+				}
+				self::log_activity( 'Publish Info', "Saved metadata for Rank Math SEO.", 'info' );
+			}
 		}
 
 		if ( is_wp_error( $post_id ) ) {
@@ -308,6 +367,7 @@ class WP_SEO_Automater_Admin {
 		elseif ( isset( $_POST['wp_seo_automater_save_settings'] ) && check_admin_referer( 'wp_seo_automater_settings_save' ) ) {
 			update_option( 'wp_seo_automater_gemini_key', sanitize_text_field( $_POST['gemini_api_key'] ) );
 			update_option( 'wp_seo_automater_gemini_model', sanitize_text_field( $_POST['gemini_model_id'] ) );
+			update_option( 'wp_seo_automater_seo_plugin', sanitize_text_field( $_POST['seo_plugin'] ) ); // New Setting
 			// Allow some HTML in prompt (e.g. line breaks) but sanitize heavily
 			update_option( 'wp_seo_automater_master_prompt', wp_kses_post( $_POST['master_prompt'] ) );
 			
@@ -317,6 +377,7 @@ class WP_SEO_Automater_Admin {
 
 		$api_key = get_option( 'wp_seo_automater_gemini_key', '' );
 		$model_id = get_option( 'wp_seo_automater_gemini_model', 'gemini-pro-latest' );
+		$seo_plugin = get_option( 'wp_seo_automater_seo_plugin', 'auto' ); // Default to auto
 		$master_prompt = get_option( 'wp_seo_automater_master_prompt', $this->get_default_master_prompt() );
 
 		include_once WP_SEO_AUTOMATER_PATH . 'admin/partials/settings-display.php';
