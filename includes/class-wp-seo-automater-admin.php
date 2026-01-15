@@ -38,7 +38,7 @@ class WP_SEO_Automater_Admin {
 
 		// FORCE IMAGE INSTRUCTION IF MISSING (Fix for existing users with stale prompts)
 		if ( stripos( $master_prompt, 'Image Search Keywords' ) === false ) {
-			$master_prompt .= "\n\n[SYSTEM UPDATE]: You must also output 'Image Search Keywords: 2-3 visual nouns' in the Phase 1 Metadata section for Unsplash integration.";
+			$master_prompt .= "\n\n[SYSTEM UPDATE]: You must also output 'Image Search Keywords: 1-2 broad visual terms (e.g. luxury glasses)' in the Phase 1 Metadata section for Unsplash integration.";
 		}
 
 		self::log_activity( 'Generation Start', "Processing article: '{$title}' with keywords '{$keywords}'...", 'info' );
@@ -84,6 +84,19 @@ class WP_SEO_Automater_Admin {
 		$image_keywords = '';
 		if ( preg_match( '/Image\s*Search\s*Keywords.*?(?:[:\-]|\s)[\s\*]*([^\n\r]+)/i', $content, $matches ) ) {
 			$image_keywords = trim( str_replace( array( '*', '_', '`', '"', "'", '<', '>' ), '', $matches[1] ) );
+			
+			// OPTIMIZATION: Broaden the search
+			// 1. If comma-separated (e.g. "luxury glasses, table, office"), take only the first concept.
+			if ( strpos( $image_keywords, ',' ) !== false ) {
+				$parts = explode( ',', $image_keywords );
+				$image_keywords = trim( $parts[0] );
+			}
+			
+			// 2. Limit to max 5 words (prevent "broken frames on table in scottsdale")
+			$words = explode( ' ', $image_keywords );
+			if ( count( $words ) > 5 ) {
+				$image_keywords = implode( ' ', array_slice( $words, 0, 5 ) );
+			}
 		}
 
 		// LOGGING
@@ -255,6 +268,7 @@ class WP_SEO_Automater_Admin {
 
 			// 2. IMAGE SIDELOAD (Unsplash)
 			$image_url = isset($_POST['image_url']) ? esc_url_raw($_POST['image_url']) : '';
+			self::log_activity( 'Publish Debug', "Received Image URL: " . ( empty($image_url) ? 'EMPTY' : $image_url ), 'info' );
 			
 			if ( ! empty( $image_url ) ) {
 				// Required for media_sideload_image
@@ -262,9 +276,31 @@ class WP_SEO_Automater_Admin {
 				require_once(ABSPATH . 'wp-admin/includes/file.php');
 				require_once(ABSPATH . 'wp-admin/includes/image.php');
 
-				// Sideload. This downloads, creates attachment, and returns HTML or ID.
-				// We want ID, so 'id' as last arg.
-				$attachment_id = media_sideload_image( $image_url, $post_id, $title, 'id' );
+				// CHECK FOR DUPLICATES (Optimization)
+				// Look for an existing attachment that has this specific Image URL stored as meta.
+				$existing_attachment = get_posts( array(
+					'post_type'  => 'attachment',
+					'meta_key'   => '_wp_seo_automater_source_url',
+					'meta_value' => $image_url,
+					'posts_per_page' => 1,
+					'fields'     => 'ids', // efficient
+				) );
+
+				if ( ! empty( $existing_attachment ) ) {
+					// Use existing ID
+					$attachment_id = $existing_attachment[0];
+					self::log_activity( 'Image', "Reusing existing image ID: $attachment_id for source URL", 'info' );
+				} else {
+					// Sideload. This downloads, creates attachment, and returns HTML or ID.
+					// We want ID, so 'id' as last arg.
+					self::log_activity( 'Publish Debug', "Attempting download...", 'info' );
+					$attachment_id = media_sideload_image( $image_url, $post_id, $title, 'id' );
+					
+					// Save the source URL for future deduplication
+					if ( ! is_wp_error( $attachment_id ) ) {
+						update_post_meta( $attachment_id, '_wp_seo_automater_source_url', $image_url );
+					}
+				}
 
 				if ( ! is_wp_error( $attachment_id ) ) {
 					// Set as Featured Image
@@ -275,7 +311,7 @@ class WP_SEO_Automater_Admin {
 					
 					self::log_activity( 'Image', "Sideloaded image ID: $attachment_id", 'success' );
 				} else {
-					self::log_activity( 'Image Error', $attachment_id->get_error_message(), 'error' );
+					self::log_activity( 'Image Error', "Sideload Failed: " . $attachment_id->get_error_message(), 'error' );
 				}
 			}
 
