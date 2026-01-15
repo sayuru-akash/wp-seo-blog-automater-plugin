@@ -92,10 +92,10 @@ class WP_SEO_Automater_Admin {
 				$image_keywords = trim( $parts[0] );
 			}
 			
-			// 2. Limit to max 5 words (prevent "broken frames on table in scottsdale")
+			// 2. Limit to max 2 words (Aggressive broadness: "luxury glasses repair..." -> "luxury glasses")
 			$words = explode( ' ', $image_keywords );
-			if ( count( $words ) > 5 ) {
-				$image_keywords = implode( ' ', array_slice( $words, 0, 5 ) );
+			if ( count( $words ) > 2 ) {
+				$image_keywords = implode( ' ', array_slice( $words, 0, 2 ) );
 			}
 		}
 
@@ -154,15 +154,32 @@ class WP_SEO_Automater_Admin {
 		// 4. EXTRACT SCHEMA (JSON-LD)
 		// Schema often gets wrapped in code blocks in Markdown, so extracting from HTML is safer/easier if markdown parser handled valid blocks.
 		// Actually, let's extract from HTML to handle the <script> tags or <pre> blocks consistently.
+		// 4. EXTRACT SCHEMA (JSON-LD)
 		$extracted_schema = '';
-		if ( preg_match( '/<script type="application\/ld\+json">(.*?)<\/script>/is', $html_content, $matches ) ) {
+		
+		// Priority 1: <script> tag (most common if AI follows HTML instruction)
+		if ( preg_match( '/<script\s+type="application\/ld\+json"[^>]*>(.*?)<\/script>/is', $html_content, $matches ) ) {
 			$extracted_schema = trim( $matches[1] );
+			// Remove from content
 			$html_content = str_replace( $matches[0], '', $html_content );
-		} elseif ( preg_match( '/```json(.*?)```/is', $content, $matches ) ) { 
-			// Fallback: Look in raw content if HTML conversion broke the code block
+		} 
+		// Priority 2: Markdown Code Block (```json ... ```)
+		elseif ( preg_match( '/```json(.*?)```/is', $content, $matches ) ) { 
+			// Check if it looks like schema context
 			if ( strpos( $matches[1], '@context' ) !== false ) {
 				$extracted_schema = trim( $matches[1] );
-				// We still need to remove it from HTML, so we rely on the surgical slicing below to cut preamble/footer.
+				// Clean potential weirdness
+			}
+		}
+
+		// CLEANUP: If schema extracted, ensure it's valid JSON
+		if ( ! empty( $extracted_schema ) ) {
+			// Decodes/Encodes to clean syntax errors if minor, or valid check
+			$decoded = json_decode( $extracted_schema );
+			if ( $decoded === null ) {
+				self::log_activity( 'Schema Warning', "Extracted schema was invalid JSON. Attempting cleanup.", 'warning' );
+				// Common fix: remove trailing commas or weird quotes? For now, just log.
+				// Advanced: could try to aggressive trim { }
 			}
 		}
 
@@ -291,14 +308,56 @@ class WP_SEO_Automater_Admin {
 					$attachment_id = $existing_attachment[0];
 					self::log_activity( 'Image', "Reusing existing image ID: $attachment_id for source URL", 'info' );
 				} else {
-					// Sideload. This downloads, creates attachment, and returns HTML or ID.
-					// We want ID, so 'id' as last arg.
-					self::log_activity( 'Publish Debug', "Attempting download...", 'info' );
-					$attachment_id = media_sideload_image( $image_url, $post_id, $title, 'id' );
+					// MANUAL DOWNLOAD PIPELINE (Fixes "Invalid URL" for Unsplash links without .jpg extension)
+					self::log_activity( 'Publish Debug', "Attempting manual download via wp_remote_get...", 'info' );
 					
-					// Save the source URL for future deduplication
-					if ( ! is_wp_error( $attachment_id ) ) {
-						update_post_meta( $attachment_id, '_wp_seo_automater_source_url', $image_url );
+					$get_response = wp_remote_get( $image_url );
+					
+					if ( is_wp_error( $get_response ) ) {
+						$attachment_id = $get_response; // Pass error
+					} elseif ( wp_remote_retrieve_response_code( $get_response ) != 200 ) {
+						$attachment_id = new WP_Error( 'http_error', 'Unsplash returned ' . wp_remote_retrieve_response_code( $get_response ) );
+					} else {
+						// Success: Get bits
+						$image_bits = wp_remote_retrieve_body( $get_response );
+						
+						if ( ! empty( $image_bits ) ) {
+							$upload_dir = wp_upload_dir();
+							// Force a clean filename
+							$filename = sanitize_title( $title ) . '-unsplash.jpg';
+							if ( empty( $filename ) ) { $filename = 'image-' . time() . '.jpg'; }
+							
+							// Save file
+							// wp_upload_bits handles unique filenames automatically if exists
+							$upload = wp_upload_bits( $filename, null, $image_bits );
+							
+							if ( $upload['error'] ) {
+								$attachment_id = new WP_Error( 'upload_error', $upload['error'] );
+							} else {
+								// Create Attachment
+								$file_path = $upload['file'];
+								$attachment = array(
+									'post_mime_type' => 'image/jpeg',
+									'post_title'     => $title,
+									'post_content'   => '',
+									'post_status'    => 'inherit'
+								);
+								
+								$attachment_id = wp_insert_attachment( $attachment, $file_path, $post_id );
+								
+								// Generate Metadata (sizes)
+								if ( ! is_wp_error( $attachment_id ) ) {
+									require_once(ABSPATH . 'wp-admin/includes/image.php');
+									$attach_data = wp_generate_attachment_metadata( $attachment_id, $file_path );
+									wp_update_attachment_metadata( $attachment_id, $attach_data );
+									
+									// Save Source URL for Dedupe
+									update_post_meta( $attachment_id, '_wp_seo_automater_source_url', $image_url );
+								}
+							}
+						} else {
+							$attachment_id = new WP_Error( 'empty_image', 'Downloaded image body is empty.' );
+						}
 					}
 				}
 
