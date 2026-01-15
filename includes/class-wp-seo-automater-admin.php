@@ -51,71 +51,84 @@ class WP_SEO_Automater_Admin {
 		// If Gemini returns Markdown, we might want to convert headers # to <h1> etc. 
 		// For now, let's send raw and handle minimal parsing on save or just trust Gemini's HTML capability if prompted (current prompt asks for H1, H2 etc).
 		// The prompt logic implies it writes formatted text. We can convert Markdown to HTML if needed using a simple regex replace for basic headers/bolding if it comes back as MD.
-		// Quick Markdown-to-HTML fix for headers and bolding:
-		$html_content = $this->markdown_to_html( $content );
+
+		// RAW CONTENT PROCESSING (Metadata)
+		// We extract metadata from the RAW output to avoid HTML tag interference (like the </strong> bug).
 		
-		// 1. Extract Slug
+		// 1. Slug
 		$slug = '';
-		// Nuclear Regex: Match "Slug" -> anything -> colon -> optional tags -> optional quotes -> capture value
-		if ( preg_match( '/Slug.*?:\s*(?:<\/?[^>]+>)*\s*[`\'"]?([^`\'"<\n\r]+)/is', $html_content, $matches ) ) {
-			$slug = trim( strip_tags( $matches[1] ) );
+		// Match "Slug" -> optional separate -> capture rest of line
+		if ( preg_match( '/Slug.*?(?:[:\-]|\s)\s*(.*)(?:\n|$)/i', $content, $matches ) ) {
+			// Clean Markdown artifacts (*, _, `, quotes)
+			$slug = trim( str_replace( array( '*', '_', '`', '"', "'", '<', '>' ), '', $matches[1] ) );
 		}
 
-		// 1b. Extract Meta Title
+		// 2. Meta Title
 		$meta_title = '';
-		// Allow colon or hyphen separator, match until newline or HTML tag
-		if ( preg_match( '/Meta Title.*?(?:[:\-]|\s)\s*(.+?)(?:<br|<\/p>|\n|$)/is', $html_content, $matches ) ) {
-			// Aggressive cleaning: strip tags, stars, quotes
-			$meta_title = trim( str_replace( array( '**', '"', "'", '*' ), '', strip_tags( $matches[1] ) ) );
+		if ( preg_match( '/Meta\s*Title.*?(?:[:\-]|\s)\s*(.*)(?:\n|$)/i', $content, $matches ) ) {
+			$meta_title = trim( str_replace( array( '*', '_', '`', '"', "'", '<', '>' ), '', $matches[1] ) );
 		}
 
-		// 1c. Extract Meta Description
+		// 3. Meta Description
 		$meta_desc = '';
-		if ( preg_match( '/Meta Description.*?(?:[:\-]|\s)\s*(.+?)(?:<br|<\/p>|\n|$)/is', $html_content, $matches ) ) {
-			$meta_desc = trim( str_replace( array( '**', '"', "'", '*' ), '', strip_tags( $matches[1] ) ) );
+		if ( preg_match( '/Meta\s*Description.*?(?:[:\-]|\s)\s*(.*)(?:\n|$)/i', $content, $matches ) ) {
+			$meta_desc = trim( str_replace( array( '*', '_', '`', '"', "'", '<', '>' ), '', $matches[1] ) );
 		}
 
-		// 2. Extract Title from H1 (Handle attributes like class="x")
-		$extracted_title = '';
-		if ( preg_match( '/<h1.*?>(.*?)<\/h1>/is', $html_content, $matches ) ) {
-			$extracted_title = strip_tags( $matches[1] );
-		}
+		// LOGGING
+		self::log_activity( 'Debug Extraction', "Slug: '$slug' | Title: '$meta_title' | Desc: '$meta_desc'", 'info' );
 
-		// 3. Extract Schema (JSON-LD)
+		// HTML CONVERSION (For Body)
+		$html_content = $this->markdown_to_html( $content );
+
+		// 4. EXTRACT SCHEMA (JSON-LD)
+		// Schema often gets wrapped in code blocks in Markdown, so extracting from HTML is safer/easier if markdown parser handled valid blocks.
+		// Actually, let's extract from HTML to handle the <script> tags or <pre> blocks consistently.
 		$extracted_schema = '';
-		// Priority 1: Script tag
 		if ( preg_match( '/<script type="application\/ld\+json">(.*?)<\/script>/is', $html_content, $matches ) ) {
 			$extracted_schema = trim( $matches[1] );
 			$html_content = str_replace( $matches[0], '', $html_content );
-		} 
-		// Priority 2: Code block
-		elseif ( preg_match( '/```json(.*?)```/is', $html_content, $matches ) ) {
+		} elseif ( preg_match( '/```json(.*?)```/is', $content, $matches ) ) { 
+			// Fallback: Look in raw content if HTML conversion broke the code block
 			if ( strpos( $matches[1], '@context' ) !== false ) {
 				$extracted_schema = trim( $matches[1] );
-				$html_content = str_replace( $matches[0], '', $html_content );
+				// We still need to remove it from HTML, so we rely on the surgical slicing below to cut preamble/footer.
 			}
 		}
 
-		// 4. Clean Content (Consolidating the split logic)
-		if ( $extracted_title ) {
-			// Split by H1 (permissive), take the second part
-			$parts = preg_split( '/<h1.*?>.*?<\/h1>/is', $html_content, 2 );
-			if ( count( $parts ) > 1 ) {
-				$html_content = trim( $parts[1] );
+		// 5. EXTRACT CONTENT BODY (Surgical Slicing on HTML)
+		
+		// A. Find Start (H1)
+		$h1_start_pos = stripos( $html_content, '<h1' );
+		$extracted_title = '';
+		
+		if ( $h1_start_pos !== false ) {
+			if ( preg_match( '/<h1.*?>(.*?)<\/h1>/is', $html_content, $matches ) ) {
+				$extracted_title = strip_tags( $matches[1] );
 			}
+			$html_content = substr( $html_content, $h1_start_pos );
 		} else {
-            // Fallback: If no H1 found, maybe look for "Phase 2" and strip before it
-            $parts = preg_split( '/Phase 2:.*?Article/is', $html_content, 2 );
-            if ( count( $parts ) > 1 ) {
-				$html_content = trim( $parts[1] );
-			}
+			// Fallback: Remove top metadata lines manually from HTML if no H1
+			$html_content = preg_replace( '/^Phase \d+.*?(?=\n)/is', '', $html_content ); 
 		}
 
-		// Final Cleanup: Remove "Phase X" headers AND trailing separator lines (***, ---)
-		$html_content = preg_replace( '/(Phase \d+.*|Schema Markup|Output Management).*$/is', '', $html_content );
-		// Strip trailing horizontal rules or stars or dashes
-		$html_content = preg_replace( '/(\*\*\*|---|___|\&lt;hr\&gt;)\s*$/s', '', $html_content );
+		// B. Find End (Stop Phrases)
+		$stop_phrases = array( 'Phase 2:', 'Phase 3:', 'Output Management', '***', '---', '___' );
+		$cutoff_pos = strlen( $html_content );
+		
+		foreach ( $stop_phrases as $phrase ) {
+			$pos = stripos( $html_content, $phrase );
+			if ( $pos !== false && $pos < $cutoff_pos ) {
+				$cutoff_pos = $pos;
+			}
+		}
+		
+		// C. Slice it
+		$html_content = substr( $html_content, 0, $cutoff_pos );
+		
+		// Final Polish
 		$html_content = trim( $html_content );
+
 
 		wp_send_json_success( array(
 			'content' => $html_content,

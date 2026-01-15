@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define Plugin Constants
-define( 'WP_SEO_AUTOMATER_VERSION', '1.0.1' );
+define( 'WP_SEO_AUTOMATER_VERSION', '1.0.2' );
 define( 'WP_SEO_AUTOMATER_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WP_SEO_AUTOMATER_URL', plugin_dir_url( __FILE__ ) );
 
