@@ -1,6 +1,6 @@
 # WP SEO Blog Automater
 
-**Automate high-quality, SEO-optimized blog content creation using Google Gemini AI.**
+**Automate high-quality, SEO-optimised blog content creation using Google Gemini AI.**
 
 This WordPress plugin transforms a simple Title and Keyword input into a comprehensive, medically-accurate (or niche-specific), and fully optimized blog post. It automates 90% of the workflow while giving you full control over the final output.
 
@@ -59,4 +59,4 @@ Go to **BP Automater** -> **Settings** in your WordPress dashboard.
 ## 📄 License
 
 GPL-2.0+
-Developed by CodeZela Technologies.
+Developed by Sayuru Amarasinghe
