@@ -65,4 +65,4 @@ Go to **BP Automater** -> **Settings** in your WordPress dashboard.
 ## 📄 License
 
 GPL-2.0+
-Developed by Sayuru Amarasinghe
+Developed by Sayuru Amarasinghe under CodeZela Technologies
