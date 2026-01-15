@@ -573,7 +573,7 @@ Meta Description: ~155-160 chars. Keyword + Value Prop + Phone Number in text.
 
 Slug: lowercase-hyphenated-keyword.
 
-Image Search Keywords: 2-3 visual nouns describing the ideal hero image (e.g., "titanium glasses luxury table").
+Image Search Keywords: 2-3 visual nouns describing the ideal hero image (e.g., \"titanium glasses luxury table\").
 
 Phase 2: The Article (Structure & Formatting)
 
