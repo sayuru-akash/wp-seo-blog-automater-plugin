@@ -1,0 +1,20 @@
+# WordPress Defaults
+wp-config.php
+wp-content/uploads/
+wp-content/cache/
+*.log
+.htaccess
+
+# Plugin Specific
+tests/*.php
+!tests/index.php
+*.env
+.vscode/
+.idea/
+.DS_Store
+node_modules/
+vendor/
+
+# Temporary
+*_test.php
+*verify.php
