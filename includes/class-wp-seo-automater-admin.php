@@ -36,6 +36,11 @@ class WP_SEO_Automater_Admin {
 		$handler = new Gemini_API_Handler();
 		$master_prompt = get_option( 'wp_seo_automater_master_prompt', $this->get_default_master_prompt() );
 
+		// FORCE IMAGE INSTRUCTION IF MISSING (Fix for existing users with stale prompts)
+		if ( stripos( $master_prompt, 'Image Search Keywords' ) === false ) {
+			$master_prompt .= "\n\n[SYSTEM UPDATE]: You must also output 'Image Search Keywords: 2-3 visual nouns' in the Phase 1 Metadata section for Unsplash integration.";
+		}
+
 		self::log_activity( 'Generation Start', "Processing article: '{$title}' with keywords '{$keywords}'...", 'info' );
 		$content = $handler->generate_article( $title, $keywords, $master_prompt );
 
@@ -233,8 +238,6 @@ class WP_SEO_Automater_Admin {
 				} else {
 					self::log_activity( 'Publish Warning', "Invalid JSON Schema detected. Skipped saving schema for Post ID: $post_id", 'warning' );
 				}
-			}
-
 			}
 
 			// 2. IMAGE SIDELOAD (Unsplash)
