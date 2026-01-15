@@ -1,0 +1,202 @@
+:root {
+  --primary-color: #6d28d9; /* Purple 700 */
+  --primary-hover: #5b21b6; /* Purple 800 */
+  --primary-light: #ddd6fe; /* Purple 200 */
+  --bg-color: #f9fafb; /* Gray 50 */
+  --card-bg: #ffffff;
+  --text-main: #111827; /* Gray 900 */
+  --text-muted: #6b7280; /* Gray 500 */
+  --border-color: #e5e7eb; /* Gray 200 */
+  --radius: 0.75rem;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+body {
+  background-color: var(--bg-color);
+}
+
+.wp-seo-wrap {
+  font-family: "Inter", sans-serif;
+  color: var(--text-main);
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+/* Header */
+.wp-seo-header {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wp-seo-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+  letter-spacing: -0.025em;
+}
+
+/* Cards */
+.wp-seo-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border: 1px solid var(--border-color);
+}
+
+.wp-seo-card h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+}
+
+/* Forms */
+.wp-seo-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.wp-seo-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+}
+
+.wp-seo-input,
+.wp-seo-textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: all 0.2s;
+  background-color: #fff;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.wp-seo-input:focus,
+.wp-seo-textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.wp-seo-textarea {
+  min-height: 150px;
+  line-height: 1.5;
+}
+
+.wp-seo-textarea.large {
+  min-height: 400px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.9rem;
+}
+
+/* Buttons */
+.wp-seo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+  background-color: var(--primary-color);
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  text-decoration: none;
+}
+
+.wp-seo-btn:hover {
+  background-color: var(--primary-hover);
+  color: white;
+}
+
+.wp-seo-btn.secondary {
+  background-color: white;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+
+.wp-seo-btn.secondary:hover {
+  background-color: var(--bg-color);
+  color: var(--primary-color); /* Purple text on hover for secondary */
+}
+
+/* Status Badges */
+.wp-seo-badge {
+  display: inline-flex;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.wp-seo-badge.success {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.wp-seo-badge.error {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* Loading Animation */
+.wp-seo-loader {
+  border: 3px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 3px solid var(--primary-color);
+  width: 20px;
+  height: 20px;
+  -webkit-animation: spin 1s linear infinite; /* Safari */
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+  display: none;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Utility */
+.wp-seo-hidden {
+  display: none;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+.mb-4 {
+  margin-bottom: 1rem;
+}
+.flex {
+  display: flex;
+  gap: 1rem;
+}
+.items-center {
+  align-items: center;
+}
