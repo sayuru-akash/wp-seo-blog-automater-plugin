@@ -103,13 +103,15 @@ class WP_SEO_Automater_Admin {
 		}
 
 		$title = sanitize_text_field( $_POST['title'] );
+		$slug  = sanitize_title( $_POST['slug'] );
 		// Allow HTML in content
 		$content = wp_kses_post( $_POST['content'] ); 
-
-		self::log_activity( 'Publish Start', "Attempting to publish post: '{$title}'...", 'info' );
+		
+		self::log_activity( 'Publish Start', "Attempting to publish post: '{$title}' with slug '{$slug}'...", 'info' );
 
 		$post_id = wp_insert_post( array(
 			'post_title'   => $title,
+			'post_name'    => $slug,
 			'post_content' => $content,
 			'post_status'  => 'publish',
 			'post_author'  => get_current_user_id(),
