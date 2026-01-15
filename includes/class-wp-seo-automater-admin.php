@@ -52,32 +52,32 @@ class WP_SEO_Automater_Admin {
 		// For now, let's send raw and handle minimal parsing on save or just trust Gemini's HTML capability if prompted (current prompt asks for H1, H2 etc).
 		// The prompt logic implies it writes formatted text. We can convert Markdown to HTML if needed using a simple regex replace for basic headers/bolding if it comes back as MD.
 
-		// RAW CONTENT PROCESSING (Metadata)
+
 		// We extract metadata from the RAW output to avoid HTML tag interference (like the </strong> bug).
 		
 		// 1. Slug
 		$slug = '';
-		// Match "Slug" -> optional separate -> capture rest of line
-		if ( preg_match( '/Slug.*?(?:[:\-]|\s)\s*(.*)(?:\n|$)/i', $content, $matches ) ) {
+		// Match "Slug" -> optional separate -> optional markdown -> capture rest of line
+		if ( preg_match( '/Slug.*?(?:[:\-]|\s)[\s\*]*([^\n\r]+)/i', $content, $matches ) ) {
 			// Clean Markdown artifacts (*, _, `, quotes)
 			$slug = trim( str_replace( array( '*', '_', '`', '"', "'", '<', '>' ), '', $matches[1] ) );
 		}
 
 		// 2. Meta Title
 		$meta_title = '';
-		if ( preg_match( '/Meta\s*Title.*?(?:[:\-]|\s)\s*(.*)(?:\n|$)/i', $content, $matches ) ) {
+		if ( preg_match( '/Meta\s*Title.*?(?:[:\-]|\s)[\s\*]*([^\n\r]+)/i', $content, $matches ) ) {
 			$meta_title = trim( str_replace( array( '*', '_', '`', '"', "'", '<', '>' ), '', $matches[1] ) );
 		}
 
 		// 3. Meta Description
 		$meta_desc = '';
-		if ( preg_match( '/Meta\s*Description.*?(?:[:\-]|\s)\s*(.*)(?:\n|$)/i', $content, $matches ) ) {
+		if ( preg_match( '/Meta\s*Description.*?(?:[:\-]|\s)[\s\*]*([^\n\r]+)/i', $content, $matches ) ) {
 			$meta_desc = trim( str_replace( array( '*', '_', '`', '"', "'", '<', '>' ), '', $matches[1] ) );
 		}
 
 		// 4. Image Search Keywords
 		$image_keywords = '';
-		if ( preg_match( '/Image\s*Search\s*Keywords.*?(?:[:\-]|\s)\s*(.*)(?:\n|$)/i', $content, $matches ) ) {
+		if ( preg_match( '/Image\s*Search\s*Keywords.*?(?:[:\-]|\s)[\s\*]*([^\n\r]+)/i', $content, $matches ) ) {
 			$image_keywords = trim( str_replace( array( '*', '_', '`', '"', "'", '<', '>' ), '', $matches[1] ) );
 		}
 
