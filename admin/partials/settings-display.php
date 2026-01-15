@@ -24,6 +24,14 @@
                     Enter the model version (e.g., <code>gemini-pro</code>, <code>gemini-1.5-pro</code>, or <code>gemini-3-flash</code>).
                 </p>
             </div>
+
+            <div class="wp-seo-form-group">
+                <label class="wp-seo-label" for="unsplash_key">Unsplash Access Key</label>
+                <input type="password" id="unsplash_key" name="unsplash_key" class="wp-seo-input" value="<?php echo esc_attr( $unsplash_key ); ?>" placeholder="Enter Unsplash Access Key...">
+                <p class="description" style="margin-top: 0.5rem; color: var(--text-muted); font-size: 0.85rem;">
+                    Required for automatic image fetching. Get it specific from <a href="https://unsplash.com/developers" target="_blank">Unsplash Developers</a>.
+                </p>
+            </div>
         </div>
 
         <div class="wp-seo-card">

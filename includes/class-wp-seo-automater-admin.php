@@ -467,7 +467,7 @@ class WP_SEO_Automater_Admin {
 		elseif ( isset( $_POST['wp_seo_automater_save_settings'] ) && check_admin_referer( 'wp_seo_automater_settings_save' ) ) {
 			update_option( 'wp_seo_automater_gemini_key', sanitize_text_field( $_POST['gemini_api_key'] ) );
 			update_option( 'wp_seo_automater_gemini_model', sanitize_text_field( $_POST['gemini_model_id'] ) );
-			update_option( 'wp_seo_automater_unsplash_key', sanitize_text_field( $_POST['unsplash_api_key'] ) ); // New
+			update_option( 'wp_seo_automater_unsplash_key', sanitize_text_field( $_POST['unsplash_key'] ) ); // New
 			update_option( 'wp_seo_automater_seo_plugin', sanitize_text_field( $_POST['seo_plugin'] ) ); 
 			// Allow some HTML in prompt (e.g. line breaks) but sanitize heavily
 			update_option( 'wp_seo_automater_master_prompt', wp_kses_post( $_POST['master_prompt'] ) );
