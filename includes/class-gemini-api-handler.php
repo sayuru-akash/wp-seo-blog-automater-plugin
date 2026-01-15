@@ -23,17 +23,18 @@ class Gemini_API_Handler {
 		$full_prompt = $this->construct_prompt( $title, $keywords, $master_prompt );
 		
 		// Initial Call
+		WP_SEO_Automater_Admin::log_activity( 'API Request', "Initial generation request for: $title", 'info' );
 		$response = $this->make_api_request( $full_prompt );
 
 		if ( is_wp_error( $response ) ) {
+			WP_SEO_Automater_Admin::log_activity( 'API Error', $response->get_error_message(), 'error' );
 			return $response;
 		}
 
 		$generated_text = $this->extract_text_from_response( $response );
+		WP_SEO_Automater_Admin::log_activity( 'API Response', "Received initial chunk (" . strlen($generated_text) . " chars)", 'success' );
 
 		// Check for continuation trigger
-		// The prompt instructions say: "Stop at a natural paragraph break and write [PAUSING FOR CONTINUATION]"
-		// We loop until complete or max retries.
 		$max_loops = 3; 
 		$loop_count = 0;
 		$history = [
@@ -42,9 +43,8 @@ class Gemini_API_Handler {
 		];
 
 		while ( strpos( $generated_text, '[PAUSING FOR CONTINUATION]' ) !== false && $loop_count < $max_loops ) {
-			// Remove the pause marker from the accumulated text (optional, but keeps it clean)
-			// Actually we keep it in the history so the model knows where it left off, 
-			// but we can strip it from the final result.
+			$loop_count++;
+			WP_SEO_Automater_Admin::log_activity( 'Continuation', "Loop #$loop_count triggered due to pause marker.", 'info' );
 			
 			$fail_safe_prompt = "Continue exactly where you left off. Do not repeat the last sentence.";
 			
@@ -55,17 +55,18 @@ class Gemini_API_Handler {
 			$next_response = $this->make_api_request( null, $history );
 			
 			if ( is_wp_error( $next_response ) ) {
+				WP_SEO_Automater_Admin::log_activity( 'Continuation Error', "Failed in loop #$loop_count: " . $next_response->get_error_message(), 'error' );
 				break; // Stop on error, return what we have
 			}
 
 			$next_chunk = $this->extract_text_from_response( $next_response );
+			WP_SEO_Automater_Admin::log_activity( 'API Response', "Received continuation chunk (" . strlen($next_chunk) . " chars)", 'success' );
 			
 			// Update history with new chunk
 			$history[] = ['role' => 'model', 'parts' => [['text' => $next_chunk]]];
 			
 			// Append to full text
 			$generated_text .= "\n" . $next_chunk;
-			$loop_count++;
 		}
 
 		// Final cleanup: Remove the [PAUSING...] markers

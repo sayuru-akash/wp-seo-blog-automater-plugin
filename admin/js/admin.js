@@ -41,6 +41,18 @@ jQuery(document).ready(function ($) {
           // Simple heuristic: If response.data.content is set
           $("#result_content").val(response.data.content);
 
+          // Populate Slug
+          if (response.data.slug) {
+            $("#result_slug").val(response.data.slug);
+          } else {
+            // Fallback: simple slugify from title
+            var slug = title
+              .toLowerCase()
+              .replace(/ /g, "-")
+              .replace(/[^\w-]+/g, "");
+            $("#result_slug").val(slug);
+          }
+
           // Optional: Try to regex extract H1 for title input if not present
           var content = response.data.content;
           var titleMatch = content.match(/^#\s+(.+)$/m);
@@ -66,6 +78,7 @@ jQuery(document).ready(function ($) {
     e.preventDefault();
 
     var finalTitle = $("#result_title").val();
+    var finalSlug = $("#result_slug").val();
     var finalContent = $("#result_content").val();
 
     if (!finalTitle || !finalContent) {
@@ -82,6 +95,7 @@ jQuery(document).ready(function ($) {
         action: "wp_seo_publish_post",
         nonce: wpSeoAutomater.nonce,
         title: finalTitle,
+        slug: finalSlug,
         content: finalContent,
       },
       success: function (response) {
@@ -111,6 +125,7 @@ jQuery(document).ready(function ($) {
       $("#generation-results").addClass("wp-seo-hidden");
       $("#result_content").val("");
       $("#result_title").val("");
+      $("#result_slug").val("");
       $("#publish-message").html("");
     }
   });

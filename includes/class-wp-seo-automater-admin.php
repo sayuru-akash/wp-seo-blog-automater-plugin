@@ -36,14 +36,15 @@ class WP_SEO_Automater_Admin {
 		$handler = new Gemini_API_Handler();
 		$master_prompt = get_option( 'wp_seo_automater_master_prompt', $this->get_default_master_prompt() );
 
+		self::log_activity( 'Generation Start', "Processing article: '{$title}' with keywords '{$keywords}'...", 'info' );
 		$content = $handler->generate_article( $title, $keywords, $master_prompt );
 
 		if ( is_wp_error( $content ) ) {
-			$this->log_activity( 'Generation Failed', "Title: $title - Error: " . $content->get_error_message(), 'error' );
+			self::log_activity( 'Generation Failed', "Title: $title - Error: " . $content->get_error_message(), 'error' );
 			wp_send_json_error( $content->get_error_message() );
 		}
 
-		$this->log_activity( 'Generation Success', "Generated article for: $title", 'success' );
+		self::log_activity( 'Generation Success', "Generated article for: $title", 'success' );
 
 		// Return content. We assume raw text/markdown.
 		// Use a simple markdown parser or just nl2br if needed, but WP post content handles HTML well.
@@ -52,9 +53,17 @@ class WP_SEO_Automater_Admin {
 		// The prompt logic implies it writes formatted text. We can convert Markdown to HTML if needed using a simple regex replace for basic headers/bolding if it comes back as MD.
 		// Quick Markdown-to-HTML fix for headers and bolding:
 		$html_content = $this->markdown_to_html( $content );
+		
+		// Extract Slug if present
+		// Prompt says: "Slug: lowercase-hyphenated-keyword."
+		$slug = '';
+		if ( preg_match( '/Slug:\s*(.+?)(?:\n|$)/i', $content, $matches ) ) {
+			$slug = trim( $matches[1] );
+		}
 
 		wp_send_json_success( array(
-			'content' => $html_content
+			'content' => $html_content,
+			'slug'    => $slug
 		));
 	}
 
@@ -72,6 +81,8 @@ class WP_SEO_Automater_Admin {
 		// Allow HTML in content
 		$content = wp_kses_post( $_POST['content'] ); 
 
+		self::log_activity( 'Publish Start', "Attempting to publish post: '{$title}'...", 'info' );
+
 		$post_id = wp_insert_post( array(
 			'post_title'   => $title,
 			'post_content' => $content,
@@ -81,11 +92,11 @@ class WP_SEO_Automater_Admin {
 		));
 
 		if ( is_wp_error( $post_id ) ) {
-			$this->log_activity( 'Publish Failed', "Title: $title - Error: " . $post_id->get_error_message(), 'error' );
+			self::log_activity( 'Publish Failed', "Title: $title - Error: " . $post_id->get_error_message(), 'error' );
 			wp_send_json_error( $post_id->get_error_message() );
 		}
 
-		$this->log_activity( 'Publish Success', "Published Post ID: $post_id", 'success' );
+		self::log_activity( 'Publish Success', "Published Post ID: $post_id", 'success' );
 
 		wp_send_json_success( array(
 			'post_id' => $post_id,
@@ -96,7 +107,7 @@ class WP_SEO_Automater_Admin {
 	/**
 	 * Simple Logger
 	 */
-	private function log_activity( $topic, $details, $status ) {
+	public static function log_activity( $topic, $details, $status ) {
 		$logs = get_option( 'wp_seo_automater_logs', array() );
 		// Prepend new log
 		array_unshift( $logs, array(
@@ -105,8 +116,8 @@ class WP_SEO_Automater_Admin {
 			'details' => $details,
 			'status'  => $status
 		));
-		// Keep last 50
-		$logs = array_slice( $logs, 0, 50 );
+		// Keep last 200
+		$logs = array_slice( $logs, 0, 200 );
 		update_option( 'wp_seo_automater_logs', $logs );
 	}
 
@@ -223,6 +234,7 @@ class WP_SEO_Automater_Admin {
 		// Reset Prompt
 		if ( isset( $_POST['wp_seo_automater_reset_prompt'] ) && check_admin_referer( 'wp_seo_automater_settings_save' ) ) {
 			delete_option( 'wp_seo_automater_master_prompt' );
+			self::log_activity( 'Settings', 'Master Prompt reset to default.', 'info' );
 			echo '<div class="notice notice-info is-dismissible"><p>Master Prompt reset to default.</p></div>';
 		}
 		// Save settings if posted
@@ -232,6 +244,7 @@ class WP_SEO_Automater_Admin {
 			// Allow some HTML in prompt (e.g. line breaks) but sanitize heavily
 			update_option( 'wp_seo_automater_master_prompt', wp_kses_post( $_POST['master_prompt'] ) );
 			
+			self::log_activity( 'Settings', 'Plugin settings updated.', 'success' );
 			echo '<div class="notice notice-success is-dismissible"><p>Settings saved successfully.</p></div>';
 		}
 

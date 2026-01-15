@@ -35,6 +35,11 @@
             </div>
 
             <div class="wp-seo-form-group">
+                <label class="wp-seo-label">URL Slug</label>
+                <input type="text" id="result_slug" class="wp-seo-input">
+            </div>
+
+            <div class="wp-seo-form-group">
                 <label class="wp-seo-label">Content (HTML)</label>
                 <textarea id="result_content" class="wp-seo-textarea large" style="min-height: 600px;"></textarea>
             </div>
