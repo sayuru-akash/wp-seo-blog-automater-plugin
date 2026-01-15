@@ -92,7 +92,9 @@ jQuery(document).ready(function ($) {
                     "'"
                 );
               } else if (response.data.debug_info.keywords === "") {
-                console.log("No image keywords found in text.");
+                alert(
+                  "Notice: No Image Keywords Found.\nThe AI did not output 'Image Search Keywords'.\nPlease check your prompt settings or try again."
+                );
               }
             }
           }
