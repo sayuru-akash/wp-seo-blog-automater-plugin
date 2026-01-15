@@ -53,13 +53,21 @@ jQuery(document).ready(function ($) {
             $("#result_slug").val(slug);
           }
 
-          // Optional: Try to regex extract H1 for title input if not present
-          var content = response.data.content;
-          var titleMatch = content.match(/^#\s+(.+)$/m);
-          if (titleMatch && titleMatch[1]) {
-            $("#result_title").val(titleMatch[1]);
+          // Title Logic:
+          // 1. Use extracted title from AI (H1) if present
+          // 2. Fallback to Regex match (JS side)
+          // 3. Fallback to user input
+          if (response.data.title) {
+            $("#result_title").val(response.data.title);
           } else {
-            $("#result_title").val(title); // User provided title
+            // Fallback Regex
+            var content = response.data.content;
+            var titleMatch = content.match(/^#\s+(.+)$/m);
+            if (titleMatch && titleMatch[1]) {
+              $("#result_title").val(titleMatch[1]);
+            } else {
+              $("#result_title").val(title); // User provided inputs
+            }
           }
         } else {
           alert("Error: " + response.data);

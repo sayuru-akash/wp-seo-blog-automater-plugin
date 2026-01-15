@@ -54,16 +54,41 @@ class WP_SEO_Automater_Admin {
 		// Quick Markdown-to-HTML fix for headers and bolding:
 		$html_content = $this->markdown_to_html( $content );
 		
-		// Extract Slug if present
-		// Prompt says: "Slug: lowercase-hyphenated-keyword."
+		// 1. Extract Slug
 		$slug = '';
-		if ( preg_match( '/Slug:\s*(.+?)(?:\n|$)/i', $content, $matches ) ) {
-			$slug = trim( $matches[1] );
+		// Nuclear Regex: Match "Slug" -> anything -> colon -> optional tags -> optional quotes -> capture value
+		if ( preg_match( '/Slug.*?:\s*(?:<\/?[^>]+>)*\s*[`\'"]?([^`\'"<\n\r]+)/is', $html_content, $matches ) ) {
+			$slug = trim( strip_tags( $matches[1] ) );
+			self::log_activity( 'Debug Slug', "Found slug: $slug", 'info' );
+		} else {
+			self::log_activity( 'Debug Slug', "Regex failed to match slug in content start: " . substr($html_content, 0, 500), 'error' );
+		}
+
+		// 2. Extract Title from H1 (Handle attributes like class="x")
+		$extracted_title = '';
+		if ( preg_match( '/<h1.*?>(.*?)<\/h1>/is', $html_content, $matches ) ) {
+			$extracted_title = strip_tags( $matches[1] );
+		}
+
+		// 3. Clean Content
+		if ( $extracted_title ) {
+			// Split by H1 (permissive), take the second part
+			$parts = preg_split( '/<h1.*?>.*?<\/h1>/is', $html_content, 2 );
+			if ( count( $parts ) > 1 ) {
+				$html_content = trim( $parts[1] );
+			}
+		} else {
+            // Fallback: If no H1 found, maybe look for "Phase 2" and strip before it
+            $parts = preg_split( '/Phase 2:.*?Article/is', $html_content, 2 );
+            if ( count( $parts ) > 1 ) {
+				$html_content = trim( $parts[1] );
+			}
 		}
 
 		wp_send_json_success( array(
 			'content' => $html_content,
-			'slug'    => $slug
+			'slug'    => $slug,
+			'title'   => $extracted_title // Send extracted title back
 		));
 	}
 
@@ -353,8 +378,6 @@ Readability: Short, elegant paragraphs. Single line spacing only.
 Bolding: Use bold text sparingly for key takeaways/lists only. Do not bold full sentences.
 
 Internal Linking: Provide 3-6 internal link suggestions (anchor text only) to relevant service pages.
-
-Image SEO: Provide 4-8 descriptive Alt Text suggestions with local context.
 
 Mandatory FAQ Section: Place at the end of the body (H2: \"Frequently Asked Questions\"). Include 5 distinct Q&As.
 
