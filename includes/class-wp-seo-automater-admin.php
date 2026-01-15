@@ -103,10 +103,18 @@ class WP_SEO_Automater_Admin {
 		$extracted_title = '';
 		
 		if ( $h1_start_pos !== false ) {
-			if ( preg_match( '/<h1.*?>(.*?)<\/h1>/is', $html_content, $matches ) ) {
-				$extracted_title = strip_tags( $matches[1] );
+			if ( preg_match( '/<h1.*?>(.*?)<\/h1>/is', $html_content, $matches, PREG_OFFSET_CAPTURE ) ) {
+				$extracted_title = strip_tags( $matches[1][0] );
+				// MATCH FOUND: The matches[0] contains the full <h1...>Text</h1> string and its offset.
+				// We want to start the content AFTER this tag.
+				$full_h1_string = $matches[0][0]; // The text "<h1...>...</h1>"
+				$h1_end_pos = $h1_start_pos + strlen( $full_h1_string );
+				
+				$html_content = substr( $html_content, $h1_end_pos );
+			} else {
+				// Fallback if regex failed but strpos passed (weird edge case), just cut from start
+				$html_content = substr( $html_content, $h1_start_pos );
 			}
-			$html_content = substr( $html_content, $h1_start_pos );
 		} else {
 			// Fallback: Remove top metadata lines manually from HTML if no H1
 			$html_content = preg_replace( '/^Phase \d+.*?(?=\n)/is', '', $html_content ); 
