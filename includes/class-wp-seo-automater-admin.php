@@ -487,7 +487,7 @@ class WP_SEO_Automater_Admin {
 			'wp-seo-automater', 
 			array( $this, 'display_generator_page' ), 
 			'dashicons-superhero', 
-			100
+			6
 		);
 
 		add_submenu_page(
