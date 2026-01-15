@@ -76,6 +76,25 @@ jQuery(document).ready(function ($) {
           } else {
             $("#result_image_preview").hide();
             $("#result_image_credit").text("");
+
+            // DIAGNOSTIC ALERT
+            if (response.data.debug_info) {
+              console.warn("Unsplash Failure Risk:", response.data.debug_info);
+              if (
+                response.data.debug_info.unsplash_status !== "Success" &&
+                response.data.debug_info.unsplash_status !== "Not Attempted"
+              ) {
+                alert(
+                  "Notice: Image Auto-Fetch Failed.\nReason: " +
+                    response.data.debug_info.unsplash_status +
+                    "\nKeywords Found: '" +
+                    response.data.debug_info.keywords +
+                    "'"
+                );
+              } else if (response.data.debug_info.keywords === "") {
+                console.log("No image keywords found in text.");
+              }
+            }
           }
 
           // Title Logic:

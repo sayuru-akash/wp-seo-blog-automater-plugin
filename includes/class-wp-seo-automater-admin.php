@@ -92,6 +92,7 @@ class WP_SEO_Automater_Admin {
 		// 5. FETCH IMAGE FROM UNSPLASH
 		$unsplash_url = '';
 		$unsplash_credit = '';
+		$unsplash_debug = 'Not Attempted';
 		$unsplash_key = get_option( 'wp_seo_automater_unsplash_key', '' );
 		
 		if ( ! empty( $unsplash_key ) && ! empty( $image_keywords ) ) {
@@ -118,13 +119,20 @@ class WP_SEO_Automater_Admin {
 					// Get photographer credit
 					$user = $data['results'][0]['user'];
 					$unsplash_credit = 'Photo by ' . $user['name'] . ' on Unsplash';
+					$unsplash_debug = 'Success';
 					self::log_activity( 'Unsplash', "Found image for '$image_keywords': $unsplash_url", 'success' );
 				} else {
+					$unsplash_debug = 'No Results from API';
 					self::log_activity( 'Unsplash', "No images found for '$image_keywords'.", 'warning' );
 				}
 			} else {
+				$unsplash_debug = 'API Error: ' . $response->get_error_message();
 				self::log_activity( 'Unsplash Error', $response->get_error_message(), 'error' );
 			}
+		} elseif ( empty($unsplash_key) ) {
+			$unsplash_debug = 'Missing API Key';
+		} elseif ( empty($image_keywords) ) {
+			$unsplash_debug = 'No Keywords Extracted from AI';
 		}
 
 		// HTML CONVERSION (For Body)
@@ -195,7 +203,12 @@ class WP_SEO_Automater_Admin {
 			'meta_title' => $meta_title,
 			'meta_desc'  => $meta_desc,
 			'image_url'  => $unsplash_url,
-			'image_credit' => $unsplash_credit
+			'image_credit' => $unsplash_credit,
+			'debug_info' => array(
+				'keywords' => $image_keywords,
+				'unsplash_status' => $unsplash_debug,
+				'has_key' => !empty($unsplash_key)
+			)
 		));
 	}
 
