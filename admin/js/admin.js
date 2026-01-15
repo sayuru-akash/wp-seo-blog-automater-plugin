@@ -66,6 +66,18 @@ jQuery(document).ready(function ($) {
             $("#result_meta_desc").val(response.data.meta_desc);
           }
 
+          // Populate Image
+          if (response.data.image_url) {
+            $("#result_image_url").val(response.data.image_url);
+            $("#result_image_preview")
+              .attr("src", response.data.image_url)
+              .show();
+            $("#result_image_credit").text(response.data.image_credit);
+          } else {
+            $("#result_image_preview").hide();
+            $("#result_image_credit").text("");
+          }
+
           // Title Logic:
           // 1. Use extracted title from AI (H1) if present
           // 2. Fallback to Regex match (JS side)
@@ -106,6 +118,7 @@ jQuery(document).ready(function ($) {
     // Get Yoast values
     var finalMetaTitle = $("#result_meta_title").val();
     var finalMetaDesc = $("#result_meta_desc").val();
+    var finalImageUrl = $("#result_image_url").val(); // New
 
     if (!finalTitle || !finalContent) {
       alert("Cannot publish empty content.");
@@ -126,6 +139,7 @@ jQuery(document).ready(function ($) {
         schema: finalSchema,
         meta_title: finalMetaTitle,
         meta_desc: finalMetaDesc,
+        image_url: finalImageUrl, // Send it
       },
       success: function (response) {
         $("#btn-publish").text("Publish to WordPress").prop("disabled", false);

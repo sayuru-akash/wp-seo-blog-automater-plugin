@@ -7,6 +7,10 @@ This WordPress plugin transforms a simple Title and Keyword input into a compreh
 ## 🚀 Key Features
 
 - **Google Gemini AI Integration**: Powered by the latest Gemini Pro models for nuanced, human-like writing.
+- **📸 Visual Intelligence (New)**:
+  - **Auto-Image Search**: The AI determines the perfect visual search terms.
+  - **Unsplash Integration**: Automatically searches for high-quality, royalty-free images.
+  - **Auto-Sideloading**: Downloads the image, uploads it to your Media Library, sets it as the **Featured Image**, and adds SEO-optimized **Alt Text**—all in one click.
 - **One-Click SEO**: Automatically generates optimized:
   - **H1 Title**: Catchy and keyword-rich.
   - **URL Slug**: Clean and SEO-friendly.
@@ -16,7 +20,9 @@ This WordPress plugin transforms a simple Title and Keyword input into a compreh
   - **Yoast SEO Support**: Auto-fills Yoast metadata (Title, Desc, OpenGraph, Twitter).
   - **Rank Math Support**: Auto-fills Rank Math metadata.
   - **Auto-Detect**: Smartly identifies your active SEO plugin.
-- **Clean Output**: Automatically strips internal metadata/instructions ("Phase 1", "\*\*\*") so your post is ready to publish.
+- **Robust Extraction Engine**:
+  - **Surgical Parsing**: Separates Metadata from Content to ensure zero data loss.
+  - **Smart Cleaning**: Removes AI artifacts ("Phase 1", internal instructions) automatically.
 - **Customizable Brain**: Comes with a powerful "Master Prompt" that you can tweak to match any brand voice or industry.
 
 ## 📥 Installation
@@ -30,7 +36,8 @@ This WordPress plugin transforms a simple Title and Keyword input into a compreh
 Go to **BP Automater** -> **Settings** in your WordPress dashboard.
 
 1.  **Gemini API Key**: Get your free key from [Google AI Studio](https://aistudio.google.com/).
-2.  **Gemini Model**: Enter the model ID (default: `gemini-pro` or `gemini-1.5-flash`).
+2.  **Unsplash Access Key**: Get your free key from [Unsplash Developers](https://unsplash.com/developers).
+    - Required for the "Visual Intelligence" feature.
 3.  **Active SEO Plugin**: Set to **Auto Detect** (recommended). It will find Yoast or Rank Math automatically.
 4.  **Master System Prompt**: A rigorous prompt is pre-loaded. You can edit this to change the persona (e.g., "Medical Copywriter" vs "Tech Blogger").
 
@@ -40,14 +47,13 @@ Go to **BP Automater** -> **Settings** in your WordPress dashboard.
 2.  **Enter Title**: E.g., "The Benefits of Titanium Glasses".
 3.  **Enter Keywords**: E.g., "lightweight frames, durability, hypoallergenic".
 4.  Click **Generate Article**.
-    - _Wait 30-60 seconds for the AI to research and write._
+    - _Wait 30-60 seconds for the AI to research, write, and find an image._
 5.  **Review Preview**:
-    - Check the extracted **H1 Title**.
-    - Edit the **URL Slug** if needed.
-    - Review/Edit the **Meta Title** and **Description**.
-    - Scan the **Content**.
+    - **Image**: Check the fetched Unsplash image.
+    - **SEO**: Review the extracted H1, Slug, and Meta fields.
+    - **Content**: Scan the article body.
 6.  Click **Publish to WordPress**.
-    - The post is created instantly.
+    - The post is created instantly with the image attached and all SEO data saved.
     - Check the "View Post" link to see it live.
 
 ## 🔍 Technical Details

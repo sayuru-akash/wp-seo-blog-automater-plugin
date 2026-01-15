@@ -75,8 +75,52 @@ class WP_SEO_Automater_Admin {
 			$meta_desc = trim( str_replace( array( '*', '_', '`', '"', "'", '<', '>' ), '', $matches[1] ) );
 		}
 
+		// 4. Image Search Keywords
+		$image_keywords = '';
+		if ( preg_match( '/Image\s*Search\s*Keywords.*?(?:[:\-]|\s)\s*(.*)(?:\n|$)/i', $content, $matches ) ) {
+			$image_keywords = trim( str_replace( array( '*', '_', '`', '"', "'", '<', '>' ), '', $matches[1] ) );
+		}
+
 		// LOGGING
-		self::log_activity( 'Debug Extraction', "Slug: '$slug' | Title: '$meta_title' | Desc: '$meta_desc'", 'info' );
+		self::log_activity( 'Debug Extraction', "Slug: '$slug' | Title: '$meta_title' | Image Key: '$image_keywords'", 'info' );
+
+		// 5. FETCH IMAGE FROM UNSPLASH
+		$unsplash_url = '';
+		$unsplash_credit = '';
+		$unsplash_key = get_option( 'wp_seo_automater_unsplash_key', '' );
+		
+		if ( ! empty( $unsplash_key ) && ! empty( $image_keywords ) ) {
+			// Call Unsplash
+			$endpoint = 'https://api.unsplash.com/search/photos';
+			$params = array(
+				'client_id' => $unsplash_key,
+				'query'     => $image_keywords,
+				'page'      => 1,
+				'per_page'  => 1,
+				'orientation' => 'landscape'
+			);
+			$api_url = add_query_arg( $params, $endpoint );
+			
+			$response = wp_remote_get( $api_url );
+			
+			if ( ! is_wp_error( $response ) ) {
+				$body = wp_remote_retrieve_body( $response );
+				$data = json_decode( $body, true );
+				
+				if ( isset( $data['results'][0] ) ) {
+					// Get Regular URL for web display/upload
+					$unsplash_url = $data['results'][0]['urls']['regular'];
+					// Get photographer credit
+					$user = $data['results'][0]['user'];
+					$unsplash_credit = 'Photo by ' . $user['name'] . ' on Unsplash';
+					self::log_activity( 'Unsplash', "Found image for '$image_keywords': $unsplash_url", 'success' );
+				} else {
+					self::log_activity( 'Unsplash', "No images found for '$image_keywords'.", 'warning' );
+				}
+			} else {
+				self::log_activity( 'Unsplash Error', $response->get_error_message(), 'error' );
+			}
+		}
 
 		// HTML CONVERSION (For Body)
 		$html_content = $this->markdown_to_html( $content );
@@ -144,7 +188,9 @@ class WP_SEO_Automater_Admin {
 			'title'   => $extracted_title,
 			'schema'  => $extracted_schema,
 			'meta_title' => $meta_title,
-			'meta_desc'  => $meta_desc
+			'meta_desc'  => $meta_desc,
+			'image_url'  => $unsplash_url,
+			'image_credit' => $unsplash_credit
 		));
 	}
 
@@ -189,7 +235,35 @@ class WP_SEO_Automater_Admin {
 				}
 			}
 
-			// 2. SEO Plugin Integration
+			}
+
+			// 2. IMAGE SIDELOAD (Unsplash)
+			$image_url = isset($_POST['image_url']) ? esc_url_raw($_POST['image_url']) : '';
+			
+			if ( ! empty( $image_url ) ) {
+				// Required for media_sideload_image
+				require_once(ABSPATH . 'wp-admin/includes/media.php');
+				require_once(ABSPATH . 'wp-admin/includes/file.php');
+				require_once(ABSPATH . 'wp-admin/includes/image.php');
+
+				// Sideload. This downloads, creates attachment, and returns HTML or ID.
+				// We want ID, so 'id' as last arg.
+				$attachment_id = media_sideload_image( $image_url, $post_id, $title, 'id' );
+
+				if ( ! is_wp_error( $attachment_id ) ) {
+					// Set as Featured Image
+					set_post_thumbnail( $post_id, $attachment_id );
+					
+					// Set SEO Alt Text (Use Title or Keyword)
+					update_post_meta( $attachment_id, '_wp_attachment_image_alt', $title . ' - Unsplash' );
+					
+					self::log_activity( 'Image', "Sideloaded image ID: $attachment_id", 'success' );
+				} else {
+					self::log_activity( 'Image Error', $attachment_id->get_error_message(), 'error' );
+				}
+			}
+
+			// 3. SEO Plugin Integration
 			$seo_plugin_setting = get_option( 'wp_seo_automater_seo_plugin', 'auto' );
 			$is_yoast_active = defined( 'WPSEO_VERSION' );
 			$is_rank_math_active = defined( 'RANK_MATH_VERSION' );
@@ -390,7 +464,8 @@ class WP_SEO_Automater_Admin {
 		elseif ( isset( $_POST['wp_seo_automater_save_settings'] ) && check_admin_referer( 'wp_seo_automater_settings_save' ) ) {
 			update_option( 'wp_seo_automater_gemini_key', sanitize_text_field( $_POST['gemini_api_key'] ) );
 			update_option( 'wp_seo_automater_gemini_model', sanitize_text_field( $_POST['gemini_model_id'] ) );
-			update_option( 'wp_seo_automater_seo_plugin', sanitize_text_field( $_POST['seo_plugin'] ) ); // New Setting
+			update_option( 'wp_seo_automater_unsplash_key', sanitize_text_field( $_POST['unsplash_api_key'] ) ); // New
+			update_option( 'wp_seo_automater_seo_plugin', sanitize_text_field( $_POST['seo_plugin'] ) ); 
 			// Allow some HTML in prompt (e.g. line breaks) but sanitize heavily
 			update_option( 'wp_seo_automater_master_prompt', wp_kses_post( $_POST['master_prompt'] ) );
 			
@@ -399,8 +474,9 @@ class WP_SEO_Automater_Admin {
 		}
 
 		$api_key = get_option( 'wp_seo_automater_gemini_key', '' );
+		$unsplash_key = get_option( 'wp_seo_automater_unsplash_key', '' ); // New
 		$model_id = get_option( 'wp_seo_automater_gemini_model', 'gemini-pro-latest' );
-		$seo_plugin = get_option( 'wp_seo_automater_seo_plugin', 'auto' ); // Default to auto
+		$seo_plugin = get_option( 'wp_seo_automater_seo_plugin', 'auto' ); 
 		$master_prompt = get_option( 'wp_seo_automater_master_prompt', $this->get_default_master_prompt() );
 
 		include_once WP_SEO_AUTOMATER_PATH . 'admin/partials/settings-display.php';

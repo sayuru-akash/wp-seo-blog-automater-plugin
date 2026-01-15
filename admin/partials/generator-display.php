@@ -45,6 +45,16 @@
                 <textarea id="result_meta_desc" class="wp-seo-textarea" rows="3"></textarea>
             </div>
 
+            <!-- Image Preview -->
+            <div class="wp-seo-form-group">
+                <label class="wp-seo-label">Featured Image (Unsplash)</label>
+                <div id="image-preview-container" style="margin-bottom: 10px;">
+                    <img id="result_image_preview" src="" style="max-width: 100%; height: auto; display: none; border-radius: 8px; border: 1px solid #ddd;">
+                    <p id="result_image_credit" style="font-size: 12px; color: #666; font-style: italic;"></p>
+                </div>
+                <input type="hidden" id="result_image_url">
+            </div>
+
                 <div class="wp-seo-input-group">
                     <label for="result_slug">
                         URL Slug
