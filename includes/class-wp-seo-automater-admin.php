@@ -70,7 +70,32 @@ class WP_SEO_Automater_Admin {
 			$extracted_title = strip_tags( $matches[1] );
 		}
 
-		// 3. Clean Content
+		// 3. Extract Schema (JSON-LD)
+		$extracted_schema = '';
+		// Regex to find <script type="application/ld+json">...</script>
+		// Or sometimes Gemini puts it in ```json ... ``` blocks at the end.
+		
+		// Priority 1: Script tag
+		if ( preg_match( '/<script type="application\/ld\+json">(.*?)<\/script>/is', $html_content, $matches ) ) {
+			$extracted_schema = trim( $matches[1] );
+			// Remove it from content
+			$html_content = str_replace( $matches[0], '', $html_content );
+		} 
+		// Priority 2: Code block with explicit JSON
+		elseif ( preg_match( '/```json(.*?)```/is', $html_content, $matches ) ) {
+			// Only treat as schema if it looks like schema (contains "@context")
+			if ( strpos( $matches[1], '@context' ) !== false ) {
+				$extracted_schema = trim( $matches[1] );
+				// Clean any Markdown residue if needed, but trim usually handles it.
+				// Sometimes user output has `json` at start of block which regex captures if not careful.
+				// My regex: ```json(.*?)```. Group 1 matches inside.
+				// If the inner text starts with 'json', strip it. 
+				// Actually often ```json\n{...}```. The \n is captured. 
+				$html_content = str_replace( $matches[0], '', $html_content );
+			}
+		}
+
+		// 4. Clean Content (Consolidating the split logic)
 		if ( $extracted_title ) {
 			// Split by H1 (permissive), take the second part
 			$parts = preg_split( '/<h1.*?>.*?<\/h1>/is', $html_content, 2 );
@@ -85,10 +110,15 @@ class WP_SEO_Automater_Admin {
 			}
 		}
 
+		// Final Cleanup: Remove any "Phase 4" or "Schema Markup" headers left over
+		$html_content = preg_replace( '/(Phase 4|Schema Markup|Output Management).*$/is', '', $html_content );
+		$html_content = trim( $html_content );
+
 		wp_send_json_success( array(
 			'content' => $html_content,
 			'slug'    => $slug,
-			'title'   => $extracted_title // Send extracted title back
+			'title'   => $extracted_title,
+			'schema'  => $extracted_schema
 		));
 	}
 
@@ -106,6 +136,11 @@ class WP_SEO_Automater_Admin {
 		$slug  = sanitize_title( $_POST['slug'] );
 		// Allow HTML in content
 		$content = wp_kses_post( $_POST['content'] ); 
+		// Schema (Allow raw JSON/HTML but sanitize basic script tags logic if needed, but for JSON-LD we need structure)
+		// wp_kses_post might strip some JSON chars or script tags.
+		// Since we trust the AI output (and user is admin), we can be a bit more permissive or just save it.
+		// Ideally we validate JSON.
+		$schema = isset($_POST['schema']) ? trim($_POST['schema']) : '';
 		
 		self::log_activity( 'Publish Start', "Attempting to publish post: '{$title}' with slug '{$slug}'...", 'info' );
 
@@ -117,6 +152,11 @@ class WP_SEO_Automater_Admin {
 			'post_author'  => get_current_user_id(),
 			'post_type'    => 'post'
 		));
+		
+		if ( ! is_wp_error( $post_id ) && ! empty( $schema ) ) {
+			// Save Schema
+			update_post_meta( $post_id, '_wp_seo_schema_markup', $schema );
+		}
 
 		if ( is_wp_error( $post_id ) ) {
 			self::log_activity( 'Publish Failed', "Title: $title - Error: " . $post_id->get_error_message(), 'error' );

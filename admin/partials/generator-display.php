@@ -34,10 +34,17 @@
                 <input type="text" id="result_title" class="wp-seo-input">
             </div>
 
-            <div class="wp-seo-form-group">
-                <label class="wp-seo-label">URL Slug</label>
-                <input type="text" id="result_slug" class="wp-seo-input">
-            </div>
+                <div class="wp-seo-input-group">
+                    <label for="result_slug">
+                        URL Slug
+                        <br>
+                        <small>Auto-generated. Edit if needed.</small>
+                    </label>
+                    <input type="text" id="result_slug" class="wp-seo-form-control">
+                </div>
+
+                <!-- Hidden Schema Field -->
+                <input type="hidden" id="result_schema">
 
             <div class="wp-seo-form-group">
                 <label class="wp-seo-label">Content (HTML)</label>

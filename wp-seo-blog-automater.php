@@ -32,3 +32,18 @@ function run_wp_seo_automater() {
 	$plugin_admin->run();
 }
 add_action( 'plugins_loaded', 'run_wp_seo_automater' );
+
+/**
+ * Frontend: Inject Schema if present
+ */
+function wp_seo_automater_inject_schema() {
+	if ( is_single() ) {
+		$schema = get_post_meta( get_the_ID(), '_wp_seo_schema_markup', true );
+		if ( ! empty( $schema ) ) {
+			echo "\n<!-- WP SEO Automater Schema -->\n";
+			echo '<script type="application/ld+json">' . $schema . '</script>';
+			echo "\n<!-- /WP SEO Automater Schema -->\n";
+		}
+	}
+}
+add_action( 'wp_head', 'wp_seo_automater_inject_schema' );

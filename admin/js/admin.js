@@ -53,6 +53,11 @@ jQuery(document).ready(function ($) {
             $("#result_slug").val(slug);
           }
 
+          // Populate Schema (Hidden)
+          if (response.data.schema) {
+            $("#result_schema").val(response.data.schema);
+          }
+
           // Title Logic:
           // 1. Use extracted title from AI (H1) if present
           // 2. Fallback to Regex match (JS side)
@@ -88,6 +93,7 @@ jQuery(document).ready(function ($) {
     var finalTitle = $("#result_title").val();
     var finalSlug = $("#result_slug").val();
     var finalContent = $("#result_content").val();
+    var finalSchema = $("#result_schema").val();
 
     if (!finalTitle || !finalContent) {
       alert("Cannot publish empty content.");
@@ -105,6 +111,7 @@ jQuery(document).ready(function ($) {
         title: finalTitle,
         slug: finalSlug,
         content: finalContent,
+        schema: finalSchema,
       },
       success: function (response) {
         $("#btn-publish").text("Publish to WordPress").prop("disabled", false);
