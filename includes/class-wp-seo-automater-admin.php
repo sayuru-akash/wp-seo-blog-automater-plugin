@@ -63,14 +63,16 @@ class WP_SEO_Automater_Admin {
 
 		// 1b. Extract Meta Title
 		$meta_title = '';
-		if ( preg_match( '/Meta Title.*?:\s*(.+?)(?:<br|<\/p>|\n|$)/is', $html_content, $matches ) ) {
-			$meta_title = trim( strip_tags( $matches[1] ) );
+		// Allow colon or hyphen separator, match until newline or HTML tag
+		if ( preg_match( '/Meta Title.*?(?:[:\-]|\s)\s*(.+?)(?:<br|<\/p>|\n|$)/is', $html_content, $matches ) ) {
+			// Aggressive cleaning: strip tags, stars, quotes
+			$meta_title = trim( str_replace( array( '**', '"', "'", '*' ), '', strip_tags( $matches[1] ) ) );
 		}
 
 		// 1c. Extract Meta Description
 		$meta_desc = '';
-		if ( preg_match( '/Meta Description.*?:\s*(.+?)(?:<br|<\/p>|\n|$)/is', $html_content, $matches ) ) {
-			$meta_desc = trim( strip_tags( $matches[1] ) );
+		if ( preg_match( '/Meta Description.*?(?:[:\-]|\s)\s*(.+?)(?:<br|<\/p>|\n|$)/is', $html_content, $matches ) ) {
+			$meta_desc = trim( str_replace( array( '**', '"', "'", '*' ), '', strip_tags( $matches[1] ) ) );
 		}
 
 		// 2. Extract Title from H1 (Handle attributes like class="x")
