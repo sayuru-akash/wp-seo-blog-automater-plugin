@@ -33,12 +33,14 @@ define( 'WP_SEO_AUTOMATER_FILE', __FILE__ );
 
 // Load plugin text domain for translations
 add_action( 'plugins_loaded', 'wp_seo_automater_load_textdomain' );
-function wp_seo_automater_load_textdomain() {
-	load_plugin_textdomain(
-		'wp-seo-blog-automater',
-		false,
-		dirname( WP_SEO_AUTOMATER_BASENAME ) . '/languages'
-	);
+if ( ! function_exists( 'wp_seo_automater_load_textdomain' ) ) {
+	function wp_seo_automater_load_textdomain() {
+		load_plugin_textdomain(
+			'wp-seo-blog-automater',
+			false,
+			dirname( WP_SEO_AUTOMATER_BASENAME ) . '/languages'
+		);
+	}
 }
 
 // Autoloader or Includes
@@ -51,24 +53,26 @@ require_once WP_SEO_AUTOMATER_PATH . 'includes/class-gemini-api-handler.php';
  *
  * @since 1.0.0
  */
-function wp_seo_automater_activate() {
-	// Set default options if they don't exist
-	if ( false === get_option( 'wp_seo_automater_gemini_model' ) ) {
-		add_option( 'wp_seo_automater_gemini_model', 'gemini-pro-latest' );
+if ( ! function_exists( 'wp_seo_automater_activate' ) ) {
+	function wp_seo_automater_activate() {
+		// Set default options if they don't exist
+		if ( false === get_option( 'wp_seo_automater_gemini_model' ) ) {
+			add_option( 'wp_seo_automater_gemini_model', 'gemini-pro-latest' );
+		}
+		if ( false === get_option( 'wp_seo_automater_seo_plugin' ) ) {
+			add_option( 'wp_seo_automater_seo_plugin', 'auto' );
+		}
+		if ( false === get_option( 'wp_seo_automater_logs' ) ) {
+			add_option( 'wp_seo_automater_logs', array() );
+		}
+		
+		// Log activation
+		WP_SEO_Automater_Admin::log_activity(
+			'Plugin Activated',
+			'WP SEO Blog Automater v' . WP_SEO_AUTOMATER_VERSION . ' activated successfully.',
+			'success'
+		);
 	}
-	if ( false === get_option( 'wp_seo_automater_seo_plugin' ) ) {
-		add_option( 'wp_seo_automater_seo_plugin', 'auto' );
-	}
-	if ( false === get_option( 'wp_seo_automater_logs' ) ) {
-		add_option( 'wp_seo_automater_logs', array() );
-	}
-	
-	// Log activation
-	WP_SEO_Automater_Admin::log_activity(
-		'Plugin Activated',
-		'WP SEO Blog Automater v' . WP_SEO_AUTOMATER_VERSION . ' activated successfully.',
-		'success'
-	);
 }
 register_activation_hook( WP_SEO_AUTOMATER_FILE, 'wp_seo_automater_activate' );
 
@@ -78,16 +82,18 @@ register_activation_hook( WP_SEO_AUTOMATER_FILE, 'wp_seo_automater_activate' );
  *
  * @since 1.0.0
  */
-function wp_seo_automater_deactivate() {
-	// Log deactivation
-	WP_SEO_Automater_Admin::log_activity(
-		'Plugin Deactivated',
-		'WP SEO Blog Automater deactivated.',
-		'info'
-	);
-	
-	// Clear any scheduled events if we add cron jobs in the future
-	// wp_clear_scheduled_hook( 'wp_seo_automater_cron_hook' );
+if ( ! function_exists( 'wp_seo_automater_deactivate' ) ) {
+	function wp_seo_automater_deactivate() {
+		// Log deactivation
+		WP_SEO_Automater_Admin::log_activity(
+			'Plugin Deactivated',
+			'WP SEO Blog Automater deactivated.',
+			'info'
+		);
+		
+		// Clear any scheduled events if we add cron jobs in the future
+		// wp_clear_scheduled_hook( 'wp_seo_automater_cron_hook' );
+	}
 }
 register_deactivation_hook( WP_SEO_AUTOMATER_FILE, 'wp_seo_automater_deactivate' );
 
@@ -97,11 +103,13 @@ register_deactivation_hook( WP_SEO_AUTOMATER_FILE, 'wp_seo_automater_deactivate'
  *
  * @since 1.0.0
  */
-function run_wp_seo_automater() {
-	$plugin_admin = new WP_SEO_Automater_Admin();
-	$plugin_admin->run();
+if ( ! function_exists( 'run_wp_seo_automater' ) ) {
+	function run_wp_seo_automater() {
+		$plugin_admin = new WP_SEO_Automater_Admin();
+		$plugin_admin->run();
+	}
+	add_action( 'plugins_loaded', 'run_wp_seo_automater' );
 }
-add_action( 'plugins_loaded', 'run_wp_seo_automater' );
 
 /**
  * Frontend: Inject Schema Markup into head.
