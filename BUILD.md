@@ -149,4 +149,4 @@ For CI/CD integration, the build script can be automated:
 
 ---
 
-**Need help?** Contact support@codezela.com
+**Need help?** Contact info@codezela.com

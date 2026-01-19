@@ -153,7 +153,7 @@ This release transforms the plugin from MVP to enterprise-grade, production-read
 
 ---
 
-**Note**: This changelog follows [semantic versioning](https://semver.org/). For any questions about changes, please contact support@codezela.com.
+**Note**: This changelog follows [semantic versioning](https://semver.org/). For any questions about changes, please contact info@codezela.com.
 
 [1.0.4]: https://github.com/codezela/wp-seo-blog-automater/releases/tag/1.0.4
 [1.0.3]: https://github.com/codezela/wp-seo-blog-automater/releases/tag/1.0.3

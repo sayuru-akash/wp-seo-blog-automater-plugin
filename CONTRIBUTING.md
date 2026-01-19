@@ -313,7 +313,7 @@ If applicable
 
 ## 📬 Contact
 
-- **Email**: support@codezela.com
+- **Email**: info@codezela.com
 - **Website**: https://codezela.com
 - **Issues**: GitHub Issues
 

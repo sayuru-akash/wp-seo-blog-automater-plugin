@@ -303,7 +303,7 @@ WP_SEO_AUTOMATER_FILE     // Main plugin file path
 
 For support, feature requests, or bug reports:
 
-- **Email:** support@codezela.com
+- **Email:** info@codezela.com
 - **Website:** [https://codezela.com](https://codezela.com)
 - **Documentation:** [Plugin Documentation](https://codezela.com/docs/wp-seo-blog-automater)
 
