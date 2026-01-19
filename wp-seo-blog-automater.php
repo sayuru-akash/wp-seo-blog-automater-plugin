@@ -3,7 +3,7 @@
  * Plugin Name:       WP SEO Blog Automater
  * Plugin URI:        https://codezela.com/wp-seo-blog-automater/
  * Description:       Professional AI-powered content automation tool. Automatically generates high-quality, SEO-optimized blog posts with integrated images, schema markup, and complete meta data using Google Gemini AI.
- * Version:           1.0.4
+ * Version:           1.0.5
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Codezela Technologies
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define Plugin Constants
-define( 'WP_SEO_AUTOMATER_VERSION', '1.0.4' );
+define( 'WP_SEO_AUTOMATER_VERSION', '1.0.5' );
 define( 'WP_SEO_AUTOMATER_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WP_SEO_AUTOMATER_URL', plugin_dir_url( __FILE__ ) );
 define( 'WP_SEO_AUTOMATER_BASENAME', plugin_basename( __FILE__ ) );
@@ -46,6 +46,15 @@ if ( ! function_exists( 'wp_seo_automater_load_textdomain' ) ) {
 // Autoloader or Includes
 require_once WP_SEO_AUTOMATER_PATH . 'includes/class-wp-seo-automater-admin.php';
 require_once WP_SEO_AUTOMATER_PATH . 'includes/class-gemini-api-handler.php';
+require_once WP_SEO_AUTOMATER_PATH . 'includes/class-github-updater.php';
+
+// Initialize GitHub Updater for automatic updates
+if ( ! function_exists( 'wp_seo_automater_init_github_updater' ) ) {
+	function wp_seo_automater_init_github_updater() {
+		new WP_SEO_Automater_GitHub_Updater( WP_SEO_AUTOMATER_BASENAME, WP_SEO_AUTOMATER_VERSION );
+	}
+	add_action( 'init', 'wp_seo_automater_init_github_updater' );
+}
 
 /**
  * Plugin activation hook.

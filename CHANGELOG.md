@@ -5,6 +5,53 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2026-01-20
+
+### 🚀 Automatic Updates Release
+
+Major enhancement adding GitHub-based automatic updates and UI improvements.
+
+### Added
+
+- ✨ **GitHub Automatic Updates**: Plugin now checks GitHub releases for updates
+  - One-click updates directly from WordPress admin
+  - Update notifications appear in WordPress dashboard
+  - 12-hour caching to prevent API rate limits
+  - Complete documentation in RELEASES.md
+- 🎯 **Improved Admin Menu Icon**: Switched from logo image to clean Dashicon (`dashicons-chart-area`)
+  - Professional, consistent with WordPress UI
+  - No more logo display issues in admin sidebar
+- 🛡️ **Function Guards**: Added `function_exists()` checks to prevent redeclaration errors
+  - Safer plugin updates
+  - Prevents conflicts with old versions
+- 📦 **Enhanced Build System**:
+  - Only cleans ZIP files from dist/ (preserves other files)
+  - Automated GitHub release instructions after build
+  - Excludes build artifacts (build.sh, build.bat, BUILD.md, dist/)
+- 📖 **Complete Translation Template**: Fully functional POT file with 75+ translatable strings
+  - All admin UI strings mapped
+  - Proper msgctxt for disambiguation
+  - Ready for translation to any language
+
+### Changed
+
+- 🎨 Admin left menu now uses `dashicons-chart-area` instead of logo image
+- 🔧 Build script preserves non-ZIP files in dist/ folder
+- 📝 Build output now includes GitHub release instructions
+
+### Fixed
+
+- 🐛 Function redeclaration errors when multiple plugin versions exist
+- 🐛 Build script no longer removes entire dist/ folder
+- 🐛 Logo display issues in WordPress admin sidebar
+
+### Technical
+
+- New file: `includes/class-github-updater.php` - Handles automatic updates
+- New file: `RELEASES.md` - Complete release workflow documentation
+- Updated: All version references to 1.0.5
+- Updated: POT file with complete string extraction
+
 ## [1.0.4] - 2026-01-20
 
 ### 🎉 Production-Ready Release
