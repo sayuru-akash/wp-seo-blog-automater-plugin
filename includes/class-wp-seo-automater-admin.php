@@ -524,7 +524,7 @@ class WP_SEO_Automater_Admin {
 
 		// Get fresh release data
 		if ( class_exists( 'WP_SEO_Automater_GitHub_Updater' ) ) {
-			$updater = new WP_SEO_Automater_GitHub_Updater( WP_SEO_AUTOMATER_PLUGIN_FILE );
+			$updater = new WP_SEO_Automater_GitHub_Updater( WP_SEO_AUTOMATER_BASENAME, WP_SEO_AUTOMATER_VERSION );
 			$release = $updater->get_github_release();
 			
 			if ( is_wp_error( $release ) ) {
