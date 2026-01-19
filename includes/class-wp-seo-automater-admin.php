@@ -590,6 +590,15 @@ class WP_SEO_Automater_Admin {
 			'wp-seo-automater-logs',
 			array( $this, 'display_logs_page' )
 		);
+
+		add_submenu_page(
+			'wp-seo-automater',
+			__( 'System Info', 'wp-seo-blog-automater' ),
+			__( 'System Info', 'wp-seo-blog-automater' ),
+			'manage_options',
+			'wp-seo-automater-system-info',
+			array( $this, 'display_system_info_page' )
+		);
 	}
 
 	/**
@@ -695,6 +704,15 @@ class WP_SEO_Automater_Admin {
 	 */
 	public function display_logs_page() {
 		include_once WP_SEO_AUTOMATER_PATH . 'admin/partials/logs-display.php';
+	}
+
+	/**
+	 * Render the System Info Page.
+	 *
+	 * @since 1.0.6
+	 */
+	public function display_system_info_page() {
+		include_once WP_SEO_AUTOMATER_PATH . 'admin/partials/system-info-display.php';
 	}
 
 	/**

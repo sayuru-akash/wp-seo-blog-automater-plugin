@@ -5,6 +5,41 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7] - 2026-01-20
+
+### 📋 System Info Page Release
+
+Added dedicated System Info page for better update visibility and system monitoring.
+
+### Added
+
+- ✨ **System Info Page**: New menu item showing plugin and system status
+  - Current vs. Latest version display
+  - Update availability notification with direct link to update
+  - System requirements check (PHP, WordPress, API keys)
+  - Complete "How Updates Work" guide built-in
+  - Where to find updates in WordPress (Dashboard, Plugins page, Toolbar)
+  - Update schedule explanation (12-hour checks)
+  - Direct links to GitHub releases and WordPress updates page
+  - Plugin details display (Name, Author, URI, Text Domain)
+- 🎨 **New UI Components**: Info grids, notice boxes, status badges
+- 📖 **In-App Documentation**: Users can now see update status without leaving the plugin
+
+### Why This Matters
+
+Users were confused about where to find updates since the GitHub updater integrates with WordPress's native system (not a separate page in the plugin menu). The new System Info page provides clear visibility into:
+- Whether an update is available
+- Where to go to update (Dashboard → Updates or Plugins page)
+- How the automatic update system works
+- System compatibility status
+
+### Technical
+
+- New file: `admin/partials/system-info-display.php`
+- New menu item: Blog Automater → System Info
+- Added CSS for info grids and notice boxes
+- Translation-ready with 30+ new strings
+
 ## [1.0.6] - 2026-01-20
 
 ### 📊 UX Improvements Release

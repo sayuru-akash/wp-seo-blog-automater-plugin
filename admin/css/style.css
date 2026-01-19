@@ -433,6 +433,93 @@ body {
   margin-left: 0.25rem;
 }
 
+/* Info Grid */
+.wp-seo-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.wp-seo-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.wp-seo-info-label {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.wp-seo-info-value {
+  font-size: 1.125rem;
+  color: var(--text-main);
+}
+
+/* Notices */
+.wp-seo-notice {
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius);
+  margin-top: 1.5rem;
+  border-left: 4px solid;
+}
+
+.wp-seo-notice p {
+  margin: 0;
+}
+
+.wp-seo-notice-success {
+  background-color: #ecfdf5;
+  border-left-color: var(--success-color);
+  color: #065f46;
+}
+
+.wp-seo-notice-warning {
+  background-color: #fef3c7;
+  border-left-color: var(--warning-color);
+  color: #92400e;
+}
+
+.wp-seo-notice-error {
+  background-color: #fee2e2;
+  border-left-color: var(--error-color);
+  color: #991b1b;
+}
+
+.wp-seo-notice-info {
+  background-color: #dbeafe;
+  border-left-color: var(--info-color);
+  color: #1e40af;
+}
+
+/* Info Box */
+.wp-seo-info-box {
+  background: var(--bg-color);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  margin-top: 1rem;
+}
+
+.wp-seo-info-box h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: var(--text-main);
+  font-size: 1rem;
+}
+
+.wp-seo-info-box ul {
+  margin: 0.5rem 0;
+}
+
+.wp-seo-info-box li {
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+}
+
 /* Loading Animation */
 .wp-seo-loader {
   border: 3px solid var(--border-light);
