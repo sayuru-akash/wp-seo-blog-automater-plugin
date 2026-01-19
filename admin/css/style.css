@@ -357,13 +357,14 @@ body {
 }
 
 .wp-seo-btn-secondary::before {
-  background: var(--primary-light);
+  background: linear-gradient(135deg, var(--primary-light), rgba(99, 102, 241, 0.05));
 }
 
 .wp-seo-btn-secondary:hover:not(:disabled) {
-  color: var(--primary-color);
+  color: var(--primary-dark);
   border-color: var(--primary-color);
-  background: var(--primary-light);
+  background: white;
+  box-shadow: var(--shadow-md);
 }
 
 .wp-seo-btn .dashicons {

@@ -19,7 +19,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 PLUGIN_SLUG="wp-seo-blog-automater"
-VERSION="1.0.8"
+VERSION="1.1.0"
 BUILD_DIR="build"
 DIST_DIR="dist"
 

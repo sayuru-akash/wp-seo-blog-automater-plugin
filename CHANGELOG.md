@@ -5,6 +5,51 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-01-20
+
+### 🎨 UI/UX Improvements Release
+
+Minor version bump with critical bug fixes and visual improvements.
+
+### Fixed
+
+- 🐛 **Critical AJAX Fix**: Resolved "Network error" when clicking "Check for Updates Now" button
+  - Changed `get_github_release()` from private to public (was causing fatal PHP error)
+  - Fixed return type from `false` to `WP_Error` for proper error handling
+  - Fixed response handling from array syntax to object property access (`$release['tag_name']` → `$release->tag_name`)
+  - Added proper error handling in `check_for_update()` method
+- 🎨 **Button Hover Fix**: Fixed white secondary buttons where text became invisible on hover
+  - Changed hover state to maintain white background with better contrast
+  - Text color now uses `var(--primary-dark)` instead of `var(--primary-color)` on hover
+  - Enhanced shadow on hover for better visual feedback
+  - Fixed ::before pseudo-element gradient for smoother transitions
+
+### Changed
+
+- 🔧 Enhanced error debugging in JavaScript with detailed console logging
+- 📝 Improved error messages to include browser console reference
+
+### Added
+
+- ✅ **Test Suite**: Created `tests/test-github-api.php` for API connectivity verification
+  - Standalone PHP script to test GitHub API endpoint
+  - Validates response structure and asset availability
+  - Helps diagnose update system issues
+
+### Technical
+
+- Updated all version numbers from 1.0.8 to 1.1.0
+- Enhanced AJAX error callback with xhr, status, and error details
+- Improved WP_Error handling throughout the update chain
+
+### Why This Version Bump
+
+Moving to 1.1.0 (minor version) because:
+- Contains important bug fixes that affect core functionality
+- Includes backward-compatible improvements
+- Provides better testing and debugging capabilities
+- Follows semantic versioning: MAJOR.MINOR.PATCH
+
 ## [1.0.8] - 2026-01-20
 
 ### ⚡ Instant Update Check Release
