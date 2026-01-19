@@ -252,6 +252,26 @@ msgstr ""
 msgid "Details"
 msgstr ""
 
+#: admin/partials/logs-display.php
+msgid "Showing %d - %d of %d logs"
+msgstr ""
+
+#: admin/partials/logs-display.php
+msgid "Page %d of %d"
+msgstr ""
+
+#: admin/partials/logs-display.php
+msgid "Previous"
+msgstr ""
+
+#: admin/partials/logs-display.php
+msgid "Next"
+msgstr ""
+
+#: admin/partials/logs-display.php:41
+msgid "Details"
+msgstr ""
+
 #: admin/partials/logs-display.php:41
 msgid "No logs found yet. Activity will appear here after generating content."
 msgstr ""

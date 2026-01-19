@@ -24,23 +24,44 @@ defined( 'ABSPATH' ) || exit;
     </div>
 
     <div class="wp-seo-card">
+        <?php
+        // Pagination settings
+        $logs_per_page = 20;
+        $current_page  = isset( $_GET['paged'] ) ? max( 1, intval( $_GET['paged'] ) ) : 1;
+        $logs          = get_option( 'wp_seo_automater_logs', array() );
+        $total_logs    = count( $logs );
+        $total_pages   = ceil( $total_logs / $logs_per_page );
+        $offset        = ( $current_page - 1 ) * $logs_per_page;
+        
+        // Reverse to show newest first
+        $logs = array_reverse( $logs );
+        
+        // Get current page logs
+        $current_logs = array_slice( $logs, $offset, $logs_per_page );
+        ?>
+        
+        <?php if ( $total_logs > 0 ) : ?>
+            <div class="wp-seo-logs-meta">
+                <p><?php printf( esc_html__( 'Showing %d - %d of %d logs', 'wp-seo-blog-automater' ), $offset + 1, min( $offset + $logs_per_page, $total_logs ), $total_logs ); ?></p>
+            </div>
+        <?php endif; ?>
+        
         <div class="wp-seo-table-wrapper">
             <table class="wp-seo-table widefat fixed striped">
                 <thead>
                     <tr>
-                        <th><?php esc_html_e( 'Date', 'wp-seo-blog-automater' ); ?></th>
+                        <th style="width: 160px;"><?php esc_html_e( 'Date', 'wp-seo-blog-automater' ); ?></th>
                         <th><?php esc_html_e( 'Topic', 'wp-seo-blog-automater' ); ?></th>
-                        <th><?php esc_html_e( 'Status', 'wp-seo-blog-automater' ); ?></th>
+                        <th style="width: 100px;"><?php esc_html_e( 'Status', 'wp-seo-blog-automater' ); ?></th>
                         <th><?php esc_html_e( 'Details', 'wp-seo-blog-automater' ); ?></th>
                     </tr>
                 </thead>
                 <tbody id="logs-body">
                     <?php
-                    $logs = get_option( 'wp_seo_automater_logs', array() );
-                    if ( empty( $logs ) ) {
-                        echo '<tr><td colspan="4">' . esc_html__( 'No logs found yet. Activity will appear here after generating content.', 'wp-seo-blog-automater' ) . '</td></tr>';
+                    if ( empty( $current_logs ) ) {
+                        echo '<tr><td colspan="4" style="text-align: center; padding: 40px;">' . esc_html__( 'No logs found yet. Activity will appear here after generating content.', 'wp-seo-blog-automater' ) . '</td></tr>';
                     } else {
-                        foreach ( $logs as $log ) {
+                        foreach ( $current_logs as $log ) {
                             $badge_class = 'default';
                             switch ( $log['status'] ) {
                                 case 'success':
@@ -68,6 +89,33 @@ defined( 'ABSPATH' ) || exit;
                 </tbody>
             </table>
         </div>
+        
+        <?php if ( $total_pages > 1 ) : ?>
+            <div class="wp-seo-pagination">
+                <?php
+                $base_url = remove_query_arg( 'paged' );
+                
+                // Previous button
+                if ( $current_page > 1 ) {
+                    echo '<a href="' . esc_url( add_query_arg( 'paged', $current_page - 1, $base_url ) ) . '" class="wp-seo-btn wp-seo-btn-secondary">← ' . esc_html__( 'Previous', 'wp-seo-blog-automater' ) . '</a>';
+                }
+                
+                // Page numbers
+                echo '<span class="wp-seo-pagination-info">';
+                printf( 
+                    esc_html__( 'Page %d of %d', 'wp-seo-blog-automater' ), 
+                    $current_page, 
+                    $total_pages 
+                );
+                echo '</span>';
+                
+                // Next button
+                if ( $current_page < $total_pages ) {
+                    echo '<a href="' . esc_url( add_query_arg( 'paged', $current_page + 1, $base_url ) ) . '" class="wp-seo-btn wp-seo-btn-secondary">' . esc_html__( 'Next', 'wp-seo-blog-automater' ) . ' →</a>';
+                }
+                ?>
+            </div>
+        <?php endif; ?>
     </div>
     
     <div class="wp-seo-footer">

@@ -5,6 +5,43 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] - 2026-01-20
+
+### 📊 UX Improvements Release
+
+Enhanced logs management and user experience improvements.
+
+### Added
+
+- ✨ **Logs Pagination**: Professional pagination system for activity logs
+  - Shows 20 logs per page
+  - Previous/Next navigation
+  - Page counter (e.g., "Page 1 of 5")
+  - Shows log count (e.g., "Showing 1-20 of 87 logs")
+  - Newest logs appear first (reversed order)
+- 📖 **Update Guide**: Complete UPDATE-GUIDE.md with step-by-step instructions
+  - How to manually update from older versions
+  - Troubleshooting common update issues
+  - FTP/SSH quick update commands
+
+### Changed
+
+- 🎨 Logs table improved with fixed column widths for better readability
+- 📊 Empty logs state now centered with better spacing
+- 🔄 Logs display newest entries first (auto-reversed)
+
+### Fixed
+
+- 🐛 Logs page now follows WordPress pagination best practices
+- 🐛 Fixed infinite scroll issue with large log files
+- 🐛 Better performance with hundreds of log entries
+
+### Technical
+
+- Updated translation strings for pagination (Previous, Next, Page X of Y)
+- Added pagination CSS styling matching modern design system
+- Improved table column width consistency
+
 ## [1.0.5] - 2026-01-20
 
 ### 🚀 Automatic Updates Release
