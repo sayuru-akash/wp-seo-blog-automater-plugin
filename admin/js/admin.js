@@ -1,20 +1,38 @@
+/**
+ * WP SEO Blog Automater - Admin JavaScript
+ *
+ * @package    WP_SEO_Blog_Automater
+ * @author     Codezela Technologies
+ * @since      1.0.0
+ */
+
 jQuery(document).ready(function ($) {
-  // Generate Button Click
+  "use strict";
+
+  /**
+   * Generate Button Click Handler
+   */
   $("#btn-generate").on("click", function (e) {
     e.preventDefault();
 
-    var title = $("#article_title").val();
-    var keywords = $("#article_keywords").val();
+    var title = $("#article_title").val().trim();
+    var keywords = $("#article_keywords").val().trim();
 
+    // Validation
     if (!title || !keywords) {
       alert("Please enter both a title and keywords.");
       return;
     }
 
     // UI Updates
-    $(this).prop("disabled", true);
+    var $btn = $(this);
+    var originalText = $btn.find(".btn-text").text();
+
+    $btn.prop("disabled", true);
+    $btn.find(".btn-text").text("Generating...");
     $(".wp-seo-loader").show();
     $("#generation-results").addClass("wp-seo-hidden");
+    $("#publish-message").html("");
 
     $.ajax({
       url: wpSeoAutomater.ajax_url,
@@ -25,21 +43,17 @@ jQuery(document).ready(function ($) {
         title: title,
         keywords: keywords,
       },
+      timeout: 120000, // 2 minutes timeout
       success: function (response) {
         $(".wp-seo-loader").hide();
-        $("#btn-generate").prop("disabled", false);
+        $btn.prop("disabled", false);
+        $btn.find(".btn-text").text(originalText);
 
         if (response.success) {
           $("#generation-results").removeClass("wp-seo-hidden");
 
-          // Populate fields
-          // If the AI returned a JSON with title/content split, use it.
-          // But our handler returns raw text string usually.
-          // We'll rely on the PHP side to parse it or just put it all in content for now.
-          // For better UX, let's assume PHP tries to split it or we just dump it in content.
-
-          // Simple heuristic: If response.data.content is set
-          $("#result_content").val(response.data.content);
+          // Populate content
+          $("#result_content").val(response.data.content || "");
 
           // Populate Slug
           if (response.data.slug) {
@@ -54,17 +68,11 @@ jQuery(document).ready(function ($) {
           }
 
           // Populate Schema (Hidden)
-          if (response.data.schema) {
-            $("#result_schema").val(response.data.schema);
-          }
+          $("#result_schema").val(response.data.schema || "");
 
-          // Populate Yoast Meta Fields
-          if (response.data.meta_title) {
-            $("#result_meta_title").val(response.data.meta_title);
-          }
-          if (response.data.meta_desc) {
-            $("#result_meta_desc").val(response.data.meta_desc);
-          }
+          // Populate Meta Fields
+          $("#result_meta_title").val(response.data.meta_title || "");
+          $("#result_meta_desc").val(response.data.meta_desc || "");
 
           // Populate Image
           if (response.data.image_url) {
@@ -72,37 +80,27 @@ jQuery(document).ready(function ($) {
             $("#result_image_preview")
               .attr("src", response.data.image_url)
               .show();
-            $("#result_image_credit").text(response.data.image_credit);
+            $("#result_image_credit").text(response.data.image_credit || "");
           } else {
             $("#result_image_preview").hide();
             $("#result_image_credit").text("");
 
             // DIAGNOSTIC ALERT
             if (response.data.debug_info) {
-              console.warn("Unsplash Failure Risk:", response.data.debug_info);
+              console.warn("Unsplash Debug Info:", response.data.debug_info);
               if (
                 response.data.debug_info.unsplash_status !== "Success" &&
                 response.data.debug_info.unsplash_status !== "Not Attempted"
               ) {
-                alert(
-                  "Notice: Image Auto-Fetch Failed.\nReason: " +
-                    response.data.debug_info.unsplash_status +
-                    "\nKeywords Found: '" +
-                    response.data.debug_info.keywords +
-                    "'"
-                );
-              } else if (response.data.debug_info.keywords === "") {
-                alert(
-                  "Notice: No Image Keywords Found.\nThe AI did not output 'Image Search Keywords'.\nPlease check your prompt settings or try again."
+                console.error(
+                  "Image fetch failed:",
+                  response.data.debug_info.unsplash_status,
                 );
               }
             }
           }
 
-          // Title Logic:
-          // 1. Use extracted title from AI (H1) if present
-          // 2. Fallback to Regex match (JS side)
-          // 3. Fallback to user input
+          // Title Logic
           if (response.data.title) {
             $("#result_title").val(response.data.title);
           } else {
@@ -112,41 +110,65 @@ jQuery(document).ready(function ($) {
             if (titleMatch && titleMatch[1]) {
               $("#result_title").val(titleMatch[1]);
             } else {
-              $("#result_title").val(title); // User provided inputs
+              $("#result_title").val(title);
             }
           }
+
+          // Scroll to results
+          $("html, body").animate(
+            {
+              scrollTop: $("#generation-results").offset().top - 100,
+            },
+            500,
+          );
         } else {
-          alert("Error: " + response.data);
+          var errorMsg = response.data || "Unknown error occurred";
+          alert("Error: " + errorMsg);
+          console.error("Generation error:", response);
         }
       },
-      error: function () {
+      error: function (jqXHR, textStatus, errorThrown) {
         $(".wp-seo-loader").hide();
-        $("#btn-generate").prop("disabled", false);
-        alert("System Error. Please try again.");
+        $btn.prop("disabled", false);
+        $btn.find(".btn-text").text(originalText);
+
+        var errorMsg = "System Error. Please try again.";
+        if (textStatus === "timeout") {
+          errorMsg =
+            "Request timed out. The AI may need more time. Please try again.";
+        }
+        alert(errorMsg);
+        console.error("AJAX error:", textStatus, errorThrown);
       },
     });
   });
 
-  // Publish Button Click
+  /**
+   * Publish Button Click Handler
+   */
   $("#btn-publish").on("click", function (e) {
     e.preventDefault();
 
-    var finalTitle = $("#result_title").val();
-    var finalSlug = $("#result_slug").val();
-    var finalContent = $("#result_content").val();
+    var finalTitle = $("#result_title").val().trim();
+    var finalSlug = $("#result_slug").val().trim();
+    var finalContent = $("#result_content").val().trim();
     var finalSchema = $("#result_schema").val();
-
-    // Get Yoast values
     var finalMetaTitle = $("#result_meta_title").val();
     var finalMetaDesc = $("#result_meta_desc").val();
-    var finalImageUrl = $("#result_image_url").val(); // New
+    var finalImageUrl = $("#result_image_url").val();
 
+    // Validation
     if (!finalTitle || !finalContent) {
-      alert("Cannot publish empty content.");
+      alert("Cannot publish empty content. Title and content are required.");
       return;
     }
 
-    $(this).text("Publishing...").prop("disabled", true);
+    var $btn = $(this);
+    var originalHtml = $btn.html();
+
+    $btn
+      .html('<span class="dashicons dashicons-update"></span> Publishing...')
+      .prop("disabled", true);
 
     $.ajax({
       url: wpSeoAutomater.ajax_url,
@@ -160,39 +182,73 @@ jQuery(document).ready(function ($) {
         schema: finalSchema,
         meta_title: finalMetaTitle,
         meta_desc: finalMetaDesc,
-        image_url: finalImageUrl, // Send it
+        image_url: finalImageUrl,
       },
+      timeout: 60000, // 1 minute timeout
       success: function (response) {
-        $("#btn-publish").text("Publish to WordPress").prop("disabled", false);
+        $btn.html(originalHtml).prop("disabled", false);
 
         if (response.success) {
           // Show success message with link
           $("#publish-message").html(
-            '<span style="color:green;">Published! </span> <a href="' +
+            '<span style="color: var(--success-color); font-weight: 600;">✓ Published Successfully!</span> ' +
+              '<a href="' +
               response.data.post_url +
-              '" target="_blank">View Post</a>'
+              '" target="_blank" rel="noopener" style="color: var(--primary-color); text-decoration: underline;">View Post →</a>',
           );
+
+          // Optional: Clear form after success
+          // setTimeout(function() {
+          //   $("#btn-discard").trigger("click");
+          // }, 3000);
         } else {
-          alert("Publish Error: " + response.data);
+          var errorMsg = response.data || "Unknown publish error";
+          alert("Publish Error: " + errorMsg);
+          console.error("Publish error:", response);
         }
       },
-      error: function () {
-        $("#btn-publish").text("Publish to WordPress").prop("disabled", false);
-        alert("Network Error");
+      error: function (jqXHR, textStatus, errorThrown) {
+        $btn.html(originalHtml).prop("disabled", false);
+
+        var errorMsg =
+          "Network Error. Please check your connection and try again.";
+        if (textStatus === "timeout") {
+          errorMsg = "Publish timed out. Please try again.";
+        }
+        alert(errorMsg);
+        console.error("AJAX error:", textStatus, errorThrown);
       },
     });
   });
 
-  // Discard Button
+  /**
+   * Discard Button Click Handler
+   */
   $("#btn-discard").on("click", function () {
-    if (confirm("Are you sure you want to discard this content?")) {
+    if (
+      confirm(
+        "Are you sure you want to discard this content? This action cannot be undone.",
+      )
+    ) {
       $("#generation-results").addClass("wp-seo-hidden");
       $("#result_content").val("");
       $("#result_title").val("");
       $("#result_slug").val("");
       $("#result_meta_title").val("");
       $("#result_meta_desc").val("");
+      $("#result_image_url").val("");
+      $("#result_image_preview").hide();
+      $("#result_image_credit").text("");
+      $("#result_schema").val("");
       $("#publish-message").html("");
+
+      // Scroll back to top
+      $("html, body").animate(
+        {
+          scrollTop: $(".wp-seo-wrap").offset().top - 50,
+        },
+        300,
+      );
     }
   });
 });

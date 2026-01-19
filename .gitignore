@@ -5,6 +5,14 @@ wp-content/cache/
 *.log
 .htaccess
 
+# Build artifacts
+/build/
+dist/*
+!dist/.gitignore
+*.zip
+*.tar.gz
+*.rar
+
 # Plugin Specific
 tests/*.php
 !tests/index.php
@@ -14,7 +22,24 @@ tests/*.php
 .DS_Store
 node_modules/
 vendor/
+composer.lock
+package-lock.json
 
 # Temporary
 *_test.php
 *verify.php
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# OS files
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.Spotlight-V100
+.Trashes

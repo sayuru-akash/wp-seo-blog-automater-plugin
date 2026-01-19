@@ -1,33 +1,88 @@
 <?php
+/**
+ * Admin Class for WP SEO Blog Automater
+ *
+ * Handles all admin-side functionality including AJAX handlers,
+ * menu registration, settings management, and content generation.
+ *
+ * @package    WP_SEO_Blog_Automater
+ * @author     Codezela Technologies
+ * @since      1.0.0
+ */
 
+// Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+	die( 'Direct access forbidden.' );
+}
+
+/**
+ * Main admin class for the plugin.
+ *
+ * @since 1.0.0
+ */
 class WP_SEO_Automater_Admin {
 
 	/**
 	 * Initialize the class and set its properties.
+	 *
+	 * @since 1.0.0
 	 */
 	public function __construct() {
+		// Constructor intentionally left empty - initialization happens in run()
 	}
 
 	/**
-	 * Run the loader tc execute all of the hooks with WordPress.
+	 * Run the loader to execute all of the hooks with WordPress.
+	 *
+	 * @since 1.0.0
 	 */
 	public function run() {
+		// Admin menu
 		add_action( 'admin_menu', array( $this, 'add_plugin_admin_menu' ) );
+		
+		// Enqueue scripts and styles
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_styles' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 		
+		// AJAX handlers
 		add_action( 'wp_ajax_wp_seo_generate_post', array( $this, 'ajax_generate_post' ) );
 		add_action( 'wp_ajax_wp_seo_publish_post', array( $this, 'ajax_publish_post' ) );
+		
+		// Add settings link on plugins page
+		add_filter( 'plugin_action_links_' . WP_SEO_AUTOMATER_BASENAME, array( $this, 'add_action_links' ) );
 	}
 
 	/**
-	 * AJAX: Generate Content
+	 * Add settings link to plugin actions.
+	 *
+	 * @since 1.0.4
+	 * @param array $links Existing plugin action links.
+	 * @return array Modified plugin action links.
+	 */
+	public function add_action_links( $links ) {
+		$settings_link = sprintf(
+			'<a href="%s">%s</a>',
+			admin_url( 'admin.php?page=wp-seo-automater-settings' ),
+			esc_html__( 'Settings', 'wp-seo-blog-automater' )
+		);
+		array_unshift( $links, $settings_link );
+		return $links;
+	}
+
+	/**
+	 * AJAX Handler: Generate Content.
+	 * 
+	 * Processes content generation requests from the admin interface.
+	 * Validates input, calls Gemini API, extracts metadata, fetches images,
+	 * and returns structured data to the frontend.
+	 *
+	 * @since 1.0.0
 	 */
 	public function ajax_generate_post() {
 		check_ajax_referer( 'wp_seo_automater_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( 'Permission denied.' );
+			wp_send_json_error( __( 'Permission denied.', 'wp-seo-blog-automater' ) );
 		}
 
 		$title = sanitize_text_field( $_POST['title'] );
@@ -243,13 +298,18 @@ class WP_SEO_Automater_Admin {
 	}
 
 	/**
-	 * AJAX: Publish Post
+	 * AJAX Handler: Publish Post.
+	 * 
+	 * Creates a new WordPress post with all generated content,
+	 * metadata, images, and SEO plugin integration.
+	 *
+	 * @since 1.0.0
 	 */
 	public function ajax_publish_post() {
 		check_ajax_referer( 'wp_seo_automater_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'publish_posts' ) ) {
-			wp_send_json_error( 'Permission denied.' );
+			wp_send_json_error( __( 'Permission denied.', 'wp-seo-blog-automater' ) );
 		}
 
 		$title = sanitize_text_field( $_POST['title'] );
@@ -439,7 +499,15 @@ class WP_SEO_Automater_Admin {
 	}
 
 	/**
-	 * Simple Logger
+	 * Log activity to the plugin's log system.
+	 * 
+	 * Stores activity logs in WordPress options for debugging and monitoring.
+	 * Keeps the last 200 log entries.
+	 *
+	 * @since 1.0.0
+	 * @param string $topic   Log topic/category.
+	 * @param string $details Detailed log message.
+	 * @param string $status  Log status (success, error, warning, info).
 	 */
 	public static function log_activity( $topic, $details, $status ) {
 		$logs = get_option( 'wp_seo_automater_logs', array() );
@@ -456,7 +524,14 @@ class WP_SEO_Automater_Admin {
 	}
 
 	/**
-	 * Helper: Simple Markdown to HTML
+	 * Simple Markdown to HTML converter.
+	 * 
+	 * Converts basic Markdown syntax to HTML for content display.
+	 * Handles headers (H1-H3) and bold text.
+	 *
+	 * @since 1.0.0
+	 * @param string $text Markdown text.
+	 * @return string HTML text.
 	 */
 	private function markdown_to_html( $text ) {
 		// Convert Headers
@@ -467,33 +542,35 @@ class WP_SEO_Automater_Admin {
 		// Bold
 		$text = preg_replace( '/\*\*(.*?)\*\*/', '<strong>$1</strong>', $text );
 		
-		// Lists (Simple bullet points)
-		// This is tricky without a full parser, but let's try basic * handling
-		// ... Actually, relying on WP to handle newlines is often better or just asking Gemini for HTML directly.
-		// The prompt asks for "H1 Title", "H2", "H3". Gemini usually outputs Markdown.
-		// Let's stick to core basic headers and bolding.
-		
 		return $text;
 	}
 
 	/**
 	 * Register the administration menu for this plugin into the WordPress Dashboard.
+	 *
+	 * @since 1.0.0
 	 */
 	public function add_plugin_admin_menu() {
+		// Check if custom logo exists, otherwise use dashicon
+		$icon_url = 'dashicons-edit-large';
+		if ( file_exists( WP_SEO_AUTOMATER_PATH . 'images/logo.png' ) ) {
+			$icon_url = WP_SEO_AUTOMATER_URL . 'images/logo.png';
+		}
+		
 		add_menu_page(
-			'BP Automater', 
-			'BP Automater', 
-			'manage_options', 
-			'wp-seo-automater', 
-			array( $this, 'display_generator_page' ), 
-			'dashicons-superhero', 
+			__( 'WP SEO Blog Automater', 'wp-seo-blog-automater' ),
+			__( 'Blog Automater', 'wp-seo-blog-automater' ),
+			'manage_options',
+			'wp-seo-automater',
+			array( $this, 'display_generator_page' ),
+			$icon_url,
 			6
 		);
 
 		add_submenu_page(
 			'wp-seo-automater',
-			'Generator',
-			'Generator',
+			__( 'Generator', 'wp-seo-blog-automater' ),
+			__( 'Generator', 'wp-seo-blog-automater' ),
 			'manage_options',
 			'wp-seo-automater',
 			array( $this, 'display_generator_page' )
@@ -501,8 +578,8 @@ class WP_SEO_Automater_Admin {
 
 		add_submenu_page(
 			'wp-seo-automater',
-			'Settings',
-			'Settings',
+			__( 'Settings', 'wp-seo-blog-automater' ),
+			__( 'Settings', 'wp-seo-blog-automater' ),
 			'manage_options',
 			'wp-seo-automater-settings',
 			array( $this, 'display_settings_page' )
@@ -510,8 +587,8 @@ class WP_SEO_Automater_Admin {
 
 		add_submenu_page(
 			'wp-seo-automater',
-			'Logs',
-			'Logs',
+			__( 'Activity Logs', 'wp-seo-blog-automater' ),
+			__( 'Logs', 'wp-seo-blog-automater' ),
 			'manage_options',
 			'wp-seo-automater-logs',
 			array( $this, 'display_logs_page' )
@@ -520,6 +597,9 @@ class WP_SEO_Automater_Admin {
 
 	/**
 	 * Register the stylesheets for the admin area.
+	 *
+	 * @since 1.0.0
+	 * @param string $hook The current admin page hook.
 	 */
 	public function enqueue_styles( $hook ) {
 		// Only load on our plugin pages
@@ -527,32 +607,40 @@ class WP_SEO_Automater_Admin {
 			return;
 		}
 
-		wp_enqueue_style( 
-			'wp-seo-automater-admin', 
-			WP_SEO_AUTOMATER_URL . 'admin/css/style.css', 
-			array(), 
-			WP_SEO_AUTOMATER_VERSION, 
-			'all' 
+		wp_enqueue_style(
+			'wp-seo-automater-admin',
+			WP_SEO_AUTOMATER_URL . 'admin/css/style.css',
+			array(),
+			WP_SEO_AUTOMATER_VERSION,
+			'all'
 		);
 		
 		// Enqueue Google Fonts (Inter)
-		wp_enqueue_style( 'google-fonts-inter', 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap', false );
+		wp_enqueue_style(
+			'google-fonts-inter',
+			'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap',
+			array(),
+			null
+		);
 	}
 
 	/**
 	 * Register the JavaScript for the admin area.
+	 *
+	 * @since 1.0.0
+	 * @param string $hook The current admin page hook.
 	 */
 	public function enqueue_scripts( $hook ) {
 		if ( strpos( $hook, 'wp-seo-automater' ) === false ) {
 			return;
 		}
 
-		wp_enqueue_script( 
-			'wp-seo-automater-admin-js', 
-			WP_SEO_AUTOMATER_URL . 'admin/js/admin.js', 
-			array( 'jquery' ), 
-			WP_SEO_AUTOMATER_VERSION, 
-			false 
+		wp_enqueue_script(
+			'wp-seo-automater-admin-js',
+			WP_SEO_AUTOMATER_URL . 'admin/js/admin.js',
+			array( 'jquery' ),
+			WP_SEO_AUTOMATER_VERSION,
+			true
 		);
 
 		wp_localize_script( 'wp-seo-automater-admin-js', 'wpSeoAutomater', array(
@@ -563,31 +651,32 @@ class WP_SEO_Automater_Admin {
 
 	/**
 	 * Render the Settings Page.
+	 *
+	 * @since 1.0.0
 	 */
 	public function display_settings_page() {
 		// Reset Prompt
 		if ( isset( $_POST['wp_seo_automater_reset_prompt'] ) && check_admin_referer( 'wp_seo_automater_settings_save' ) ) {
 			delete_option( 'wp_seo_automater_master_prompt' );
 			self::log_activity( 'Settings', 'Master Prompt reset to default.', 'info' );
-			echo '<div class="notice notice-info is-dismissible"><p>Master Prompt reset to default.</p></div>';
+			echo '<div class="notice notice-info is-dismissible"><p>' . esc_html__( 'Master Prompt reset to default.', 'wp-seo-blog-automater' ) . '</p></div>';
 		}
 		// Save settings if posted
 		elseif ( isset( $_POST['wp_seo_automater_save_settings'] ) && check_admin_referer( 'wp_seo_automater_settings_save' ) ) {
 			update_option( 'wp_seo_automater_gemini_key', sanitize_text_field( $_POST['gemini_api_key'] ) );
 			update_option( 'wp_seo_automater_gemini_model', sanitize_text_field( $_POST['gemini_model_id'] ) );
-			update_option( 'wp_seo_automater_unsplash_key', sanitize_text_field( $_POST['unsplash_key'] ) ); // New
-			update_option( 'wp_seo_automater_seo_plugin', sanitize_text_field( $_POST['seo_plugin'] ) ); 
-			// Allow some HTML in prompt (e.g. line breaks) but sanitize heavily
+			update_option( 'wp_seo_automater_unsplash_key', sanitize_text_field( $_POST['unsplash_key'] ) );
+			update_option( 'wp_seo_automater_seo_plugin', sanitize_text_field( $_POST['seo_plugin'] ) );
 			update_option( 'wp_seo_automater_master_prompt', wp_kses_post( $_POST['master_prompt'] ) );
 			
 			self::log_activity( 'Settings', 'Plugin settings updated.', 'success' );
-			echo '<div class="notice notice-success is-dismissible"><p>Settings saved successfully.</p></div>';
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Settings saved successfully.', 'wp-seo-blog-automater' ) . '</p></div>';
 		}
 
 		$api_key = get_option( 'wp_seo_automater_gemini_key', '' );
-		$unsplash_key = get_option( 'wp_seo_automater_unsplash_key', '' ); // New
+		$unsplash_key = get_option( 'wp_seo_automater_unsplash_key', '' );
 		$model_id = get_option( 'wp_seo_automater_gemini_model', 'gemini-pro-latest' );
-		$seo_plugin = get_option( 'wp_seo_automater_seo_plugin', 'auto' ); 
+		$seo_plugin = get_option( 'wp_seo_automater_seo_plugin', 'auto' );
 		$master_prompt = get_option( 'wp_seo_automater_master_prompt', $this->get_default_master_prompt() );
 
 		include_once WP_SEO_AUTOMATER_PATH . 'admin/partials/settings-display.php';
@@ -595,6 +684,8 @@ class WP_SEO_Automater_Admin {
 
 	/**
 	 * Render the Generator Page.
+	 *
+	 * @since 1.0.0
 	 */
 	public function display_generator_page() {
 		include_once WP_SEO_AUTOMATER_PATH . 'admin/partials/generator-display.php';
@@ -602,13 +693,21 @@ class WP_SEO_Automater_Admin {
 
 	/**
 	 * Render the Logs Page.
+	 *
+	 * @since 1.0.0
 	 */
 	public function display_logs_page() {
 		include_once WP_SEO_AUTOMATER_PATH . 'admin/partials/logs-display.php';
 	}
 
 	/**
-	 * Default Master Prompt.
+	 * Get the default Master Prompt.
+	 * 
+	 * Returns the default system prompt for content generation.
+	 * Can be customized by users through the settings page.
+	 *
+	 * @since 1.0.0
+	 * @return string Default master prompt.
 	 */
 	private function get_default_master_prompt() {
 		return "Role & Persona:

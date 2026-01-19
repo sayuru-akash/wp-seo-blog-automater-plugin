@@ -1,11 +1,58 @@
 <?php
+/**
+ * Gemini API Handler Class
+ *
+ * Handles all communication with Google's Gemini AI API.
+ * Manages article generation, continuation handling, and API requests.
+ *
+ * @package    WP_SEO_Blog_Automater
+ * @author     Codezela Technologies
+ * @since      1.0.0
+ */
 
+// Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+	die( 'Direct access forbidden.' );
+}
+
+/**
+ * Handles Gemini API interactions.
+ *
+ * @since 1.0.0
+ */
 class Gemini_API_Handler {
 
+	/**
+	 * Gemini API Key.
+	 *
+	 * @since 1.0.0
+	 * @var string
+	 */
 	private $api_key;
+
+	/**
+	 * Gemini API base URL.
+	 *
+	 * @since 1.0.0
+	 * @var string
+	 */
 	private $base_url = 'https://generativelanguage.googleapis.com/v1beta/models/';
+
+	/**
+	 * Gemini model ID to use.
+	 *
+	 * @since 1.0.0
+	 * @var string
+	 */
 	private $model_id;
 
+	/**
+	 * Constructor.
+	 *
+	 * @since 1.0.0
+	 * @param string|null $api_key  Optional. API key to use.
+	 * @param string|null $model_id Optional. Model ID to use.
+	 */
 	public function __construct( $api_key = null, $model_id = null ) {
 		$this->api_key = $api_key ? $api_key : get_option( 'wp_seo_automater_gemini_key', '' );
 		$this->model_id = $model_id ? $model_id : get_option( 'wp_seo_automater_gemini_model', 'gemini-pro-latest' );
@@ -13,11 +60,20 @@ class Gemini_API_Handler {
 
 
 	/**
-	 * Main function to generate content.
+	 * Main function to generate article content.
+	 *
+	 * Handles the full article generation flow including initial request,
+	 * continuation handling for long content, and response processing.
+	 *
+	 * @since 1.0.0
+	 * @param string $title         Article title/topic.
+	 * @param string $keywords      Target keywords.
+	 * @param string $master_prompt The system/master prompt with instructions.
+	 * @return string|WP_Error Generated article content or WP_Error on failure.
 	 */
 	public function generate_article( $title, $keywords, $master_prompt ) {
 		if ( empty( $this->api_key ) ) {
-			return new WP_Error( 'missing_key', 'Gemini API Key is missing.' );
+			return new WP_Error( 'missing_key', __( 'Gemini API Key is missing. Please configure it in settings.', 'wp-seo-blog-automater' ) );
 		}
 
 		$full_prompt = $this->construct_prompt( $title, $keywords, $master_prompt );
@@ -76,7 +132,15 @@ class Gemini_API_Handler {
 	}
 
 	/**
-	 * Helper to build the prompt.
+	 * Helper to build the full prompt.
+	 * 
+	 * Combines master prompt with user-specific task instructions.
+	 *
+	 * @since 1.0.0
+	 * @param string $title         Article title/topic.
+	 * @param string $keywords      Target keywords.
+	 * @param string $master_prompt The system/master prompt.
+	 * @return string Complete prompt for AI.
 	 */
 	private function construct_prompt( $title, $keywords, $master_prompt ) {
 		$user_instruction = "\n\n=== TASK ===\n";
@@ -88,7 +152,15 @@ class Gemini_API_Handler {
 	}
 
 	/**
-	 * Send Request to Gemini.
+	 * Send Request to Gemini API.
+	 * 
+	 * Makes HTTP POST request to Google's Gemini API.
+	 * Supports both initial requests and continuation with chat history.
+	 *
+	 * @since 1.0.0
+	 * @param string|null $prompt_text Initial prompt text (for first request).
+	 * @param array|null  $history     Chat history for continuation requests.
+	 * @return array|WP_Error API response data or error.
 	 */
 	private function make_api_request( $prompt_text = null, $history = null ) {
 		$url = $this->base_url . $this->model_id . ':generateContent?key=' . $this->api_key;
@@ -127,12 +199,21 @@ class Gemini_API_Handler {
 		$code = wp_remote_retrieve_response_code( $response );
 		if ( $code !== 200 ) {
 			$body_err = wp_remote_retrieve_body( $response );
-			return new WP_Error( 'api_error', "Gemini API Error ($code): $body_err" );
+			return new WP_Error( 'api_error', sprintf( __( 'Gemini API Error (%d): %s', 'wp-seo-blog-automater' ), $code, $body_err ) );
 		}
 
 		return json_decode( wp_remote_retrieve_body( $response ), true );
 	}
 
+	/**
+	 * Extract text content from API response.
+	 * 
+	 * Parses the Gemini API response structure and extracts the generated text.
+	 *
+	 * @since 1.0.0
+	 * @param array $response_data Decoded API response.
+	 * @return string Extracted text content.
+	 */
 	private function extract_text_from_response( $response_data ) {
 		if ( isset( $response_data['candidates'][0]['content']['parts'][0]['text'] ) ) {
 			return $response_data['candidates'][0]['content']['parts'][0]['text'];
