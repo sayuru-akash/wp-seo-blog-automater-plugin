@@ -551,11 +551,8 @@ class WP_SEO_Automater_Admin {
 	 * @since 1.0.0
 	 */
 	public function add_plugin_admin_menu() {
-		// Check if custom logo exists, otherwise use dashicon
-		$icon_url = 'dashicons-edit-large';
-		if ( file_exists( WP_SEO_AUTOMATER_PATH . 'images/logo.png' ) ) {
-			$icon_url = WP_SEO_AUTOMATER_URL . 'images/logo.png';
-		}
+		// Use a simple Dashicon for the admin menu icon (no logo image)
+		$icon_url = 'dashicons-chart-area';
 		
 		add_menu_page(
 			__( 'WP SEO Blog Automater', 'wp-seo-blog-automater' ),
