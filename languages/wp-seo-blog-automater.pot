@@ -1,10 +1,10 @@
-# Copyright (C) 2025 Codezela Technologies
+# Copyright (C) 2026 Codezela Technologies
 # This file is distributed under the GPL v2 or later.
 msgid ""
 msgstr ""
 "Project-Id-Version: WP SEO Blog Automater 1.0.4\n"
 "Report-Msgid-Bugs-To: support@codezela.com\n"
-"POT-Creation-Date: 2025-01-20 00:00+0000\n"
+"POT-Creation-Date: 2026-01-20 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Codezela Technologies <support@codezela.com>\n"
@@ -16,12 +16,278 @@ msgstr ""
 "X-Generator: WP SEO Blog Automater\n"
 "X-Domain: wp-seo-blog-automater\n"
 
-# Note: This is a template POT file.
-# To create translations:
-# 1. Copy this file to wp-seo-blog-automater-{locale}.po (e.g., wp-seo-blog-automater-es_ES.po)
-# 2. Translate the strings
-# 3. Compile to .mo file using Poedit or wp i18n make-mo
-# 4. Place .mo file in this languages/ directory
+# Admin Menu Items
+#: includes/class-wp-seo-automater-admin.php:561
+msgid "WP SEO Blog Automater"
+msgstr ""
 
-# All translatable strings are defined in the plugin source code
-# using __(), _e(), esc_html__(), esc_attr__(), etc.
+#: includes/class-wp-seo-automater-admin.php:562
+msgid "Blog Automater"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:572
+#: includes/class-wp-seo-automater-admin.php:573
+msgid "Generator"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:581
+#: includes/class-wp-seo-automater-admin.php:582
+#: includes/class-wp-seo-automater-admin.php:66
+msgid "Settings"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:590
+msgid "Activity Logs"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:591
+msgid "Logs"
+msgstr ""
+
+# Page Titles with Context
+#: admin/partials/generator-display.php:16
+msgctxt "Generator page title"
+msgid "Article Generator"
+msgstr ""
+
+#: admin/partials/settings-display.php:16
+msgctxt "Settings page title"
+msgid "Settings"
+msgstr ""
+
+#: admin/partials/logs-display.php:16
+msgctxt "Logs page title"
+msgid "Activity Logs"
+msgstr ""
+
+# Page Subtitles
+#: admin/partials/generator-display.php:17
+msgid "Create SEO-optimized content powered by AI"
+msgstr ""
+
+#: admin/partials/settings-display.php:17
+msgid "Configure your AI content generation settings"
+msgstr ""
+
+#: admin/partials/logs-display.php:17
+msgid "Monitor all content generation activity"
+msgstr ""
+
+# Generator Page
+#: admin/partials/generator-display.php:27
+msgid "New Article Details"
+msgstr ""
+
+#: admin/partials/generator-display.php:30
+msgid "Article Concept / Working Title"
+msgstr ""
+
+#: admin/partials/generator-display.php:37
+msgid "e.g. Benefits of Titanium Frames for Scottsdale Golfers"
+msgstr ""
+
+#: admin/partials/generator-display.php:44
+msgid "Target Keywords (Comma separated)"
+msgstr ""
+
+#: admin/partials/generator-display.php:51
+msgid "e.g. luxury eyewear scottsdale, titanium glasses, lightweight frames"
+msgstr ""
+
+#: admin/partials/generator-display.php:60
+msgid "Generate Article"
+msgstr ""
+
+#: admin/partials/generator-display.php:63
+msgid "This may take 30-60 seconds. Please wait..."
+msgstr ""
+
+#: admin/partials/generator-display.php:71
+msgid "Generated Content Preview"
+msgstr ""
+
+#: admin/partials/generator-display.php:74
+msgid "Post Title (H1)"
+msgstr ""
+
+#: admin/partials/generator-display.php:79
+msgid "SEO Meta Title"
+msgstr ""
+
+#: admin/partials/generator-display.php:84
+msgid "Meta Description"
+msgstr ""
+
+#: admin/partials/generator-display.php:90
+msgid "Featured Image (Unsplash)"
+msgstr ""
+
+#: admin/partials/generator-display.php:100
+msgid "URL Slug"
+msgstr ""
+
+#: admin/partials/generator-display.php:103
+msgid "Auto-generated. Edit if needed."
+msgstr ""
+
+#: admin/partials/generator-display.php:110
+msgid "Content (HTML)"
+msgstr ""
+
+#: admin/partials/generator-display.php:117
+msgid "Publish to WordPress"
+msgstr ""
+
+#: admin/partials/generator-display.php:121
+msgid "Discard"
+msgstr ""
+
+# Settings Page
+#: admin/partials/settings-display.php:30
+msgid "API Configuration"
+msgstr ""
+
+#: admin/partials/settings-display.php:33
+msgid "Gemini API Key"
+msgstr ""
+
+#: admin/partials/settings-display.php:42
+msgid "Enter your Gemini API Key here..."
+msgstr ""
+
+#: admin/partials/settings-display.php:49
+msgid "Get your API key from %s"
+msgstr ""
+
+#: admin/partials/settings-display.php:50
+msgid "Google AI Studio"
+msgstr ""
+
+#: admin/partials/settings-display.php:58
+msgid "Gemini Model ID"
+msgstr ""
+
+#: admin/partials/settings-display.php:69
+msgid "Model options: gemini-pro-latest, gemini-1.5-pro, gemini-2.0-flash-exp"
+msgstr ""
+
+#: admin/partials/settings-display.php:75
+msgid "Unsplash Access Key"
+msgstr ""
+
+#: admin/partials/settings-display.php:83
+msgid "Enter Unsplash Access Key..."
+msgstr ""
+
+#: admin/partials/settings-display.php:89
+msgid "Required for automatic image fetching. Get it from %s"
+msgstr ""
+
+#: admin/partials/settings-display.php:90
+msgid "Unsplash Developers"
+msgstr ""
+
+#: admin/partials/settings-display.php:98
+msgid "SEO Plugin Integration"
+msgstr ""
+
+#: admin/partials/settings-display.php:101
+msgid "Active SEO Plugin"
+msgstr ""
+
+#: admin/partials/settings-display.php:105
+msgid "Auto Detect (Recommended)"
+msgstr ""
+
+#: admin/partials/settings-display.php:108
+msgid "Yoast SEO"
+msgstr ""
+
+#: admin/partials/settings-display.php:111
+msgid "Rank Math"
+msgstr ""
+
+#: admin/partials/settings-display.php:115
+msgid "Select which SEO plugin to populate metadata for. Auto Detect will check your active plugins automatically."
+msgstr ""
+
+#: admin/partials/settings-display.php:121
+msgid "Master Prompt Configuration"
+msgstr ""
+
+#: admin/partials/settings-display.php:124
+msgid "Master System Prompt"
+msgstr ""
+
+#: admin/partials/settings-display.php:133
+msgid "This prompt defines the AI persona, voice, and content rules. Customize carefully to match your brand requirements."
+msgstr ""
+
+#: admin/partials/settings-display.php:141
+msgid "Save Settings"
+msgstr ""
+
+#: admin/partials/settings-display.php:148
+msgid "Are you sure? This will overwrite your current Master Prompt with the default one."
+msgstr ""
+
+#: admin/partials/settings-display.php:151
+msgid "Reset to Default Prompt"
+msgstr ""
+
+# Logs Page
+#: admin/partials/logs-display.php:31
+msgid "Date"
+msgstr ""
+
+#: admin/partials/logs-display.php:32
+msgid "Topic"
+msgstr ""
+
+#: admin/partials/logs-display.php:33
+msgid "Status"
+msgstr ""
+
+#: admin/partials/logs-display.php:34
+msgid "Details"
+msgstr ""
+
+#: admin/partials/logs-display.php:41
+msgid "No logs found yet. Activity will appear here after generating content."
+msgstr ""
+
+# Company Branding
+#: admin/partials/generator-display.php:21
+#: admin/partials/settings-display.php:21
+#: admin/partials/logs-display.php:21
+msgid "Codezela Technologies"
+msgstr ""
+
+#: admin/partials/generator-display.php:133
+#: admin/partials/settings-display.php:161
+#: admin/partials/logs-display.php:78
+msgid "Powered by %s"
+msgstr ""
+
+# Admin Notices
+#: includes/class-wp-seo-automater-admin.php:662
+msgid "Master Prompt reset to default."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:673
+msgid "Settings saved successfully."
+msgstr ""
+
+# Error Messages
+#: includes/class-wp-seo-automater-admin.php:85
+#: includes/class-wp-seo-automater-admin.php:312
+msgid "Permission denied."
+msgstr ""
+
+#: includes/class-gemini-api-handler.php:76
+msgid "Gemini API Key is missing. Please configure it in settings."
+msgstr ""
+
+#: includes/class-gemini-api-handler.php:202
+msgid "Gemini API Error (%d): %s"
+msgstr ""
