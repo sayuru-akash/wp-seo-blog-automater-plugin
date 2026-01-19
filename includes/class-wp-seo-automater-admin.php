@@ -539,7 +539,7 @@ class WP_SEO_Automater_Admin {
 
 			// Compare versions
 			$current_version = WP_SEO_AUTOMATER_VERSION;
-			$latest_version = isset( $release['tag_name'] ) ? ltrim( $release['tag_name'], 'v' ) : '';
+			$latest_version = isset( $release->tag_name ) ? ltrim( $release->tag_name, 'v' ) : '';
 			
 			if ( empty( $latest_version ) ) {
 				wp_send_json_error( array(

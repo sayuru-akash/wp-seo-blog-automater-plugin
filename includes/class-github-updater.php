@@ -87,9 +87,9 @@ class WP_SEO_Automater_GitHub_Updater {
 	 * Get latest release information from GitHub.
 	 *
 	 * @since 1.0.4
-	 * @return object|false Release data or false on failure.
+	 * @return object|WP_Error Release data or WP_Error on failure.
 	 */
-	private function get_github_release() {
+	public function get_github_release() {
 		// Check cache first
 		$cached = get_transient( $this->cache_key );
 		if ( false !== $cached ) {
@@ -108,14 +108,15 @@ class WP_SEO_Automater_GitHub_Updater {
 		);
 
 		if ( is_wp_error( $response ) ) {
-			return false;
+			return $response;
 		}
 
 		$body = wp_remote_retrieve_body( $response );
 		$data = json_decode( $body );
 
 		if ( empty( $data ) || isset( $data->message ) ) {
-			return false;
+			$error_msg = isset( $data->message ) ? $data->message : 'Invalid response from GitHub';
+			return new WP_Error( 'github_error', $error_msg );
 		}
 
 		// Cache for 12 hours
@@ -138,7 +139,7 @@ class WP_SEO_Automater_GitHub_Updater {
 
 		$release = $this->get_github_release();
 
-		if ( ! $release ) {
+		if ( ! $release || is_wp_error( $release ) ) {
 			return $transient;
 		}
 

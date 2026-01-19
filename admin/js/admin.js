@@ -285,6 +285,7 @@ jQuery(document).ready(function ($) {
         nonce: wpSeoAutomater.nonce,
       },
       success: function (response) {
+        console.log("AJAX Response:", response);
         $btn.prop("disabled", false);
         $btn.html(originalHtml);
 
@@ -356,7 +357,13 @@ jQuery(document).ready(function ($) {
             );
         }
       },
-      error: function () {
+      error: function (xhr, status, error) {
+        console.error("AJAX Error:", {
+          xhr: xhr,
+          status: status,
+          error: error,
+          responseText: xhr.responseText,
+        });
         $btn.prop("disabled", false);
         $btn.html(originalHtml);
 
@@ -365,7 +372,7 @@ jQuery(document).ready(function ($) {
           .addClass("wp-seo-notice-error")
           .html(
             "<p><strong>Error:</strong> " +
-              "Network error. Please try again." +
+              "Network error. Please try again. Check browser console for details." +
               "</p>",
           );
       },
