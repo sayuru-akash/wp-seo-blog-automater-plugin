@@ -264,8 +264,7 @@ jQuery(document).ready(function ($) {
     // Show loading state
     $btn.prop("disabled", true);
     $btn.html(
-      '<span class="dashicons dashicons-update spin"></span> ' +
-        "Checking...",
+      '<span class="dashicons dashicons-update spin"></span> ' + "Checking...",
     );
 
     // Hide existing notices
@@ -302,7 +301,9 @@ jQuery(document).ready(function ($) {
               .removeClass("wp-seo-notice-info wp-seo-notice-success")
               .addClass("wp-seo-notice-warning")
               .html(
-                "<p><strong>Update Available!</strong> " + data.message + "</p>",
+                "<p><strong>Update Available!</strong> " +
+                  data.message +
+                  "</p>",
               );
 
             // Update the status notice
@@ -371,4 +372,3 @@ jQuery(document).ready(function ($) {
     });
   });
 });
-
