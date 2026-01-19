@@ -357,7 +357,11 @@ body {
 }
 
 .wp-seo-btn-secondary::before {
-  background: linear-gradient(135deg, var(--primary-light), rgba(99, 102, 241, 0.05));
+  background: linear-gradient(
+    135deg,
+    var(--primary-light),
+    rgba(99, 102, 241, 0.05)
+  );
 }
 
 .wp-seo-btn-secondary:hover:not(:disabled) {

@@ -45,6 +45,7 @@ Minor version bump with critical bug fixes and visual improvements.
 ### Why This Version Bump
 
 Moving to 1.1.0 (minor version) because:
+
 - Contains important bug fixes that affect core functionality
 - Includes backward-compatible improvements
 - Provides better testing and debugging capabilities
