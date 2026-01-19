@@ -1,6 +1,6 @@
 # WP SEO Blog Automater
 
-[![Version](https://img.shields.io/badge/version-1.0.4-blue.svg)](https://github.com/codezela/wp-seo-blog-automater)
+[![Version](https://img.shields.io/badge/version-1.0.8-blue.svg)](https://github.com/codezela/wp-seo-blog-automater)
 [![WordPress](https://img.shields.io/badge/WordPress-5.8+-green.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.4+-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/license-GPL--2.0+-red.svg)](LICENSE)

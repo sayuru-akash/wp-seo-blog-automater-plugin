@@ -251,4 +251,124 @@ jQuery(document).ready(function ($) {
       );
     }
   });
+
+  /**
+   * Check for Updates Now Button Handler
+   */
+  $("#check-updates-now").on("click", function (e) {
+    e.preventDefault();
+
+    var $btn = $(this);
+    var originalHtml = $btn.html();
+
+    // Show loading state
+    $btn.prop("disabled", true);
+    $btn.html(
+      '<span class="dashicons dashicons-update spin"></span> ' +
+        "Checking...",
+    );
+
+    // Hide existing notices
+    $("#update-status-notice").hide();
+
+    // Show checking message
+    $("#update-check-message")
+      .removeClass("wp-seo-notice-success wp-seo-notice-error")
+      .addClass("wp-seo-notice wp-seo-notice-info")
+      .html("<p>" + "Checking for updates from GitHub..." + "</p>")
+      .show();
+
+    $.ajax({
+      url: wpSeoAutomater.ajax_url,
+      type: "POST",
+      data: {
+        action: "check_updates_now",
+        nonce: wpSeoAutomater.nonce,
+      },
+      success: function (response) {
+        $btn.prop("disabled", false);
+        $btn.html(originalHtml);
+
+        if (response.success) {
+          var data = response.data;
+
+          // Update version display
+          $("#current-version-text").text(data.current_version);
+          $("#latest-version-text").text(data.latest_version);
+
+          // Show success/update message
+          if (data.update_available) {
+            $("#update-check-message")
+              .removeClass("wp-seo-notice-info wp-seo-notice-success")
+              .addClass("wp-seo-notice-warning")
+              .html(
+                "<p><strong>Update Available!</strong> " + data.message + "</p>",
+              );
+
+            // Update the status notice
+            $("#update-status-notice")
+              .html(
+                '<div class="wp-seo-notice wp-seo-notice-warning">' +
+                  "<p><strong>Update Available!</strong> " +
+                  "Version " +
+                  data.latest_version +
+                  ' is available. Go to <a href="' +
+                  wpSeoAutomater.admin_url +
+                  'plugins.php">Plugins page</a> to update.' +
+                  "</p>" +
+                  "</div>",
+              )
+              .show();
+          } else {
+            $("#update-check-message")
+              .removeClass("wp-seo-notice-info wp-seo-notice-warning")
+              .addClass("wp-seo-notice-success")
+              .html("<p><strong>Up to Date!</strong> " + data.message + "</p>");
+
+            // Update the status notice
+            $("#update-status-notice")
+              .html(
+                '<div class="wp-seo-notice wp-seo-notice-success">' +
+                  "<p><strong>Up to Date</strong> " +
+                  "You are running the latest version." +
+                  "</p>" +
+                  "</div>",
+              )
+              .show();
+          }
+
+          // Hide the check message after 5 seconds if no update
+          if (!data.update_available) {
+            setTimeout(function () {
+              $("#update-check-message").fadeOut();
+            }, 5000);
+          }
+        } else {
+          // Error
+          $("#update-check-message")
+            .removeClass("wp-seo-notice-info wp-seo-notice-success")
+            .addClass("wp-seo-notice-error")
+            .html(
+              "<p><strong>Error:</strong> " +
+                (response.data.message || "Failed to check for updates.") +
+                "</p>",
+            );
+        }
+      },
+      error: function () {
+        $btn.prop("disabled", false);
+        $btn.html(originalHtml);
+
+        $("#update-check-message")
+          .removeClass("wp-seo-notice-info wp-seo-notice-success")
+          .addClass("wp-seo-notice-error")
+          .html(
+            "<p><strong>Error:</strong> " +
+              "Network error. Please try again." +
+              "</p>",
+          );
+      },
+    });
+  });
 });
+

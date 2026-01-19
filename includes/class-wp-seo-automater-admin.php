@@ -47,6 +47,7 @@ class WP_SEO_Automater_Admin {
 		// AJAX handlers
 		add_action( 'wp_ajax_wp_seo_generate_post', array( $this, 'ajax_generate_post' ) );
 		add_action( 'wp_ajax_wp_seo_publish_post', array( $this, 'ajax_publish_post' ) );
+		add_action( 'wp_ajax_check_updates_now', array( $this, 'ajax_check_updates_now' ) );
 		
 		// Add settings link on plugins page
 		add_filter( 'plugin_action_links_' . WP_SEO_AUTOMATER_BASENAME, array( $this, 'add_action_links' ) );
@@ -499,6 +500,85 @@ class WP_SEO_Automater_Admin {
 	}
 
 	/**
+	 * AJAX handler to check for plugin updates immediately.
+	 * Clears the GitHub release cache and forces a fresh check.
+	 *
+	 * @since 1.0.8
+	 */
+	public function ajax_check_updates_now() {
+		// Verify nonce
+		check_ajax_referer( 'wp_seo_automater_nonce', 'nonce' );
+
+		// Check permissions
+		if ( ! current_user_can( 'update_plugins' ) ) {
+			wp_send_json_error( array(
+				'message' => __( 'You do not have permission to check for updates.', 'wp-seo-blog-automater' )
+			) );
+		}
+
+		// Clear the cached GitHub release data
+		delete_transient( 'wp_seo_automater_github_release' );
+		
+		// Also clear WordPress update cache
+		delete_site_transient( 'update_plugins' );
+
+		// Get fresh release data
+		if ( class_exists( 'WP_SEO_Automater_GitHub_Updater' ) ) {
+			$updater = new WP_SEO_Automater_GitHub_Updater( WP_SEO_AUTOMATER_PLUGIN_FILE );
+			$release = $updater->get_github_release();
+			
+			if ( is_wp_error( $release ) ) {
+				self::log_activity( 'Update Check', 'Failed to fetch update from GitHub: ' . $release->get_error_message(), 'error' );
+				wp_send_json_error( array(
+					'message' => sprintf(
+						__( 'Failed to check for updates: %s', 'wp-seo-blog-automater' ),
+						$release->get_error_message()
+					)
+				) );
+			}
+
+			// Compare versions
+			$current_version = WP_SEO_AUTOMATER_VERSION;
+			$latest_version = isset( $release['tag_name'] ) ? ltrim( $release['tag_name'], 'v' ) : '';
+			
+			if ( empty( $latest_version ) ) {
+				wp_send_json_error( array(
+					'message' => __( 'Could not determine latest version from GitHub.', 'wp-seo-blog-automater' )
+				) );
+			}
+
+			$update_available = version_compare( $latest_version, $current_version, '>' );
+			
+			self::log_activity( 
+				'Update Check', 
+				sprintf( 
+					'Manual update check completed. Current: %s, Latest: %s, Update Available: %s',
+					$current_version,
+					$latest_version,
+					$update_available ? 'Yes' : 'No'
+				), 
+				$update_available ? 'warning' : 'info' 
+			);
+
+			wp_send_json_success( array(
+				'current_version' => $current_version,
+				'latest_version' => $latest_version,
+				'update_available' => $update_available,
+				'message' => $update_available 
+					? sprintf(
+						__( 'Update available! Version %s is ready to install. Go to the Plugins page to update.', 'wp-seo-blog-automater' ),
+						$latest_version
+					)
+					: __( 'You are running the latest version!', 'wp-seo-blog-automater' )
+			) );
+		} else {
+			wp_send_json_error( array(
+				'message' => __( 'GitHub Updater class not found.', 'wp-seo-blog-automater' )
+			) );
+		}
+	}
+
+	/**
 	 * Log activity to the plugin's log system.
 	 * 
 	 * Stores activity logs in WordPress options for debugging and monitoring.
@@ -652,6 +732,7 @@ class WP_SEO_Automater_Admin {
 		wp_localize_script( 'wp-seo-automater-admin-js', 'wpSeoAutomater', array(
 			'ajax_url' => admin_url( 'admin-ajax.php' ),
 			'nonce'    => wp_create_nonce( 'wp_seo_automater_nonce' ),
+			'admin_url' => admin_url(),
 		));
 	}
 

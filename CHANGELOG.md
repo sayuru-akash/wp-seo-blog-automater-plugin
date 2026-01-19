@@ -5,6 +5,56 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.8] - 2026-01-20
+
+### ⚡ Instant Update Check Release
+
+Added immediate update checking functionality for better user control and transparency.
+
+### Added
+
+- ✨ **Instant Update Check**: "Check for Updates Now" button on System Info page
+  - Immediate GitHub API check without waiting for 12-hour automatic cycle
+  - Clear transient cache and fetch fresh release data
+  - Real-time version comparison and display update
+  - Loading state with spinning icon for visual feedback
+  - Success/error messages with auto-fade after 5 seconds
+  - Updates both display and WordPress update system
+- 🔄 **Dynamic Version Display**: Version numbers update in real-time after check
+- 📝 **Activity Logging**: All manual update checks logged for tracking
+- 🎨 **Enhanced UI**: Animated dashicons during loading state
+
+### Changed
+
+- 🔧 System Info page now has interactive update checking
+- 🎯 Update status notices refresh dynamically without page reload
+- 💫 Better user feedback with immediate visual response
+
+### Technical
+
+- New AJAX handler: `ajax_check_updates_now()` in admin class
+- Clears both `wp_seo_automater_github_release` and `update_plugins` transients
+- JavaScript handler with error handling and timeout protection
+- Added `admin_url` to localized script data for proper URL construction
+- CSS animation for spinning dashicons
+- Permission check: requires `update_plugins` capability
+- Network error handling with user-friendly messages
+
+### Why This Matters
+
+Users wanted immediate control over update checking instead of waiting up to 12 hours for the automatic system. This gives power users the ability to:
+
+- Check for updates on-demand after seeing a GitHub release notification
+- Verify update availability immediately after releasing a new version
+- Confirm the update system is working correctly
+- Get instant feedback without waiting for WordPress cron
+
+### Security
+
+- Nonce verification on AJAX requests
+- Capability check for `update_plugins` permission
+- Sanitized output and escaped data throughout
+
 ## [1.0.7] - 2026-01-20
 
 ### 📋 System Info Page Release
@@ -28,6 +78,7 @@ Added dedicated System Info page for better update visibility and system monitor
 ### Why This Matters
 
 Users were confused about where to find updates since the GitHub updater integrates with WordPress's native system (not a separate page in the plugin menu). The new System Info page provides clear visibility into:
+
 - Whether an update is available
 - Where to go to update (Dashboard → Updates or Plugins page)
 - How the automatic update system works

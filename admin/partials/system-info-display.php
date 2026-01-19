@@ -64,50 +64,63 @@ $checks = array(
     </div>
 
     <!-- Version Info -->
-    <div class="wp-seo-card">
-        <h2><?php esc_html_e( 'Version Information', 'wp-seo-blog-automater' ); ?></h2>
+    <div class="wp-seo-card" id="version-info-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="margin: 0;"><?php esc_html_e( 'Version Information', 'wp-seo-blog-automater' ); ?></h2>
+            <button type="button" id="check-updates-now" class="wp-seo-btn wp-seo-btn-secondary">
+                <span class="dashicons dashicons-update" style="margin-right: 0.5rem;"></span>
+                <?php esc_html_e( 'Check for Updates Now', 'wp-seo-blog-automater' ); ?>
+            </button>
+        </div>
         
-        <div class="wp-seo-info-grid">
+        <div id="update-check-message"></div>
+        
+        <div class="wp-seo-info-grid" id="version-display">
             <div class="wp-seo-info-item">
                 <span class="wp-seo-info-label"><?php esc_html_e( 'Current Version', 'wp-seo-blog-automater' ); ?></span>
                 <span class="wp-seo-info-value">
-                    <strong><?php echo esc_html( $current_version ); ?></strong>
+                    <strong id="current-version-text"><?php echo esc_html( $current_version ); ?></strong>
                 </span>
             </div>
             
             <div class="wp-seo-info-item">
                 <span class="wp-seo-info-label"><?php esc_html_e( 'Latest Version', 'wp-seo-blog-automater' ); ?></span>
                 <span class="wp-seo-info-value">
-                    <strong><?php echo esc_html( $latest_version ); ?></strong>
+                    <strong id="latest-version-text"><?php echo esc_html( $latest_version ); ?></strong>
                 </span>
             </div>
         </div>
         
-        <?php if ( $update_available ) : ?>
-            <div class="wp-seo-notice wp-seo-notice-warning">
-                <p>
-                    <strong><?php esc_html_e( 'Update Available!', 'wp-seo-blog-automater' ); ?></strong>
-                    <?php 
-                    printf(
-                        esc_html__( 'Version %s is available. Go to %s to update.', 'wp-seo-blog-automater' ),
-                        esc_html( $latest_version ),
-                        '<a href="' . esc_url( admin_url( 'plugins.php' ) ) . '">' . esc_html__( 'Plugins page', 'wp-seo-blog-automater' ) . '</a>'
-                    );
-                    ?>
-                </p>
-            </div>
-        <?php else : ?>
-            <div class="wp-seo-notice wp-seo-notice-success">
-                <p>
-                    <strong><?php esc_html_e( 'Up to Date', 'wp-seo-blog-automater' ); ?></strong>
-                    <?php esc_html_e( 'You are running the latest version.', 'wp-seo-blog-automater' ); ?>
-                </p>
-            </div>
-        <?php endif; ?>
+        <div id="update-status-notice">
+            <?php if ( $update_available ) : ?>
+                <div class="wp-seo-notice wp-seo-notice-warning">
+                    <p>
+                        <strong><?php esc_html_e( 'Update Available!', 'wp-seo-blog-automater' ); ?></strong>
+                        <?php 
+                        printf(
+                            esc_html__( 'Version %s is available. Go to %s to update.', 'wp-seo-blog-automater' ),
+                            esc_html( $latest_version ),
+                            '<a href="' . esc_url( admin_url( 'plugins.php' ) ) . '">' . esc_html__( 'Plugins page', 'wp-seo-blog-automater' ) . '</a>'
+                        );
+                        ?>
+                    </p>
+                </div>
+            <?php else : ?>
+                <div class="wp-seo-notice wp-seo-notice-success">
+                    <p>
+                        <strong><?php esc_html_e( 'Up to Date', 'wp-seo-blog-automater' ); ?></strong>
+                        <?php esc_html_e( 'You are running the latest version.', 'wp-seo-blog-automater' ); ?>
+                    </p>
+                </div>
+            <?php endif; ?>
+        </div>
         
         <div class="wp-seo-actions" style="margin-top: 1.5rem;">
+            <a href="<?php echo esc_url( admin_url( 'plugins.php' ) ); ?>" class="wp-seo-btn wp-seo-btn-primary">
+                <?php esc_html_e( 'Go to Plugins Page', 'wp-seo-blog-automater' ); ?>
+            </a>
             <a href="<?php echo esc_url( admin_url( 'update-core.php' ) ); ?>" class="wp-seo-btn wp-seo-btn-secondary">
-                <?php esc_html_e( 'Check for Updates', 'wp-seo-blog-automater' ); ?>
+                <?php esc_html_e( 'WordPress Updates', 'wp-seo-blog-automater' ); ?>
             </a>
             <a href="https://github.com/sayuru-akash/wp-seo-blog-automater-plugin/releases" target="_blank" rel="noopener" class="wp-seo-btn wp-seo-btn-secondary">
                 <?php esc_html_e( 'View Releases on GitHub', 'wp-seo-blog-automater' ); ?>
@@ -204,12 +217,10 @@ $checks = array(
 
     <div class="wp-seo-footer">
         <p>
-            <?php 
-            printf(
-                esc_html__( 'Powered by %s', 'wp-seo-blog-automater' ),
-                '<a href="https://codezela.com" target="_blank" rel="noopener"><strong>' . esc_html__( 'Codezela Technologies', 'wp-seo-blog-automater' ) . '</strong></a>'
-            );
-            ?>
+            <?php esc_html_e( 'Powered by', 'wp-seo-blog-automater' ); ?>
+            <a href="https://codezela.com" target="_blank" rel="noopener">
+                <strong><?php esc_html_e( 'Codezela Technologies', 'wp-seo-blog-automater' ); ?></strong>
+            </a>
         </p>
     </div>
 </div>

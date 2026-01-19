@@ -11,7 +11,7 @@ REM @version    1.0.4
 setlocal EnableDelayedExpansion
 
 set PLUGIN_SLUG=wp-seo-blog-automater
-set VERSION=1.0.7
+set VERSION=1.0.8
 set BUILD_DIR=build
 set DIST_DIR=dist
 set ZIP_NAME=%PLUGIN_SLUG%-v%VERSION%.zip
