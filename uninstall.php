@@ -29,20 +29,21 @@ delete_option( 'wp_seo_automater_logs' );
 if ( is_multisite() ) {
 	global $wpdb;
 	$blog_ids = $wpdb->get_col( "SELECT blog_id FROM $wpdb->blogs" );
-	$original_blog_id = get_current_blog_id();
-	
+
+	$options_to_delete = array(
+		'wp_seo_automater_gemini_key',
+		'wp_seo_automater_gemini_model',
+		'wp_seo_automater_unsplash_key',
+		'wp_seo_automater_seo_plugin',
+		'wp_seo_automater_master_prompt',
+		'wp_seo_automater_logs',
+	);
+
 	foreach ( $blog_ids as $blog_id ) {
-		switch_to_blog( $blog_id );
-		
-		delete_option( 'wp_seo_automater_gemini_key' );
-		delete_option( 'wp_seo_automater_gemini_model' );
-		delete_option( 'wp_seo_automater_unsplash_key' );
-		delete_option( 'wp_seo_automater_seo_plugin' );
-		delete_option( 'wp_seo_automater_master_prompt' );
-		delete_option( 'wp_seo_automater_logs' );
+		$prefix = $wpdb->get_blog_prefix( $blog_id );
+		$table  = $prefix . 'options';
+		$wpdb->query( "DELETE FROM $table WHERE option_name IN ('" . implode( "', '", $options_to_delete ) . "')" );
 	}
-	
-	switch_to_blog( $original_blog_id );
 }
 
 /**
