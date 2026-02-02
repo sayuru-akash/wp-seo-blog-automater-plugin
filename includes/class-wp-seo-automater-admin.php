@@ -234,8 +234,26 @@ class WP_SEO_Automater_Admin {
 			$decoded = json_decode( $extracted_schema );
 			if ( $decoded === null ) {
 				self::log_activity( 'Schema Warning', "Extracted schema was invalid JSON. Attempting cleanup.", 'warning' );
-				// Common fix: remove trailing commas or weird quotes? For now, just log.
-				// Advanced: could try to aggressive trim { }
+
+				// 1. Aggressive Trim: Find first { and last }
+				$start = strpos( $extracted_schema, '{' );
+				$end   = strrpos( $extracted_schema, '}' );
+
+				if ( $start !== false && $end !== false && $end > $start ) {
+					$extracted_schema = substr( $extracted_schema, $start, $end - $start + 1 );
+				}
+
+				// 2. Remove trailing commas (which are invalid in JSON but common in JS objects)
+				$extracted_schema = preg_replace( '/,\s*([\}\]])/s', '$1', $extracted_schema );
+
+				// Retry Decode
+				$decoded = json_decode( $extracted_schema );
+
+				if ( $decoded !== null ) {
+					self::log_activity( 'Schema Fixed', "Schema cleanup successful.", 'success' );
+				} else {
+					self::log_activity( 'Schema Error', "Schema cleanup failed. JSON Error: " . json_last_error_msg(), 'error' );
+				}
 			}
 		}
 
