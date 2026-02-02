@@ -23,6 +23,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WP_SEO_Automater_Admin {
 
 	/**
+	 * Buffer for logs to minimize DB writes.
+	 * @var array
+	 */
+	private static $log_buffer = array();
+
+	/**
+	 * Whether the shutdown hook is registered.
+	 * @var bool
+	 */
+	private static $shutdown_hook_registered = false;
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since 1.0.0
@@ -590,14 +602,40 @@ class WP_SEO_Automater_Admin {
 	 * @param string $status  Log status (success, error, warning, info).
 	 */
 	public static function log_activity( $topic, $details, $status ) {
-		$logs = get_option( 'wp_seo_automater_logs', array() );
-		// Prepend new log
-		array_unshift( $logs, array(
+		// Buffer new log
+		self::$log_buffer[] = array(
 			'date'    => current_time( 'mysql' ),
 			'topic'   => $topic,
 			'details' => $details,
 			'status'  => $status
-		));
+		);
+
+		// Register shutdown hook once
+		if ( ! self::$shutdown_hook_registered ) {
+			add_action( 'shutdown', array( __CLASS__, 'flush_logs' ) );
+			self::$shutdown_hook_registered = true;
+		}
+	}
+
+	/**
+	 * Flush buffered logs to database.
+	 *
+	 * @since 1.1.0
+	 */
+	public static function flush_logs() {
+		if ( empty( self::$log_buffer ) ) {
+			return;
+		}
+
+		$logs = get_option( 'wp_seo_automater_logs', array() );
+
+		// Newest logs should be at the top. The buffer has oldest->newest during the request.
+		// Reversing ensures the last log added is the first one in the list.
+		$reversed_buffer = array_reverse( self::$log_buffer );
+
+		// Prepend new logs
+		$logs = array_merge( $reversed_buffer, $logs );
+
 		// Keep last 200
 		$logs = array_slice( $logs, 0, 200 );
 		update_option( 'wp_seo_automater_logs', $logs );
