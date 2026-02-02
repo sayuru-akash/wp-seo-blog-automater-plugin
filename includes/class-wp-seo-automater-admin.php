@@ -356,13 +356,35 @@ class WP_SEO_Automater_Admin {
 
 				// CHECK FOR DUPLICATES (Optimization)
 				// Look for an existing attachment that has this specific Image URL stored as meta.
+				// PERFORMANCE FIX: Use MD5 hash for faster lookups (indexed) instead of long URL string (text/blob)
+				$image_url_hash = md5( $image_url );
+
+				// 1. Try fast lookup by hash
 				$existing_attachment = get_posts( array(
 					'post_type'  => 'attachment',
-					'meta_key'   => '_wp_seo_automater_source_url',
-					'meta_value' => $image_url,
+					'meta_key'   => '_wp_seo_automater_source_url_hash',
+					'meta_value' => $image_url_hash,
 					'posts_per_page' => 1,
-					'fields'     => 'ids', // efficient
+					'fields'     => 'ids',
 				) );
+
+				// 2. Fallback: Legacy lookup by URL (if hash not found)
+				// This handles images created before this optimization was added.
+				if ( empty( $existing_attachment ) ) {
+					$existing_attachment = get_posts( array(
+						'post_type'  => 'attachment',
+						'meta_key'   => '_wp_seo_automater_source_url',
+						'meta_value' => $image_url,
+						'posts_per_page' => 1,
+						'fields'     => 'ids',
+					) );
+
+					// If found via legacy method, update it with hash for next time
+					if ( ! empty( $existing_attachment ) ) {
+						update_post_meta( $existing_attachment[0], '_wp_seo_automater_source_url_hash', $image_url_hash );
+						self::log_activity( 'Image Optimization', "Backfilled hash for attachment ID: " . $existing_attachment[0], 'info' );
+					}
+				}
 
 				if ( ! empty( $existing_attachment ) ) {
 					// Use existing ID
@@ -414,6 +436,7 @@ class WP_SEO_Automater_Admin {
 									
 									// Save Source URL for Dedupe
 									update_post_meta( $attachment_id, '_wp_seo_automater_source_url', $image_url );
+									update_post_meta( $attachment_id, '_wp_seo_automater_source_url_hash', md5( $image_url ) );
 								}
 							}
 						} else {
