@@ -24,12 +24,16 @@ class WP_SEO_Automater_Admin {
 
 	/**
 	 * Buffer for logs to minimize DB writes.
+	 *
+	 * @since 1.1.0
 	 * @var array
 	 */
 	private static $log_buffer = array();
 
 	/**
 	 * Whether the shutdown hook is registered.
+	 *
+	 * @since 1.1.0
 	 * @var bool
 	 */
 	private static $shutdown_hook_registered = false;
@@ -639,6 +643,9 @@ class WP_SEO_Automater_Admin {
 		// Keep last 200
 		$logs = array_slice( $logs, 0, 200 );
 		update_option( 'wp_seo_automater_logs', $logs );
+
+		// Clear the buffer to avoid duplicate writes on subsequent flushes.
+		self::$log_buffer = array();
 	}
 
 	/**

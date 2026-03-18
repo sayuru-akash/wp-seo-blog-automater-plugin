@@ -81,6 +81,7 @@ if ( ! function_exists( 'wp_seo_automater_activate' ) ) {
 			'WP SEO Blog Automater v' . WP_SEO_AUTOMATER_VERSION . ' activated successfully.',
 			'success'
 		);
+		WP_SEO_Automater_Admin::flush_logs();
 	}
 }
 register_activation_hook( WP_SEO_AUTOMATER_FILE, 'wp_seo_automater_activate' );
@@ -99,6 +100,7 @@ if ( ! function_exists( 'wp_seo_automater_deactivate' ) ) {
 			'WP SEO Blog Automater deactivated.',
 			'info'
 		);
+		WP_SEO_Automater_Admin::flush_logs();
 		
 		// Clear any scheduled events if we add cron jobs in the future
 		// wp_clear_scheduled_hook( 'wp_seo_automater_cron_hook' );
