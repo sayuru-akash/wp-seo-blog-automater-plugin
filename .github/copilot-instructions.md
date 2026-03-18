@@ -2,6 +2,7 @@
 
 ## Project context
 - This repository is a WordPress plugin (`wp-seo-blog-automater.php`) that generates SEO blog content with Gemini and optional Unsplash images.
+- Keep the existing project/plugin naming as `automater` (not `automator`) to match the established plugin slug, option keys, and text domain.
 - Core logic lives in:
   - `/includes/class-wp-seo-automater-admin.php`
   - `/includes/class-gemini-api-handler.php`
