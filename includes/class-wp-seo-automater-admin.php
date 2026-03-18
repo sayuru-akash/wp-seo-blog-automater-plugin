@@ -356,10 +356,11 @@ class WP_SEO_Automater_Admin {
 
 				// CHECK FOR DUPLICATES (Optimization)
 				// Look for an existing attachment that has this specific Image URL stored as meta.
-				// PERFORMANCE FIX: Use MD5 hash for faster lookups (indexed) instead of long URL string (text/blob)
+				// PERFORMANCE FIX: Use MD5 hash (fixed 32-char string) for faster filtering by meta_key+meta_value
+				// instead of comparing long URL strings stored as LONGTEXT.
 				$image_url_hash = md5( $image_url );
 
-				// 1. Try fast lookup by hash
+				// 1. Try fast lookup by hash, then confirm the full URL to guard against hash collisions.
 				$existing_attachment = get_posts( array(
 					'post_type'  => 'attachment',
 					'meta_key'   => '_wp_seo_automater_source_url_hash',
@@ -368,7 +369,16 @@ class WP_SEO_Automater_Admin {
 					'fields'     => 'ids',
 				) );
 
-				// 2. Fallback: Legacy lookup by URL (if hash not found)
+				// Verify the source URL matches to rule out hash collisions.
+				if ( ! empty( $existing_attachment ) ) {
+					$stored_url = get_post_meta( $existing_attachment[0], '_wp_seo_automater_source_url', true );
+					if ( $stored_url !== $image_url ) {
+						// Hash collision: the stored URL doesn't match; treat as a miss and fall back.
+						$existing_attachment = array();
+					}
+				}
+
+				// 2. Fallback: Legacy lookup by URL (if hash not found or collision detected)
 				// This handles images created before this optimization was added.
 				if ( empty( $existing_attachment ) ) {
 					$existing_attachment = get_posts( array(
@@ -436,7 +446,7 @@ class WP_SEO_Automater_Admin {
 									
 									// Save Source URL for Dedupe
 									update_post_meta( $attachment_id, '_wp_seo_automater_source_url', $image_url );
-									update_post_meta( $attachment_id, '_wp_seo_automater_source_url_hash', md5( $image_url ) );
+									update_post_meta( $attachment_id, '_wp_seo_automater_source_url_hash', $image_url_hash );
 								}
 							}
 						} else {
