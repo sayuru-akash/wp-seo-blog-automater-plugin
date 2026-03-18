@@ -81,21 +81,60 @@ class WP_SEO_Automater_GitHub_Updater {
 		add_filter( 'pre_set_site_transient_update_plugins', array( $this, 'check_for_update' ) );
 		add_filter( 'plugins_api', array( $this, 'plugin_info' ), 20, 3 );
 		add_filter( 'upgrader_post_install', array( $this, 'after_install' ), 10, 3 );
+
+		// Schedule background update check
+		add_action( 'wp_seo_automater_github_updater_cron', array( $this, 'background_update_check' ) );
 	}
 
 	/**
 	 * Get latest release information from GitHub.
 	 *
 	 * @since 1.0.4
-	 * @return object|WP_Error Release data or WP_Error on failure.
+	 * @param bool $force_sync Whether to force a synchronous check.
+	 * @return object|WP_Error|bool Release data, WP_Error on failure, or false if checking in background.
 	 */
-	public function get_github_release() {
+	public function get_github_release( $force_sync = false ) {
 		// Check cache first
 		$cached = get_transient( $this->cache_key );
 		if ( false !== $cached ) {
-			return $cached;
+			// If cached result is an error and we are forcing sync, ignore it and retry.
+			if ( isset( $cached->error ) && $cached->error ) {
+				if ( ! $force_sync ) {
+					return false;
+				}
+			} else {
+				return $cached;
+			}
 		}
 
+		if ( $force_sync ) {
+			return $this->fetch_github_release();
+		}
+
+		// Schedule background update if not already scheduled
+		if ( ! wp_next_scheduled( 'wp_seo_automater_github_updater_cron' ) ) {
+			wp_schedule_single_event( time(), 'wp_seo_automater_github_updater_cron' );
+		}
+
+		return false;
+	}
+
+	/**
+	 * Perform background update check.
+	 *
+	 * @since 1.1.0
+	 */
+	public function background_update_check() {
+		$this->fetch_github_release();
+	}
+
+	/**
+	 * Fetch release data from GitHub API.
+	 *
+	 * @since 1.1.0
+	 * @return object|WP_Error|void Release data or WP_Error.
+	 */
+	private function fetch_github_release() {
 		$api_url  = "https://api.github.com/repos/{$this->github_user}/{$this->github_repo}/releases/latest";
 		$response = wp_remote_get(
 			$api_url,
@@ -108,6 +147,7 @@ class WP_SEO_Automater_GitHub_Updater {
 		);
 
 		if ( is_wp_error( $response ) ) {
+			set_transient( $this->cache_key, (object) array( 'error' => true ), 1 * HOUR_IN_SECONDS );
 			return $response;
 		}
 
@@ -115,6 +155,7 @@ class WP_SEO_Automater_GitHub_Updater {
 		$data = json_decode( $body );
 
 		if ( empty( $data ) || isset( $data->message ) ) {
+			set_transient( $this->cache_key, (object) array( 'error' => true ), 1 * HOUR_IN_SECONDS );
 			$error_msg = isset( $data->message ) ? $data->message : 'Invalid response from GitHub';
 			return new WP_Error( 'github_error', $error_msg );
 		}
@@ -197,9 +238,9 @@ class WP_SEO_Automater_GitHub_Updater {
 			return $result;
 		}
 
-		$release = $this->get_github_release();
+		$release = $this->get_github_release( true );
 
-		if ( ! $release ) {
+		if ( ! $release || is_wp_error( $release ) ) {
 			return $result;
 		}
 
