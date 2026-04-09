@@ -178,6 +178,17 @@ class WP_SEO_Automater_GitHub_Updater {
 			return $transient;
 		}
 
+		if (
+			isset( $transient->response[ $this->plugin_basename ]->new_version ) &&
+			version_compare(
+				$transient->response[ $this->plugin_basename ]->new_version,
+				$this->plugin_version,
+				'<='
+			)
+		) {
+			unset( $transient->response[ $this->plugin_basename ] );
+		}
+
 		$release = $this->get_github_release();
 
 		if ( ! $release || is_wp_error( $release ) ) {
@@ -215,6 +226,9 @@ class WP_SEO_Automater_GitHub_Updater {
 			);
 
 			$transient->response[ $this->plugin_basename ] = (object) $plugin_data;
+		} elseif ( isset( $transient->response[ $this->plugin_basename ] ) ) {
+			// Remove stale update notices once the installed plugin version catches up.
+			unset( $transient->response[ $this->plugin_basename ] );
 		}
 
 		return $transient;
@@ -302,6 +316,7 @@ class WP_SEO_Automater_GitHub_Updater {
 
 		// Clear cache after update
 		delete_transient( $this->cache_key );
+		delete_site_transient( 'update_plugins' );
 
 		// Activate plugin
 		if ( isset( $hook_extra['plugin'] ) && $hook_extra['plugin'] === $this->plugin_basename ) {
