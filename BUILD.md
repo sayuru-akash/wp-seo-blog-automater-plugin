@@ -164,6 +164,9 @@ The workflow:
 3. Skips normal pushes with no version bump
 4. Runs the same `./scripts/release-build-check.sh` validation used locally
 5. Uploads the built ZIP as a workflow artifact when validation passes
+6. Creates or updates a GitHub Release tagged as `v<version>` and attaches the ZIP
+
+If you already pushed the version bump before this workflow existed, run the workflow manually from the Actions tab with `force_release=true` to publish the release for the current version without changing the version again.
 
 ---
 

@@ -2,15 +2,24 @@ name: Version Build
 
 on:
   push:
+    branches:
+      - main
     paths:
       - 'wp-seo-blog-automater.php'
       - 'build.sh'
       - 'build.bat'
       - 'scripts/**'
       - '.github/workflows/version-build.yml'
+  workflow_dispatch:
+    inputs:
+      force_release:
+        description: Create or update the GitHub release for the current plugin version
+        required: false
+        default: true
+        type: boolean
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: version-build-${{ github.ref }}
@@ -44,6 +53,11 @@ jobs:
         run: |
           set -euo pipefail
 
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version_changed=${{ inputs.force_release }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           before_ref="${{ github.event.before }}"
           after_ref="${{ github.sha }}"
 
@@ -68,6 +82,8 @@ jobs:
     needs: detect-version-change
     if: needs.detect-version-change.outputs.version_changed == 'true'
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -87,3 +103,28 @@ jobs:
           name: wp-seo-blog-automater-v${{ needs.detect-version-change.outputs.current_version }}
           path: dist/*.zip
           if-no-files-found: error
+
+      - name: Create or update GitHub release
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="${{ needs.detect-version-change.outputs.current_version }}"
+          tag="v${version}"
+          asset="dist/wp-seo-blog-automater-v${version}.zip"
+
+          if [ ! -f "$asset" ]; then
+            echo "Expected release asset not found: $asset" >&2
+            exit 1
+          fi
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists. Updating asset."
+            gh release upload "$tag" "$asset" --clobber
+          else
+            echo "Creating release $tag."
+            gh release create "$tag" "$asset" \
+              --target "${{ github.sha }}" \
+              --title "Version ${version}" \
+              --generate-notes
+          fi

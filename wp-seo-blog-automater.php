@@ -3,7 +3,7 @@
  * Plugin Name:       WP SEO Blog Automater
  * Plugin URI:        https://codezela.com/wp-seo-blog-automater/
  * Description:       Professional AI-powered content automation tool. Automatically generates high-quality, SEO-optimized blog posts with integrated images, schema markup, and complete meta data using Google Gemini AI.
- * Version:           1.2.0
+ * Version:           1.2.1
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Codezela Technologies
@@ -16,7 +16,7 @@
  * @package    WP_SEO_Blog_Automater
  * @author     Codezela Technologies
  * @since      1.0.0
- * @copyright  2025 Codezela Technologies
+ * @copyright  2026 Codezela Technologies
  */
 
 // If this file is called directly, abort.
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define Plugin Constants
-define( 'WP_SEO_AUTOMATER_VERSION', '1.2.0' );
+define( 'WP_SEO_AUTOMATER_VERSION', '1.2.1' );
 define( 'WP_SEO_AUTOMATER_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WP_SEO_AUTOMATER_URL', plugin_dir_url( __FILE__ ) );
 define( 'WP_SEO_AUTOMATER_BASENAME', plugin_basename( __FILE__ ) );
