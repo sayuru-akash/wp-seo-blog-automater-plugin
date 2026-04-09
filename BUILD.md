@@ -21,17 +21,18 @@ build.bat
 The build script automatically:
 
 1. ✅ Creates a clean build directory
-2. ✅ Copies all necessary plugin files
-3. ✅ Excludes development files:
+2. ✅ Detects the release version directly from `wp-seo-blog-automater.php`
+3. ✅ Copies all necessary plugin files
+4. ✅ Excludes development files:
    - `tests/` directory
    - All dot files (`.git`, `.gitignore`, etc.)
    - All dot folders (`.vscode`, `.idea`, etc.)
    - `node_modules/`, `vendor/`
    - `*.log`, `*.map` files
    - OS files (`.DS_Store`, `Thumbs.db`)
-4. ✅ Creates optimized ZIP: `wp-seo-blog-automater-v1.0.4.zip`
-5. ✅ Places ZIP in `dist/` folder
-6. ✅ Cleans up temporary files
+5. ✅ Creates optimized ZIP: `wp-seo-blog-automater-v<version>.zip`
+6. ✅ Places ZIP in `dist/` folder
+7. ✅ Cleans up temporary files
 
 ## Output
 
@@ -39,7 +40,7 @@ After running, you'll find:
 
 ```
 dist/
-  └── wp-seo-blog-automater-v1.0.4.zip
+  └── wp-seo-blog-automater-v<version>.zip
 ```
 
 This ZIP file is ready for:
@@ -63,7 +64,7 @@ rsync -av --exclude='tests' --exclude='.*' --exclude='build.sh' --exclude='build
 
 # Create ZIP
 cd temp-build
-zip -r ../wp-seo-blog-automater-v1.0.4.zip wp-seo-blog-automater
+zip -r ../wp-seo-blog-automater-v<version>.zip wp-seo-blog-automater
 cd ..
 
 # Cleanup
@@ -77,7 +78,7 @@ rm -rf temp-build
 3. Delete `.git`, `.gitignore`, and other dot files
 4. Delete `build.sh`, `build.bat`, `BUILD.md`, `dist/`, `build/`
 5. Right-click folder → Send to → Compressed (zipped) folder
-6. Rename to: `wp-seo-blog-automater-v1.0.4.zip`
+6. Rename to: `wp-seo-blog-automater-v<version>.zip`
 
 ## Verification
 
@@ -101,11 +102,34 @@ When releasing a new version:
 
 1. Update version in `wp-seo-blog-automater.php` header
 2. Update `WP_SEO_AUTOMATER_VERSION` constant
-3. Update version in `build.sh` (line 15)
-4. Update version in `build.bat` (line 12)
-5. Update `README.md` version badge
-6. Update `CHANGELOG.md`
-7. Update `languages/wp-seo-blog-automater.pot`
+3. Update `README.md` version badge
+4. Update `CHANGELOG.md`
+5. Update `languages/wp-seo-blog-automater.pot`
+
+## Version-Aware Validation
+
+The repository now includes a single validation command used by both local Git hooks and GitHub Actions:
+
+```bash
+./scripts/release-build-check.sh
+```
+
+It will:
+
+1. Lint all PHP files
+2. Validate that the plugin header version and `WP_SEO_AUTOMATER_VERSION` match
+3. Run `./build.sh`
+4. Verify the generated ZIP contents and version
+
+## Local Pre-Push Hook
+
+To enable automatic local validation before pushes that change the plugin version, configure Git once in this repository:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+After that, normal pushes are left alone, but pushes that change the plugin version will run the release validation locally before Git sends them upstream.
 
 ## Troubleshooting
 
@@ -131,21 +155,15 @@ sudo yum install zip      # CentOS/RHEL
 
 ## Automated Builds
 
-For CI/CD integration, the build script can be automated:
+GitHub Actions is configured in `.github/workflows/version-build.yml`.
 
-```bash
-# GitHub Actions example
-- name: Build Plugin
-  run: |
-    chmod +x build.sh
-    ./build.sh
+The workflow:
 
-- name: Upload Artifact
-  uses: actions/upload-artifact@v2
-  with:
-    name: plugin-package
-    path: dist/*.zip
-```
+1. Triggers on pushes that touch the version/build logic
+2. Checks whether the pushed range actually changed the plugin version
+3. Skips normal pushes with no version bump
+4. Runs the same `./scripts/release-build-check.sh` validation used locally
+5. Uploads the built ZIP as a workflow artifact when validation passes
 
 ---
 

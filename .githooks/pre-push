@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+NULL_SHA="0000000000000000000000000000000000000000"
+HOOK_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+REPO_ROOT="$( cd "$HOOK_DIR/.." && pwd )"
+CHECK_SCRIPT="$REPO_ROOT/scripts/release-build-check.sh"
+VERSION_CHECK_SCRIPT="$REPO_ROOT/scripts/version-changed.sh"
+
+cd "$REPO_ROOT"
+
+should_validate=1
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+    [ -n "${local_ref:-}" ] || continue
+
+    case "$local_ref" in
+        refs/heads/*) ;;
+        *) continue ;;
+    esac
+
+    if [ "$local_sha" = "$NULL_SHA" ]; then
+        continue
+    fi
+
+    set +e
+    "$VERSION_CHECK_SCRIPT" "$remote_sha" "$local_sha"
+    status=$?
+    set -e
+
+    case "$status" in
+        0)
+            should_validate=0
+            break
+            ;;
+        1)
+            ;;
+        *)
+            echo "Unable to determine whether the pushed range changed the plugin version." >&2
+            exit "$status"
+            ;;
+    esac
+done
+
+if [ "$should_validate" -ne 0 ]; then
+    echo "No plugin version change detected in this push. Skipping release validation."
+    exit 0
+fi
+
+echo "Plugin version change detected. Running release build validation before push..."
+"$CHECK_SCRIPT"

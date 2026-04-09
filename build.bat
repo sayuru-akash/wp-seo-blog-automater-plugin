@@ -6,14 +6,34 @@ REM Usage: Double-click this file or run: build.bat
 REM
 REM @package    WP_SEO_Blog_Automater
 REM @author     Codezela Technologies
-REM @version    1.0.4
+REM @version    plugin-version
 
 setlocal EnableDelayedExpansion
 
 set PLUGIN_SLUG=wp-seo-blog-automater
-set VERSION=1.1.0
 set BUILD_DIR=build
 set DIST_DIR=dist
+
+where php >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    for /f "usebackq delims=" %%v in (`php scripts/get-version.php`) do set VERSION=%%v
+) else (
+    where powershell >nul 2>&1
+    if %ERRORLEVEL% NEQ 0 (
+        echo ERROR: Neither PHP nor PowerShell is available to detect the plugin version.
+        pause
+        exit /b 1
+    )
+
+    for /f "usebackq delims=" %%v in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$content = Get-Content 'wp-seo-blog-automater.php' -Raw; $header = [regex]::Match($content, '(?m)^[ \t]*\*[ \t]+Version:[ \t]*([^\r\n]+)$').Groups[1].Value.Trim(); $constant = [regex]::Match($content, \"(?m)^[ \t]*define\([ \t]*'WP_SEO_AUTOMATER_VERSION',[ \t]*'([^']+)'[ \t]*\);\").Groups[1].Value.Trim(); if (-not $header -or -not $constant) { throw 'Unable to determine plugin version.' }; if ($header -ne $constant) { throw ('Version mismatch: header=' + $header + ' constant=' + $constant) }; Write-Output $header"`) do set VERSION=%%v
+)
+
+if not defined VERSION (
+    echo ERROR: Unable to detect the plugin version from wp-seo-blog-automater.php.
+    pause
+    exit /b 1
+)
+
 set ZIP_NAME=%PLUGIN_SLUG%-v%VERSION%.zip
 
 echo.

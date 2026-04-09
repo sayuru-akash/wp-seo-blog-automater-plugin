@@ -1,0 +1,89 @@
+name: Version Build
+
+on:
+  push:
+    paths:
+      - 'wp-seo-blog-automater.php'
+      - 'build.sh'
+      - 'build.bat'
+      - 'scripts/**'
+      - '.github/workflows/version-build.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: version-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect-version-change:
+    runs-on: ubuntu-latest
+    outputs:
+      current_version: ${{ steps.version.outputs.current_version }}
+      version_changed: ${{ steps.diff.outputs.version_changed }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Resolve current plugin version
+        id: version
+        run: echo "current_version=$(php scripts/get-version.php)" >> "$GITHUB_OUTPUT"
+
+      - name: Detect version change in pushed range
+        id: diff
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          before_ref="${{ github.event.before }}"
+          after_ref="${{ github.sha }}"
+
+          set +e
+          ./scripts/version-changed.sh "$before_ref" "$after_ref"
+          status=$?
+          set -e
+
+          case "$status" in
+            0)
+              echo "version_changed=true" >> "$GITHUB_OUTPUT"
+              ;;
+            1)
+              echo "version_changed=false" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              exit "$status"
+              ;;
+          esac
+
+  validate-release-build:
+    needs: detect-version-change
+    if: needs.detect-version-change.outputs.version_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Run release build validation
+        run: ./scripts/release-build-check.sh
+
+      - name: Upload built plugin package
+        uses: actions/upload-artifact@v4
+        with:
+          name: wp-seo-blog-automater-v${{ needs.detect-version-change.outputs.current_version }}
+          path: dist/*.zip
+          if-no-files-found: error

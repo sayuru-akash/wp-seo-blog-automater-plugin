@@ -7,9 +7,9 @@
 #
 # @package    WP_SEO_Blog_Automater
 # @author     Codezela Technologies
-# @version    1.0.4
+# @version    plugin-version
 
-set -e
+set -euo pipefail
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -19,9 +19,18 @@ NC='\033[0m' # No Color
 
 # Configuration
 PLUGIN_SLUG="wp-seo-blog-automater"
-VERSION="1.1.0"
 BUILD_DIR="build"
 DIST_DIR="dist"
+
+# Get the script directory (plugin root)
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+if ! command -v php >/dev/null 2>&1; then
+    echo "Error: php is required to detect the plugin version." >&2
+    exit 1
+fi
+
+VERSION="$(php "$SCRIPT_DIR/scripts/get-version.php")"
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║   WP SEO Blog Automater - Build Script v${VERSION}   ║${NC}"
@@ -29,8 +38,6 @@ echo -e "${BLUE}║          Codezela Technologies                         ║${
 echo -e "${BLUE}╚════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
-# Get the script directory (plugin root)
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
 echo -e "${YELLOW}→${NC} Preparing build environment..."
