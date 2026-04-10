@@ -9,6 +9,75 @@
 jQuery(document).ready(function ($) {
   "use strict";
 
+  function getUsedImageIds() {
+    var raw = $("#result_used_image_ids").val() || "[]";
+
+    try {
+      var parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function setUsedImageIds(ids) {
+    $("#result_used_image_ids").val(JSON.stringify(ids));
+  }
+
+  function rememberImageId(imageId) {
+    if (!imageId) {
+      return;
+    }
+
+    var ids = getUsedImageIds();
+    if (ids.indexOf(imageId) === -1) {
+      ids.push(imageId);
+      setUsedImageIds(ids);
+    }
+  }
+
+  function updateImageState(data) {
+    var debugInfo = data.debug_info || {};
+
+    $("#result_image_keywords").val(debugInfo.keywords || "");
+    $("#btn-refresh-image").prop("disabled", false);
+
+    if (data.image_id) {
+      $("#result_image_id").val(data.image_id);
+      rememberImageId(data.image_id);
+    }
+
+    if (data.image_url) {
+      $("#result_image_url").val(data.image_url);
+      $("#result_image_preview").attr("src", data.image_url).show();
+      $("#result_image_credit").text(data.image_credit || "");
+      $("#image-refresh-message")
+        .text(
+          debugInfo.image_query_used
+            ? "Image query: " + debugInfo.image_query_used
+            : "",
+        )
+        .toggle(!!debugInfo.image_query_used);
+    } else {
+      $("#result_image_url").val("");
+      $("#result_image_id").val("");
+      $("#result_image_preview").hide();
+      $("#result_image_credit").text("");
+      $("#image-refresh-message")
+        .text(debugInfo.unsplash_status || "No image found.")
+        .show();
+    }
+
+    if (
+      debugInfo &&
+      debugInfo.unsplash_status &&
+      debugInfo.unsplash_status !== "Success" &&
+      debugInfo.unsplash_status !== "Not Attempted"
+    ) {
+      console.warn("Unsplash Debug Info:", debugInfo);
+    }
+  }
+
   /**
    * Generate Button Click Handler
    */
@@ -33,6 +102,11 @@ jQuery(document).ready(function ($) {
     $(".wp-seo-loader").show();
     $("#generation-results").addClass("wp-seo-hidden");
     $("#publish-message").html("");
+    $("#image-refresh-message").hide().text("");
+    setUsedImageIds([]);
+    $("#result_image_id").val("");
+    $("#result_image_keywords").val("");
+    $("#btn-refresh-image").prop("disabled", true);
 
     $.ajax({
       url: wpSeoAutomater.ajax_url,
@@ -75,30 +149,7 @@ jQuery(document).ready(function ($) {
           $("#result_meta_desc").val(response.data.meta_desc || "");
 
           // Populate Image
-          if (response.data.image_url) {
-            $("#result_image_url").val(response.data.image_url);
-            $("#result_image_preview")
-              .attr("src", response.data.image_url)
-              .show();
-            $("#result_image_credit").text(response.data.image_credit || "");
-          } else {
-            $("#result_image_preview").hide();
-            $("#result_image_credit").text("");
-
-            // DIAGNOSTIC ALERT
-            if (response.data.debug_info) {
-              console.warn("Unsplash Debug Info:", response.data.debug_info);
-              if (
-                response.data.debug_info.unsplash_status !== "Success" &&
-                response.data.debug_info.unsplash_status !== "Not Attempted"
-              ) {
-                console.error(
-                  "Image fetch failed:",
-                  response.data.debug_info.unsplash_status,
-                );
-              }
-            }
-          }
+          updateImageState(response.data);
 
           // Title Logic
           if (response.data.title) {
@@ -139,6 +190,71 @@ jQuery(document).ready(function ($) {
         }
         alert(errorMsg);
         console.error("AJAX error:", textStatus, errorThrown);
+      },
+    });
+  });
+
+  /**
+   * Refresh Image Button Click Handler
+   */
+  $("#btn-refresh-image").on("click", function (e) {
+    e.preventDefault();
+
+    var title = $("#result_title").val().trim();
+    var metaTitle = $("#result_meta_title").val().trim();
+    var content = $("#result_content").val().trim();
+    var imageKeywords = $("#result_image_keywords").val().trim();
+
+    if (!title || !content) {
+      alert("Generate an article first before refreshing the image.");
+      return;
+    }
+
+    var $btn = $(this);
+    var originalText = $btn.find(".btn-text").text();
+
+    $btn.prop("disabled", true);
+    $btn.find(".btn-text").text("Refreshing...");
+    $("#image-refresh-message").text("Finding a different image...").show();
+
+    $.ajax({
+      url: wpSeoAutomater.ajax_url,
+      type: "POST",
+      data: {
+        action: "wp_seo_refresh_image",
+        nonce: wpSeoAutomater.nonce,
+        title: title,
+        meta_title: metaTitle,
+        content: content,
+        image_keywords: imageKeywords,
+        used_image_ids: JSON.stringify(getUsedImageIds()),
+      },
+      timeout: 60000,
+      success: function (response) {
+        $btn.prop("disabled", false);
+        $btn.find(".btn-text").text(originalText);
+
+        if (response.success) {
+          updateImageState(response.data);
+        } else {
+          $("#image-refresh-message")
+            .text(
+              (response.data && response.data.message) ||
+                "Could not refresh the image.",
+            )
+            .show();
+        }
+      },
+      error: function (jqXHR, textStatus) {
+        $btn.prop("disabled", false);
+        $btn.find(".btn-text").text(originalText);
+        $("#image-refresh-message")
+          .text(
+            textStatus === "timeout"
+              ? "Image refresh timed out. Please try again."
+              : "Image refresh failed. Please try again.",
+          )
+          .show();
       },
     });
   });
@@ -237,8 +353,13 @@ jQuery(document).ready(function ($) {
       $("#result_meta_title").val("");
       $("#result_meta_desc").val("");
       $("#result_image_url").val("");
+      $("#result_image_id").val("");
+      $("#result_image_keywords").val("");
+      setUsedImageIds([]);
       $("#result_image_preview").hide();
       $("#result_image_credit").text("");
+      $("#image-refresh-message").hide().text("");
+      $("#btn-refresh-image").prop("disabled", true);
       $("#result_schema").val("");
       $("#publish-message").html("");
 

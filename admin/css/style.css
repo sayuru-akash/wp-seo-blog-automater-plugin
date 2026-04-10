@@ -215,6 +215,19 @@ body {
   letter-spacing: -0.01em;
 }
 
+.wp-seo-inline-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.wp-seo-inline-label .wp-seo-label {
+  margin-bottom: 0;
+}
+
 .wp-seo-input,
 .wp-seo-textarea {
   width: 100%;
@@ -369,6 +382,13 @@ body {
   border-color: var(--primary-color);
   background: white;
   box-shadow: var(--shadow-md);
+}
+
+.wp-seo-btn-small {
+  padding: 0.55rem 0.85rem;
+  font-size: 0.8rem;
+  min-height: auto;
+  gap: 0.4rem;
 }
 
 .wp-seo-btn .dashicons {

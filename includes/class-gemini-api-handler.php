@@ -135,6 +135,60 @@ class Gemini_API_Handler {
 	}
 
 	/**
+	 * Generate dedicated Unsplash search queries when the main article keywords are weak.
+	 *
+	 * @since 1.3.6
+	 * @param string $context_title Fallback title/meta-title context.
+	 * @param string $image_keywords Initial image keywords extracted from the article.
+	 * @param string $content Article content for visual context.
+	 * @return array|WP_Error List of candidate search queries or WP_Error.
+	 */
+	public function generate_image_search_keywords( $context_title, $image_keywords, $content = '' ) {
+		if ( empty( $this->api_key ) ) {
+			return new WP_Error( 'missing_key', __( 'Gemini API Key is missing. Please configure it in settings.', 'wp-seo-blog-automater' ) );
+		}
+
+		$content_excerpt = trim( preg_replace( '/\s+/', ' ', strip_tags( $content ) ) );
+		if ( strlen( $content_excerpt ) > 1200 ) {
+			$content_excerpt = substr( $content_excerpt, 0, 1200 );
+		}
+
+		$prompt = "You are generating Unsplash image search queries for a WordPress featured image.\n"
+			. "Return 4 distinct search queries only, one per line.\n"
+			. "Rules:\n"
+			. "- Each query must be 2 to 4 words.\n"
+			. "- Focus on visible photographic subjects or scenes.\n"
+			. "- Avoid generic words alone such as luxury, premium, scottsdale, arizona.\n"
+			. "- Avoid brand names unless the scene truly requires them.\n"
+			. "- Prefer concrete visual nouns such as eyeglasses, eyewear, optical boutique, titanium frames, eyewear styling.\n"
+			. "- Do not add numbering, bullets, commentary, or quotes.\n\n"
+			. "Context title: {$context_title}\n"
+			. "Initial image keywords: {$image_keywords}\n"
+			. "Article excerpt: {$content_excerpt}";
+
+		$response = $this->make_api_request( $prompt );
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		$text = $this->extract_text_from_response( $response );
+		$lines = preg_split( '/\r\n|\r|\n/', $text );
+		$queries = array();
+
+		if ( is_array( $lines ) ) {
+			foreach ( $lines as $line ) {
+				$line = preg_replace( '/^\s*(?:[-*]|\d+[\).\-\s])\s*/', '', trim( $line ) );
+				$line = trim( preg_replace( '/\s+/', ' ', $line ), "\"'` " );
+				if ( '' !== $line && ! in_array( $line, $queries, true ) ) {
+					$queries[] = $line;
+				}
+			}
+		}
+
+		return array_slice( $queries, 0, 4 );
+	}
+
+	/**
 	 * Helper to build the full prompt.
 	 * 
 	 * Combines master prompt with user-specific task instructions.

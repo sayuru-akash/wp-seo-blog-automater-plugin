@@ -5,6 +5,37 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.7] - 2026-04-10
+
+### 🖼️ Image Refresh Release
+
+Patch release focused on making featured image selection more controllable and less repetitive inside the generator UI.
+
+### Added
+
+- 🔁 **Refresh Image Button**: Added a small `Refresh Image` action next to the Unsplash preview so users can request a new featured image without regenerating the article
+- 🧠 **Three-Stage Image Query Flow**:
+  - Stage 1 uses the article's primary `Image Search Keywords`
+  - Stage 2 asks Gemini for dedicated Unsplash-friendly visual search phrases based on the generated content
+  - Stage 3 falls back to generic title/meta-derived rescue queries only if the first two stages fail
+
+### Improved
+
+- 🚫 **Repeat Image Avoidance**: Image refresh now tracks previously returned Unsplash photo IDs and skips them on subsequent refresh attempts
+- 🔍 **Richer Unsplash Search**: Queries now inspect multiple Unsplash results per request instead of only the first returned image
+- 🪵 **Debug Visibility**: The image query source and query attempts remain visible in the preview payload for troubleshooting
+
+### Technical
+
+- Updated plugin version constants and release metadata to `1.3.7`
+- Added a new AJAX endpoint for image-only refreshes from the generator preview
+
+### Verification
+
+- `php -l includes/class-wp-seo-automater-admin.php`
+- `php -l includes/class-gemini-api-handler.php`
+- `./scripts/release-build-check.sh`
+
 ## [1.3.6] - 2026-04-10
 
 ### ⚡ Manual Update Check Release

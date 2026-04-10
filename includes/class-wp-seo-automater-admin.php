@@ -47,6 +47,7 @@ class WP_SEO_Automater_Admin {
 		// AJAX handlers
 		add_action( 'wp_ajax_wp_seo_generate_post', array( $this, 'ajax_generate_post' ) );
 		add_action( 'wp_ajax_wp_seo_publish_post', array( $this, 'ajax_publish_post' ) );
+		add_action( 'wp_ajax_wp_seo_refresh_image', array( $this, 'ajax_refresh_image' ) );
 		add_action( 'wp_ajax_check_updates_now', array( $this, 'ajax_check_updates_now' ) );
 		
 		// Add settings link on plugins page
@@ -187,7 +188,7 @@ class WP_SEO_Automater_Admin {
 
 		self::log_activity( 'Debug Extraction', "Slug: '$slug' | Title: '$meta_title' | Image Key: '$image_keywords'", 'info' );
 
-		$image_result = $this->fetch_unsplash_image_data( $image_keywords, $meta_title );
+		$image_result = $this->fetch_unsplash_image_data( $image_keywords, $meta_title, $content );
 
 		$html_content = $this->markdown_to_html( $content );
 		$extracted_schema = '';
@@ -272,15 +273,72 @@ class WP_SEO_Automater_Admin {
 			'schema'       => $extracted_schema,
 			'meta_title'   => $meta_title,
 			'meta_desc'    => $meta_desc,
+			'image_id'     => $image_result['photo_id'],
 			'image_url'    => $image_result['url'],
 			'image_credit' => $image_result['credit'],
 			'debug_info'   => array(
 				'keywords'        => $image_keywords,
 				'unsplash_status' => $image_result['status'],
 				'has_key'         => $image_result['has_key'],
+				'image_query_source' => $image_result['query_source'],
 				'image_query_used' => $image_result['query_used'],
 				'image_query_attempts' => $image_result['queries_tried'],
 			),
+		);
+	}
+
+	/**
+	 * AJAX handler to refresh the featured image without regenerating the article.
+	 *
+	 * @since 1.3.6
+	 */
+	public function ajax_refresh_image() {
+		check_ajax_referer( 'wp_seo_automater_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Permission denied.', 'wp-seo-blog-automater' ) );
+		}
+
+		$image_keywords = isset( $_POST['image_keywords'] ) ? sanitize_text_field( wp_unslash( $_POST['image_keywords'] ) ) : '';
+		$meta_title = isset( $_POST['meta_title'] ) ? sanitize_text_field( wp_unslash( $_POST['meta_title'] ) ) : '';
+		$title = isset( $_POST['title'] ) ? sanitize_text_field( wp_unslash( $_POST['title'] ) ) : '';
+		$content = isset( $_POST['content'] ) ? wp_kses_post( wp_unslash( $_POST['content'] ) ) : '';
+		$used_image_ids = array();
+
+		if ( isset( $_POST['used_image_ids'] ) ) {
+			$decoded = json_decode( wp_unslash( $_POST['used_image_ids'] ), true );
+			if ( is_array( $decoded ) ) {
+				$used_image_ids = array_values(
+					array_filter(
+						array_map( 'sanitize_text_field', $decoded )
+					)
+				);
+			}
+		}
+
+		$context_title = ! empty( $meta_title ) ? $meta_title : $title;
+		self::log_activity( 'Image Refresh', "Refreshing image for '{$context_title}' with base keywords '{$image_keywords}'.", 'info' );
+
+		$image_result = $this->fetch_unsplash_image_data( $image_keywords, $context_title, $content, $used_image_ids );
+
+		if ( 0 === strpos( $image_result['status'], 'API Error:' ) ) {
+			wp_send_json_error( array( 'message' => $image_result['status'] ) );
+		}
+
+		wp_send_json_success(
+			array(
+				'image_id' => $image_result['photo_id'],
+				'image_url' => $image_result['url'],
+				'image_credit' => $image_result['credit'],
+				'debug_info' => array(
+					'keywords' => $image_keywords,
+					'unsplash_status' => $image_result['status'],
+					'has_key' => $image_result['has_key'],
+					'image_query_source' => $image_result['query_source'],
+					'image_query_used' => $image_result['query_used'],
+					'image_query_attempts' => $image_result['queries_tried'],
+				),
+			)
 		);
 	}
 
@@ -608,14 +666,16 @@ class WP_SEO_Automater_Admin {
 	 * @param string $image_keywords Extracted image keywords.
 	 * @return array URL, credit, and debug status.
 	 */
-	private function fetch_unsplash_image_data( $image_keywords, $context_title = '' ) {
+	private function fetch_unsplash_image_data( $image_keywords, $context_title = '', $content = '', $excluded_photo_ids = array() ) {
 		$unsplash_key = get_option( 'wp_seo_automater_unsplash_key', '' );
 		$result = array(
-			'url'          => '',
-			'credit'       => '',
-			'status'       => 'Not Attempted',
-			'has_key'      => ! empty( $unsplash_key ),
-			'query_used'   => '',
+			'url'           => '',
+			'credit'        => '',
+			'status'        => 'Not Attempted',
+			'has_key'       => ! empty( $unsplash_key ),
+			'photo_id'      => '',
+			'query_source'  => '',
+			'query_used'    => '',
 			'queries_tried' => array(),
 		);
 
@@ -629,29 +689,75 @@ class WP_SEO_Automater_Admin {
 			return $result;
 		}
 
-		$queries = $this->build_unsplash_query_candidates( $image_keywords, $context_title );
+		$try_queries = function ( $queries, $source ) use ( &$result, $unsplash_key, $excluded_photo_ids ) {
+			foreach ( $queries as $query ) {
+				foreach ( array( 'landscape', '' ) as $orientation ) {
+					$attempt_label = $query . ( '' !== $orientation ? ' [' . $orientation . ']' : ' [any]' );
+					if ( in_array( $attempt_label, $result['queries_tried'], true ) ) {
+						continue;
+					}
 
-		foreach ( $queries as $query ) {
-			foreach ( array( 'landscape', '' ) as $orientation ) {
-				$attempt_label = $query . ( '' !== $orientation ? ' [' . $orientation . ']' : ' [any]' );
-				$result['queries_tried'][] = $attempt_label;
-				$response = $this->search_unsplash_image( $query, $unsplash_key, $orientation );
+					$result['queries_tried'][] = $attempt_label;
+					$response = $this->search_unsplash_image( $query, $unsplash_key, $orientation );
 
-				if ( is_wp_error( $response ) ) {
-					$result['status'] = 'API Error: ' . $response->get_error_message();
-					self::log_activity( 'Unsplash Error', $response->get_error_message(), 'error' );
-					return $result;
-				}
+					if ( is_wp_error( $response ) ) {
+						$result['status'] = 'API Error: ' . $response->get_error_message();
+						self::log_activity( 'Unsplash Error', $response->get_error_message(), 'error' );
+						return $result;
+					}
 
-				if ( isset( $response['results'][0] ) ) {
-					$result['url'] = $response['results'][0]['urls']['regular'];
-					$result['credit'] = 'Photo by ' . $response['results'][0]['user']['name'] . ' on Unsplash';
-					$result['status'] = 'Success';
-					$result['query_used'] = $query;
-					self::log_activity( 'Unsplash', "Found image for '$query' using " . ( '' !== $orientation ? $orientation : 'any' ) . " orientation: {$result['url']}", 'success' );
-					return $result;
+					if ( ! empty( $response['results'] ) && is_array( $response['results'] ) ) {
+						foreach ( $response['results'] as $photo ) {
+							if ( empty( $photo['id'] ) || in_array( $photo['id'], $excluded_photo_ids, true ) ) {
+								continue;
+							}
+
+							$result['photo_id'] = $photo['id'];
+							$result['url'] = $photo['urls']['regular'];
+							$result['credit'] = 'Photo by ' . $photo['user']['name'] . ' on Unsplash';
+							$result['status'] = 'Success';
+							$result['query_source'] = $source;
+							$result['query_used'] = $query;
+							self::log_activity( 'Unsplash', "Found image for '$query' from {$source} using " . ( '' !== $orientation ? $orientation : 'any' ) . " orientation: {$result['url']}", 'success' );
+							return $result;
+						}
+					}
 				}
 			}
+
+			return null;
+		};
+
+		$stage_one = $this->build_unsplash_query_candidates( $image_keywords, '', false );
+		$attempt_result = $try_queries( $stage_one, 'article_keywords' );
+		if ( is_array( $attempt_result ) && ! empty( $attempt_result['url'] ) ) {
+			return $attempt_result;
+		}
+		if ( is_array( $attempt_result ) && 0 === strpos( $attempt_result['status'], 'API Error:' ) ) {
+			return $attempt_result;
+		}
+
+		$handler = new Gemini_API_Handler();
+		$generated_queries = $handler->generate_image_search_keywords( $context_title, $image_keywords, $content );
+		if ( is_wp_error( $generated_queries ) ) {
+			self::log_activity( 'Unsplash', 'Gemini fallback image keyword generation failed: ' . $generated_queries->get_error_message(), 'warning' );
+		} elseif ( ! empty( $generated_queries ) ) {
+			$attempt_result = $try_queries( $generated_queries, 'gemini_fallback' );
+			if ( is_array( $attempt_result ) && ! empty( $attempt_result['url'] ) ) {
+				return $attempt_result;
+			}
+			if ( is_array( $attempt_result ) && 0 === strpos( $attempt_result['status'], 'API Error:' ) ) {
+				return $attempt_result;
+			}
+		}
+
+		$stage_three = $this->build_unsplash_query_candidates( $image_keywords, $context_title, true );
+		$attempt_result = $try_queries( $stage_three, 'title_fallback' );
+		if ( is_array( $attempt_result ) && ! empty( $attempt_result['url'] ) ) {
+			return $attempt_result;
+		}
+		if ( is_array( $attempt_result ) && 0 === strpos( $attempt_result['status'], 'API Error:' ) ) {
+			return $attempt_result;
 		}
 
 		$result['status'] = 'No Results from API';
@@ -666,9 +772,10 @@ class WP_SEO_Automater_Admin {
 	 * @since 1.3.0
 	 * @param string $image_keywords Extracted image keywords.
 	 * @param string $context_title  Meta/title context from the generated article.
+	 * @param bool   $include_generic Whether to include broad generic fallbacks.
 	 * @return array Candidate queries ordered from specific to broad.
 	 */
-	private function build_unsplash_query_candidates( $image_keywords, $context_title = '' ) {
+	private function build_unsplash_query_candidates( $image_keywords, $context_title = '', $include_generic = true ) {
 		$normalized = strtolower( trim( preg_replace( '/\s+/', ' ', preg_replace( '/[^a-z0-9\s-]+/i', ' ', $image_keywords ) ) ) );
 		$normalized_context = strtolower( trim( preg_replace( '/\s+/', ' ', preg_replace( '/[^a-z0-9\s-]+/i', ' ', $context_title ) ) ) );
 		$queries = array();
@@ -711,11 +818,11 @@ class WP_SEO_Automater_Admin {
 			}
 		}
 
-		if ( $is_eyewear_query ) {
+		if ( $is_eyewear_query && $include_generic ) {
 			$add_query( 'luxury eyeglasses' );
 			$add_query( 'designer eyewear' );
 			$add_query( 'eyeglasses' );
-		} elseif ( '' !== $normalized_context ) {
+		} elseif ( '' !== $normalized_context && $include_generic ) {
 			$context_words = preg_split( '/\s+/', $normalized_context );
 			if ( is_array( $context_words ) ) {
 				foreach ( $context_words as $index => $word ) {
@@ -739,7 +846,7 @@ class WP_SEO_Automater_Admin {
 			$add_query( 'designer eyewear' );
 		}
 
-		if ( ! in_array( 'eyeglasses', $queries, true ) ) {
+		if ( $include_generic && ! in_array( 'eyeglasses', $queries, true ) ) {
 			$add_query( 'eyeglasses' );
 		}
 
@@ -761,7 +868,7 @@ class WP_SEO_Automater_Admin {
 			'client_id' => $unsplash_key,
 			'query'     => $query,
 			'page'      => 1,
-			'per_page'  => 1,
+			'per_page'  => 8,
 		);
 
 		if ( '' !== $orientation ) {

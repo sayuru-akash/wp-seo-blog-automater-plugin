@@ -46,6 +46,7 @@ echo "Slug: {$payload['slug']}\n";
 echo "Meta title: {$payload['meta_title']}\n";
 echo "Image keywords: {$payload['debug_info']['keywords']}\n";
 echo "Unsplash status: {$payload['debug_info']['unsplash_status']}\n";
+echo "Image query source: " . ( empty( $payload['debug_info']['image_query_source'] ) ? '(none)' : $payload['debug_info']['image_query_source'] ) . "\n";
 echo "Image query used: " . ( empty( $payload['debug_info']['image_query_used'] ) ? '(none)' : $payload['debug_info']['image_query_used'] ) . "\n";
 echo "Image query attempts: " . implode( ', ', $payload['debug_info']['image_query_attempts'] ) . "\n";
 echo "Image URL: " . ( empty( $payload['image_url'] ) ? '(none)' : $payload['image_url'] ) . "\n";

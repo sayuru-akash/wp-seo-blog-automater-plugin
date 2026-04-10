@@ -87,11 +87,21 @@ defined( 'ABSPATH' ) || exit;
 
             <!-- Image Preview -->
             <div class="wp-seo-form-group">
-                <label class="wp-seo-label"><?php esc_html_e( 'Featured Image (Unsplash)', 'wp-seo-blog-automater' ); ?></label>
+                <div class="wp-seo-inline-label">
+                    <label class="wp-seo-label"><?php esc_html_e( 'Featured Image (Unsplash)', 'wp-seo-blog-automater' ); ?></label>
+                    <button id="btn-refresh-image" type="button" class="wp-seo-btn wp-seo-btn-secondary wp-seo-btn-small" disabled>
+                        <span class="dashicons dashicons-image-rotate"></span>
+                        <span class="btn-text"><?php esc_html_e( 'Refresh Image', 'wp-seo-blog-automater' ); ?></span>
+                    </button>
+                </div>
                 <div id="image-preview-container" style="margin-bottom: 10px;">
                     <img id="result_image_preview" src="" style="max-width: 100%; height: auto; display: none; border-radius: 8px; border: 1px solid #ddd;">
                     <p id="result_image_credit" style="font-size: 12px; color: #666; font-style: italic;"></p>
                 </div>
+                <p id="image-refresh-message" class="description" style="display: none;"></p>
+                <input type="hidden" id="result_image_id">
+                <input type="hidden" id="result_image_keywords">
+                <input type="hidden" id="result_used_image_ids" value="[]">
                 <input type="hidden" id="result_image_url">
             </div>
 
