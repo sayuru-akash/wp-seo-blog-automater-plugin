@@ -5,6 +5,37 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.5] - 2026-04-10
+
+### 🔧 Generation Reliability Release
+
+Patch release focused on stabilizing long-form generation output, preserving the admin preview payload contract, and improving image lookup recovery.
+
+### Fixed
+
+- 🧵 **Continuation Loop Handling**: Fixed Gemini continuation logic so the plugin stops requesting extra chunks once the latest chunk no longer contains the pause marker
+- 🧹 **Trailing Assistant Chatter Cleanup**: Strips recap text, "new topic" offers, and CMS insertion instructions that were sometimes appended after the finished article/schema
+- 📦 **Shared Preview Payload Path**: The admin AJAX generator and local verification scripts now use the same parsing path, reducing contract drift for the editor box
+
+### Improved
+
+- 🖼️ **Unsplash Fallback Search**: Added broader fallback queries and orientation retries when the first image search returns zero results
+- 🧪 **Local Verification Harness**: Added fixture-driven preview checks, continuation simulation, and env-driven live preview verification scripts
+- 📝 **Documentation**: Added `.env.example` and documented the local verification flow in the repo docs
+
+### Technical
+
+- Updated plugin version constants and release metadata to `1.3.5`
+- Added debug visibility for image query attempts in the preview payload
+- Preserved the existing master prompt depth while adding stricter output boundary handling
+
+### Verification
+
+- `php tests/run-fixture-preview.php`
+- `php tests/run-gemini-continuation.php`
+- `php tests/run-live-preview.php`
+- `./scripts/release-build-check.sh`
+
 ## [1.1.0] - 2026-01-20
 
 ### 🎨 UI/UX Improvements Release
