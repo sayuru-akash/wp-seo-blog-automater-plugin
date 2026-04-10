@@ -2,7 +2,7 @@
 
 ## Overview
 
-WP SEO Blog Automater is a WordPress plugin that generates long-form SEO posts in the admin area, enriches them with metadata and optional Unsplash images, and publishes the result into WordPress. The repository also includes its own GitHub-based update path and version-aware release packaging flow.
+WP SEO Blog Automater is a WordPress plugin that generates long-form SEO posts in the admin area, enriches them with metadata and optional Unsplash images, publishes the result into WordPress, and now also provides search-engine submission helpers through Posts/Pages bulk actions (IndexNow submission, Google sitemap resubmission, and Google index-status inspection). The repository also includes its own GitHub-based update path and version-aware release packaging flow.
 
 ## Folder Structure
 
@@ -27,6 +27,7 @@ WP SEO Blog Automater is a WordPress plugin that generates long-form SEO posts i
 - Bootstrap is centralized in `wp-seo-blog-automater.php`. That file defines all plugin constants, loads includes, registers activation/deactivation hooks, and wires the admin class and GitHub updater into WordPress hooks.
 - The main content flow is admin AJAX driven. `admin/js/admin.js` posts user input to `wp_ajax_wp_seo_generate_post`, `WP_SEO_Automater_Admin::ajax_generate_post()` sanitizes input and loads the saved master prompt, `Gemini_API_Handler::generate_article()` calls Gemini and stitches continuation chunks together, then the admin class parses slug/meta/schema/image fields from the generated text and returns a structured JSON payload that the JS uses to populate the editor state.
 - Publishing is a second AJAX path. The browser submits the edited fields, the admin class validates and sanitizes them, creates the post, writes SEO/schema-related metadata, handles optional image sideloading, and returns the published post URL for the UI success state.
+- Search engine submission is list-table driven. `WP_SEO_Automater_Admin` now registers bulk actions on both post and page edit screens, serves the IndexNow verification file dynamically, authenticates to Google Search Console with a stored service-account JSON credential, and logs submission/inspection summaries back into the plugin activity log.
 - Logging is first-class and used across generation, image fetches, continuation loops, and update checks. New behavior should keep the existing pattern of recording meaningful steps with `WP_SEO_Automater_Admin::log_activity()` instead of failing silently.
 - The updater path is independent from wordpress.org. `WP_SEO_Automater_GitHub_Updater` hooks `pre_set_site_transient_update_plugins` and `plugins_api`, reads the latest GitHub release, compares tag version to `WP_SEO_AUTOMATER_VERSION`, and supplies a downloadable ZIP package. Post-install logic clears both plugin-specific and WordPress update caches so stale update notices do not persist.
 - Release packaging is version-driven from the plugin header file. `scripts/get-version.php` reads the plugin header and version constant, `build.sh` and `build.bat` derive artifact names from that value, and `scripts/release-build-check.sh` performs syntax checks, builds the ZIP, and validates archive contents. The GitHub workflow only publishes a release when the pushed range actually changes the plugin version.
@@ -45,12 +46,14 @@ WP SEO Blog Automater is a WordPress plugin that generates long-form SEO posts i
 - Preserve existing response shapes consumed by `admin/js/admin.js`. Frontend behavior expects fields such as `content`, `slug`, `schema`, `meta_title`, `meta_desc`, `image_url`, `image_credit`, and `debug_info`.
 - The JavaScript layer is jQuery-based and imperative. Match the existing style when making small edits rather than partially rewriting flows into a different frontend pattern.
 - `tests/` is still a manual/env-driven verification harness, not a reliable automated test suite. Describe it that way unless a real automated runner is added.
+- For Google Search Console integration, assume service-account JSON plus Search Console property access, not a browser OAuth flow. Keep the property string compatible with both URL-prefix and `sc-domain:` properties.
 
 ## Working Agreements
 
 - Prefer minimal, targeted changes. This plugin has a few dense controller files, so avoid broad refactors unless the task explicitly requires them.
 - When changing generation or publishing behavior, trace the full flow across PHP handler, parsed response shape, and `admin/js/admin.js` before editing. Most regressions here are contract mismatches between server and admin UI.
 - When touching generation parsing or continuation behavior, run `php tests/run-fixture-preview.php` and `php tests/run-gemini-continuation.php`. If API keys are available, also run `php tests/run-live-preview.php` to inspect the exact payload that will populate the editor box.
+- When touching search-engine submission features, reason about the official boundary: IndexNow is valid for normal posts/pages, while Google bulk submission is limited to sitemap submission and URL inspection rather than a generic "index now" API for ordinary content.
 - When changing updater behavior, reason about both caches: the plugin transient (`wp_seo_automater_github_release`) and WordPress plugin update cache (`update_plugins`).
 - When preparing a release-related change, run `./scripts/release-build-check.sh` locally. For package-only output, run `./build.sh`.
 - Keep distribution boundaries intact. Files under `.github/`, `.githooks/`, `.agents/`, `tests/`, and build helper docs should not end up in the packaged plugin ZIP.

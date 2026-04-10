@@ -1,6 +1,6 @@
 # WP SEO Blog Automater
 
-[![Version](https://img.shields.io/badge/version-1.3.7-blue.svg)](https://github.com/codezela/wp-seo-blog-automater)
+[![Version](https://img.shields.io/badge/version-1.3.8-blue.svg)](https://github.com/codezela/wp-seo-blog-automater)
 [![WordPress](https://img.shields.io/badge/WordPress-5.8+-green.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.4+-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/license-GPL--2.0+-red.svg)](LICENSE)
@@ -19,6 +19,7 @@ Developed by [**Codezela Technologies**](https://codezela.com)
 - **📸 Automatic Image Integration** - AI determines optimal search terms and automatically fetches royalty-free images from Unsplash
 - **🎯 Complete SEO Automation** - Generates meta titles, descriptions, URL slugs, and structured data (JSON-LD Schema)
 - **🔗 SEO Plugin Integration** - Native support for Yoast SEO and Rank Math with auto-detection
+- **📬 Search Engine Submission Tools** - Bulk-submit published posts/pages to IndexNow, resubmit sitemaps to Google, and inspect Google index status from the Posts and Pages screens
 - **📊 Activity Logging** - Comprehensive logging system for monitoring all generation activities
 - **⚙️ Customizable AI Prompts** - Full control over AI behavior with customizable master prompts
 
@@ -39,6 +40,8 @@ Developed by [**Codezela Technologies**](https://codezela.com)
 - **MySQL:** 5.6 or higher (or MariaDB equivalent)
 - **Google Gemini API Key:** [Get one free](https://aistudio.google.com/app/apikey)
 - **Unsplash Access Key:** [Get one free](https://unsplash.com/developers) (optional, for automatic images)
+- **IndexNow Key:** Optional, can be generated inside the plugin settings
+- **Google Search Console Service Account JSON:** Optional, required for Google sitemap submission and URL inspection bulk actions
 
 ---
 
@@ -81,6 +84,23 @@ wp plugin install wp-seo-blog-automater.zip --activate
 - **Unsplash Access Key** (Optional)
   - Required for automatic featured image integration
   - Get your key from [Unsplash Developers](https://unsplash.com/developers)
+
+#### Search Engine Submission
+
+- **IndexNow Key** (Optional)
+  - Used by the bulk `Submit to IndexNow` action on Posts and Pages
+  - You can paste your own key or generate one in Settings
+  - The plugin serves the required verification `.txt` file automatically from your site root
+- **Google Search Console Property** (Optional)
+  - Required for Google sitemap resubmission and URL inspection
+  - Supports both URL-prefix properties such as `https://example.com/` and domain properties such as `sc-domain:example.com`
+- **Google Service Account JSON** (Optional)
+  - Required for `Resubmit Sitemap to Google` and `Check Google Index Status`
+  - Create a Google Cloud service account, enable Search Console API access, and paste the full JSON credentials into Settings
+  - Add the service account email as an owner or full user on the matching Search Console property
+- **Google Sitemap URLs** (Optional)
+  - One sitemap URL per line
+  - If left blank, the plugin tries `/sitemap_index.xml`, `/wp-sitemap.xml`, and `/sitemap.xml` automatically
 
 #### SEO Plugin Integration
 
@@ -140,6 +160,20 @@ wp plugin install wp-seo-blog-automater.zip --activate
 - View detailed logs of all generation activities
 - Monitor API calls, errors, and successes
 - Troubleshoot any issues
+
+### Bulk Search Engine Actions
+
+Once Search Engine Submission settings are configured, you can run bulk actions from both **Posts → All Posts** and **Pages → All Pages**:
+
+- **Submit to IndexNow**
+  - Sends the selected published public URLs to the official IndexNow endpoint
+  - Useful for Bing and other IndexNow-participating search engines
+- **Resubmit Sitemap to Google**
+  - Resubmits your configured sitemap URLs to Google Search Console
+  - This is site-level, so the selected items simply trigger the sitemap submission run
+- **Check Google Index Status**
+  - Uses the Google URL Inspection API to check the indexed status of up to 10 selected published public URLs per run
+  - Results are shown in an admin notice and logged in the plugin activity log
 
 ---
 

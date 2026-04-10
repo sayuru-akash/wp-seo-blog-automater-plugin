@@ -48,6 +48,21 @@ $checks = array(
         'required' => 'Optional',
         'status' => get_option( 'wp_seo_automater_unsplash_key' ) ? 'success' : 'info'
     ),
+    'IndexNow Key' => array(
+        'value' => get_option( 'wp_seo_automater_indexnow_key' ) ? 'Configured' : 'Not Set',
+        'required' => 'Optional',
+        'status' => get_option( 'wp_seo_automater_indexnow_key' ) ? 'success' : 'info'
+    ),
+    'Search Console Property' => array(
+        'value' => get_option( 'wp_seo_automater_google_property' ) ? 'Configured' : home_url( '/' ),
+        'required' => 'Required for Google bulk actions',
+        'status' => get_option( 'wp_seo_automater_google_property' ) ? 'success' : 'info'
+    ),
+    'Google Service Account' => array(
+        'value' => get_option( 'wp_seo_automater_google_service_account_json' ) ? 'Configured' : 'Not Set',
+        'required' => 'Required for Google bulk actions',
+        'status' => get_option( 'wp_seo_automater_google_service_account_json' ) ? 'success' : 'warning'
+    ),
 );
 ?>
 <div class="wp-seo-wrap">

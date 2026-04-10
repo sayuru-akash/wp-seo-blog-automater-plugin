@@ -24,6 +24,10 @@ delete_option( 'wp_seo_automater_unsplash_key' );
 delete_option( 'wp_seo_automater_seo_plugin' );
 delete_option( 'wp_seo_automater_master_prompt' );
 delete_option( 'wp_seo_automater_logs' );
+delete_option( 'wp_seo_automater_indexnow_key' );
+delete_option( 'wp_seo_automater_google_property' );
+delete_option( 'wp_seo_automater_google_service_account_json' );
+delete_option( 'wp_seo_automater_google_sitemap_urls' );
 
 // For multisite
 if ( is_multisite() ) {
@@ -40,6 +44,10 @@ if ( is_multisite() ) {
 		delete_option( 'wp_seo_automater_seo_plugin' );
 		delete_option( 'wp_seo_automater_master_prompt' );
 		delete_option( 'wp_seo_automater_logs' );
+		delete_option( 'wp_seo_automater_indexnow_key' );
+		delete_option( 'wp_seo_automater_google_property' );
+		delete_option( 'wp_seo_automater_google_service_account_json' );
+		delete_option( 'wp_seo_automater_google_sitemap_urls' );
 	}
 	
 	switch_to_blog( $original_blog_id );

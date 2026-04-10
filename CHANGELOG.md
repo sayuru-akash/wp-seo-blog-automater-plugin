@@ -5,6 +5,38 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.8] - 2026-04-10
+
+### 🌐 Search Submission Release
+
+Patch release focused on adding official search-engine submission helpers for published posts and pages.
+
+### Added
+
+- 📬 **Posts & Pages Bulk Actions**: Added `Submit to IndexNow`, `Resubmit Sitemap to Google`, and `Check Google Index Status` to both the Posts and Pages admin list screens
+- 🔑 **IndexNow Key Management**: Added Settings support for saving or generating an IndexNow key and serving the required verification file directly from the plugin at `/<key>.txt`
+- 🔐 **Google Search Console Credentials**: Added Settings fields for a Search Console property, service account JSON, and optional sitemap URL overrides
+
+### Improved
+
+- 🪵 **Bulk Action Reporting**: Added per-run admin notices plus Activity Log summaries for IndexNow submissions, sitemap resubmissions, and Google index inspections
+- 🧹 **Uninstall Cleanup**: Added cleanup for the new search-engine submission options on uninstall
+- 📘 **Documentation**: Documented the new search-engine submission setup and usage flow in the repo docs
+
+### Technical
+
+- Updated plugin version constants and release metadata to `1.3.8`
+- Added service-account JWT authentication for Google Search Console API calls
+- Added official-safe Google support boundaries: sitemap submission and URL inspection only, not a fake generic "index now" action for ordinary content
+
+### Verification
+
+- `php -l includes/class-wp-seo-automater-admin.php`
+- `php -l admin/partials/settings-display.php`
+- `php -l admin/partials/system-info-display.php`
+- `php -l uninstall.php`
+- `./scripts/release-build-check.sh`
+
 ## [1.3.7] - 2026-04-10
 
 ### 🖼️ Image Refresh Release

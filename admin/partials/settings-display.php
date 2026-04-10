@@ -23,6 +23,14 @@ defined( 'ABSPATH' ) || exit;
         <?php endif; ?>
     </div>
 
+    <?php if ( ! empty( $settings_notices ) ) : ?>
+        <?php foreach ( $settings_notices as $notice ) : ?>
+            <div class="notice notice-<?php echo esc_attr( $notice['type'] ); ?> is-dismissible">
+                <p><?php echo esc_html( $notice['message'] ); ?></p>
+            </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
+
     <form method="post" action="">
         <?php wp_nonce_field( 'wp_seo_automater_settings_save' ); ?>
         
@@ -95,6 +103,98 @@ defined( 'ABSPATH' ) || exit;
         </div>
 
         <div class="wp-seo-card">
+            <h2><?php esc_html_e( 'Search Engine Submission', 'wp-seo-blog-automater' ); ?></h2>
+
+            <div class="wp-seo-form-group">
+                <label class="wp-seo-label" for="indexnow_key">
+                    <?php esc_html_e( 'IndexNow Key', 'wp-seo-blog-automater' ); ?>
+                </label>
+                <input
+                    type="text"
+                    id="indexnow_key"
+                    name="indexnow_key"
+                    class="wp-seo-input"
+                    value="<?php echo esc_attr( $indexnow_key ); ?>"
+                    placeholder="<?php esc_attr_e( 'Enter or generate an IndexNow key...', 'wp-seo-blog-automater' ); ?>"
+                >
+                <p class="description">
+                    <?php esc_html_e( 'Used for the bulk "Submit to IndexNow" action on Posts and Pages. The plugin serves the verification file for this key automatically, so you do not need to upload a physical .txt file yourself.', 'wp-seo-blog-automater' ); ?>
+                </p>
+                <?php if ( ! empty( $indexnow_key_file_url ) ) : ?>
+                    <p class="description">
+                        <?php
+                        printf(
+                            /* translators: %s: IndexNow verification file URL */
+                            esc_html__( 'Verification file URL: %s', 'wp-seo-blog-automater' ),
+                            esc_url( $indexnow_key_file_url )
+                        );
+                        ?>
+                    </p>
+                <?php endif; ?>
+            </div>
+
+            <div class="wp-seo-form-group">
+                <label class="wp-seo-label" for="google_property">
+                    <?php esc_html_e( 'Google Search Console Property', 'wp-seo-blog-automater' ); ?>
+                </label>
+                <input
+                    type="text"
+                    id="google_property"
+                    name="google_property"
+                    class="wp-seo-input"
+                    value="<?php echo esc_attr( $google_property ); ?>"
+                    placeholder="https://example.com/ or sc-domain:example.com"
+                >
+                <p class="description">
+                    <?php esc_html_e( 'Required for the Google bulk actions. Use a URL-prefix property with a trailing slash or a Domain property in the format sc-domain:example.com.', 'wp-seo-blog-automater' ); ?>
+                </p>
+            </div>
+
+            <div class="wp-seo-form-group">
+                <label class="wp-seo-label" for="google_service_account_json">
+                    <?php esc_html_e( 'Google Service Account JSON', 'wp-seo-blog-automater' ); ?>
+                </label>
+                <textarea
+                    id="google_service_account_json"
+                    name="google_service_account_json"
+                    class="wp-seo-textarea"
+                    rows="12"
+                    placeholder="<?php esc_attr_e( 'Paste the full Google Cloud service account JSON here...', 'wp-seo-blog-automater' ); ?>"
+                ><?php echo esc_textarea( $google_service_account_json ); ?></textarea>
+                <p class="description">
+                    <?php esc_html_e( 'Required for "Resubmit Sitemap to Google" and "Check Google Index Status". Add the service account email as an owner or full user on the matching Search Console property.', 'wp-seo-blog-automater' ); ?>
+                </p>
+                <?php if ( ! empty( $google_service_account_email ) ) : ?>
+                    <p class="description">
+                        <?php
+                        printf(
+                            /* translators: %s: service account email */
+                            esc_html__( 'Configured service account email: %s', 'wp-seo-blog-automater' ),
+                            esc_html( $google_service_account_email )
+                        );
+                        ?>
+                    </p>
+                <?php endif; ?>
+            </div>
+
+            <div class="wp-seo-form-group">
+                <label class="wp-seo-label" for="google_sitemap_urls">
+                    <?php esc_html_e( 'Google Sitemap URLs', 'wp-seo-blog-automater' ); ?>
+                </label>
+                <textarea
+                    id="google_sitemap_urls"
+                    name="google_sitemap_urls"
+                    class="wp-seo-textarea"
+                    rows="4"
+                    placeholder="<?php esc_attr_e( "One sitemap URL per line. Leave blank to auto-detect /sitemap_index.xml, /wp-sitemap.xml, or /sitemap.xml.", 'wp-seo-blog-automater' ); ?>"
+                ><?php echo esc_textarea( $google_sitemap_urls ); ?></textarea>
+                <p class="description">
+                    <?php esc_html_e( 'Optional override for the bulk "Resubmit Sitemap to Google" action. If left blank, the plugin will try the standard sitemap endpoints automatically.', 'wp-seo-blog-automater' ); ?>
+                </p>
+            </div>
+        </div>
+
+        <div class="wp-seo-card">
             <h2><?php esc_html_e( 'SEO Plugin Integration', 'wp-seo-blog-automater' ); ?></h2>
             <div class="wp-seo-form-group">
                 <label class="wp-seo-label" for="seo_plugin">
@@ -139,6 +239,11 @@ defined( 'ABSPATH' ) || exit;
             <button type="submit" name="wp_seo_automater_save_settings" class="wp-seo-btn wp-seo-btn-primary">
                 <span class="dashicons dashicons-yes"></span>
                 <?php esc_html_e( 'Save Settings', 'wp-seo-blog-automater' ); ?>
+            </button>
+
+            <button type="submit" name="wp_seo_automater_generate_indexnow_key" class="wp-seo-btn wp-seo-btn-secondary">
+                <span class="dashicons dashicons-admin-links"></span>
+                <?php esc_html_e( 'Generate IndexNow Key', 'wp-seo-blog-automater' ); ?>
             </button>
 
             <button 
