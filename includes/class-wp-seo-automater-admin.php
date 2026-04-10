@@ -1677,6 +1677,14 @@ class WP_SEO_Automater_Admin {
 			$args['body'] = false !== stripos( $content_type, 'application/json' )
 				? wp_json_encode( $args['body'] )
 				: http_build_query( $args['body'], '', '&' );
+		} elseif ( null === $args['body'] && ! in_array( $method, array( 'GET', 'HEAD' ), true ) ) {
+			// Some APIs, including Google Search Console sitemap submission,
+			// reject bodyless PUT/POST requests unless a zero-length body is sent.
+			$args['body'] = '';
+
+			if ( ! isset( $args['headers']['Content-Length'] ) ) {
+				$args['headers']['Content-Length'] = '0';
+			}
 		}
 
 		if ( function_exists( 'wp_remote_request' ) ) {

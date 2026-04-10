@@ -5,6 +5,28 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.9] - 2026-04-10
+
+### 🛠️ Google Sitemap Fix Release
+
+Patch release focused on fixing Google Search Console sitemap resubmission.
+
+### Fixed
+
+- 🧾 **Length Required Error**: Fixed Google sitemap submission requests so bodyless non-GET requests now send an explicit zero-length body with `Content-Length: 0`
+- 🔄 **Search Console Compatibility**: The `Resubmit Sitemap to Google` bulk action now matches the request shape Google expects for the sitemap submit endpoint
+
+### Technical
+
+- Updated plugin version constants and release metadata to `1.3.9`
+- Kept the existing Search Console auth and bulk-action flow intact while hardening the HTTP transport helper
+
+### Verification
+
+- `php -l includes/class-wp-seo-automater-admin.php`
+- `php -l wp-seo-blog-automater.php`
+- `./scripts/release-build-check.sh`
+
 ## [1.3.8] - 2026-04-10
 
 ### 🌐 Search Submission Release
