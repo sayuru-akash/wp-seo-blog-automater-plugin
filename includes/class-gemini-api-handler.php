@@ -102,7 +102,7 @@ class Gemini_API_Handler {
 			$loop_count++;
 			WP_SEO_Automater_Admin::log_activity( 'Continuation', "Loop #$loop_count triggered due to pause marker.", 'info' );
 			
-			$fail_safe_prompt = "Continue exactly where you left off. Do not repeat the last sentence.";
+			$fail_safe_prompt = 'Continue exactly where you left off. Output only the remaining article content and final schema. Do not repeat prior text, add recap notes, mention previous responses, offer a new task, or include CMS insertion instructions.';
 			
 			// Add user "Continue" message to history
 			$history[] = ['role' => 'user', 'parts' => [['text' => $fail_safe_prompt]]];

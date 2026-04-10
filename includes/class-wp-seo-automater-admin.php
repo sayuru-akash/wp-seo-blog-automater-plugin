@@ -105,6 +105,7 @@ class WP_SEO_Automater_Admin {
 			wp_send_json_error( $content->get_error_message() );
 		}
 
+		$content = $this->sanitize_generated_output( $content );
 		self::log_activity( 'Generation Success', "Generated article for: $title", 'success' );
 
 		// Return content. We assume raw text/markdown.
@@ -282,7 +283,19 @@ class WP_SEO_Automater_Admin {
 		}
 
 		// B. Find End (Stop Phrases)
-		$stop_phrases = array( 'Phase 2:', 'Phase 3:', 'Output Management', '***', '---', '___' );
+		$stop_phrases = array(
+			'Phase 2:',
+			'Phase 3:',
+			'Output Management',
+			'The article, including the mandatory Call to Action',
+			'There is no further content needed for this piece',
+			'If you have a new topic, keyword cluster',
+			'As your Lead SEO Content Strategist',
+			'Please insert the following content immediately BEFORE',
+			'***',
+			'---',
+			'___',
+		);
 		$cutoff_pos = strlen( $html_content );
 		
 		foreach ( $stop_phrases as $phrase ) {
@@ -622,6 +635,72 @@ class WP_SEO_Automater_Admin {
 	}
 
 	/**
+	 * Remove assistant-style epilogues that sometimes leak after the article/schema.
+	 *
+	 * The prompt requires the schema to be the final deliverable. If the model
+	 * appends recap text, CMS instructions, or "new task" chatter afterward,
+	 * strip it before metadata extraction and preview rendering.
+	 *
+	 * @since 1.2.5
+	 * @param string $content Raw generated content from Gemini.
+	 * @return string Sanitized generated content.
+	 */
+	private function sanitize_generated_output( $content ) {
+		$content = str_replace( array( "\r\n", "\r" ), "\n", $content );
+		$original_content = $content;
+
+		$schema_patterns = array(
+			'/<script\s+type="application\/ld\+json"[^>]*>.*?<\/script>/is',
+			'/```json\s*.*?"@context".*?```/is',
+		);
+
+		foreach ( $schema_patterns as $pattern ) {
+			if ( preg_match( $pattern, $content, $matches, PREG_OFFSET_CAPTURE ) ) {
+				$match = $matches[0][0];
+				$offset = $matches[0][1];
+				$end_pos = $offset + strlen( $match );
+				$trailing_content = trim( substr( $content, $end_pos ) );
+
+				if ( '' !== $trailing_content ) {
+					$content = substr( $content, 0, $end_pos );
+					self::log_activity( 'Generation Cleanup', 'Removed trailing content found after the final schema block.', 'warning' );
+				}
+
+				break;
+			}
+		}
+
+		$epilogue_patterns = array(
+			'/\n+\s*The article, including the mandatory Call to Action\b/i',
+			'/\n+\s*There is no further content needed for this piece\b/i',
+			'/\n+\s*If you have a new topic, keyword cluster\b/i',
+			'/\n+\s*\*?\s*As your Lead SEO Content Strategist\b/i',
+			'/\n+\s*Please insert the following content immediately BEFORE\b/i',
+		);
+
+		$cutoff_pos = null;
+		foreach ( $epilogue_patterns as $pattern ) {
+			if ( preg_match( $pattern, $content, $matches, PREG_OFFSET_CAPTURE ) ) {
+				$match_pos = $matches[0][1];
+				if ( null === $cutoff_pos || $match_pos < $cutoff_pos ) {
+					$cutoff_pos = $match_pos;
+				}
+			}
+		}
+
+		if ( null !== $cutoff_pos ) {
+			$content = rtrim( substr( $content, 0, $cutoff_pos ) );
+			self::log_activity( 'Generation Cleanup', 'Removed assistant commentary appended after the article body.', 'warning' );
+		}
+
+		if ( $content !== $original_content ) {
+			$content = trim( $content );
+		}
+
+		return $content;
+	}
+
+	/**
 	 * Simple Markdown to HTML converter.
 	 * 
 	 * Converts basic Markdown syntax to HTML for content display.
@@ -920,6 +999,10 @@ Mandatory CTA: The final paragraph must exactly match this format:
 Phase 4: Technical Deliverables
 
 Output Purity: No conversational filler. Just the content.
+
+Final Boundary Rule: The FAQPage JSON-LD schema is the final output. After the schema closes, output nothing else.
+
+Forbidden Post-Article Notes: Do not add recap text, \"the article was completed above\" notices, \"if you have a new topic\" offers, or CMS insertion instructions.
 
 Schema Markup: Immediately after the CTA, provide a valid JSON-LD FAQPage Schema script block.
 
