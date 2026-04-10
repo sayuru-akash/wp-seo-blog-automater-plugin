@@ -88,201 +88,159 @@ class WP_SEO_Automater_Admin {
 
 		$title = sanitize_text_field( $_POST['title'] );
 		$keywords = sanitize_text_field( $_POST['keywords'] );
-		
-		$handler = new Gemini_API_Handler();
+		$result = $this->generate_preview_data( $title, $keywords );
+
+		if ( is_wp_error( $result ) ) {
+			self::log_activity( 'Generation Failed', "Title: $title - Error: " . $result->get_error_message(), 'error' );
+			wp_send_json_error( $result->get_error_message() );
+		}
+
+		wp_send_json_success( $result );
+	}
+
+	/**
+	 * Get the effective master prompt used for article generation.
+	 *
+	 * Keeps the saved/default prompt intact while appending required image
+	 * keyword guidance for older installs that may still have stale prompt text.
+	 *
+	 * @since 1.3.0
+	 * @return string Effective prompt.
+	 */
+	public function get_generation_master_prompt() {
 		$master_prompt = get_option( 'wp_seo_automater_master_prompt', $this->get_default_master_prompt() );
 
-		// FORCE IMAGE INSTRUCTION IF MISSING (Fix for existing users with stale prompts)
 		if ( stripos( $master_prompt, 'Image Search Keywords' ) === false ) {
 			$master_prompt .= "\n\n[SYSTEM UPDATE]: You must also output 'Image Search Keywords: 1-2 broad visual terms (e.g. luxury glasses)' in the Phase 1 Metadata section for Unsplash integration.";
 		}
+
+		return $master_prompt;
+	}
+
+	/**
+	 * Generate the exact preview payload consumed by the admin UI.
+	 *
+	 * This method is shared by the AJAX flow and local verification scripts so
+	 * both exercise the same parsing and image-search behavior.
+	 *
+	 * @since 1.3.0
+	 * @param string      $title         Article title/topic.
+	 * @param string      $keywords      Target keywords.
+	 * @param string|null $master_prompt Optional prompt override.
+	 * @return array|WP_Error Preview payload or WP_Error on failure.
+	 */
+	public function generate_preview_data( $title, $keywords, $master_prompt = null ) {
+		$handler = new Gemini_API_Handler();
+		$master_prompt = null === $master_prompt ? $this->get_generation_master_prompt() : $master_prompt;
 
 		self::log_activity( 'Generation Start', "Processing article: '{$title}' with keywords '{$keywords}'...", 'info' );
 		$content = $handler->generate_article( $title, $keywords, $master_prompt );
 
 		if ( is_wp_error( $content ) ) {
-			self::log_activity( 'Generation Failed', "Title: $title - Error: " . $content->get_error_message(), 'error' );
-			wp_send_json_error( $content->get_error_message() );
+			return $content;
 		}
 
-		$content = $this->sanitize_generated_output( $content );
 		self::log_activity( 'Generation Success', "Generated article for: $title", 'success' );
 
-		// Return content. We assume raw text/markdown.
-		// Use a simple markdown parser or just nl2br if needed, but WP post content handles HTML well.
-		// If Gemini returns Markdown, we might want to convert headers # to <h1> etc. 
-		// For now, let's send raw and handle minimal parsing on save or just trust Gemini's HTML capability if prompted (current prompt asks for H1, H2 etc).
-		// The prompt logic implies it writes formatted text. We can convert Markdown to HTML if needed using a simple regex replace for basic headers/bolding if it comes back as MD.
+		return $this->build_generation_result_payload( $content );
+	}
 
+	/**
+	 * Parse raw AI output into the structured payload used by the editor UI.
+	 *
+	 * @since 1.3.0
+	 * @param string $content Raw generated article content.
+	 * @return array Parsed payload matching the AJAX response shape.
+	 */
+	public function build_generation_result_payload( $content ) {
+		$content = $this->sanitize_generated_output( $content );
 
-		// We extract metadata from the RAW output to avoid HTML tag interference (like the </strong> bug).
-		
-		// 1. Slug
 		$slug = '';
-		// Match "Slug" -> optional separate -> optional markdown -> capture rest of line
 		if ( preg_match( '/Slug.*?(?:[:\-]|\s)[\s\*]*([^\n\r]+)/i', $content, $matches ) ) {
-			// Clean Markdown artifacts (*, _, `, quotes)
 			$slug = trim( str_replace( array( '*', '_', '`', '"', "'", '<', '>' ), '', $matches[1] ) );
 		}
 
-		// 2. Meta Title
 		$meta_title = '';
 		if ( preg_match( '/Meta\s*Title.*?(?:[:\-]|\s)[\s\*]*([^\n\r]+)/i', $content, $matches ) ) {
 			$meta_title = trim( str_replace( array( '*', '_', '`', '"', "'", '<', '>' ), '', $matches[1] ) );
 		}
 
-		// 3. Meta Description
 		$meta_desc = '';
 		if ( preg_match( '/Meta\s*Description.*?(?:[:\-]|\s)[\s\*]*([^\n\r]+)/i', $content, $matches ) ) {
 			$meta_desc = trim( str_replace( array( '*', '_', '`', '"', "'", '<', '>' ), '', $matches[1] ) );
 		}
 
-		// 4. Image Search Keywords
 		$image_keywords = '';
 		if ( preg_match( '/Image\s*Search\s*Keywords.*?(?:[:\-]|\s)[\s\*]*([^\n\r]+)/i', $content, $matches ) ) {
 			$image_keywords = trim( str_replace( array( '*', '_', '`', '"', "'", '<', '>' ), '', $matches[1] ) );
-			
-			// OPTIMIZATION: Broaden the search
-			// 1. If comma-separated (e.g. "luxury glasses, table, office"), take only the first concept.
+
 			if ( strpos( $image_keywords, ',' ) !== false ) {
 				$parts = explode( ',', $image_keywords );
 				$image_keywords = trim( $parts[0] );
 			}
-			
-			// 2. Limit to max 2 words (Aggressive broadness: "luxury glasses repair..." -> "luxury glasses")
+
 			$words = explode( ' ', $image_keywords );
 			if ( count( $words ) > 2 ) {
 				$image_keywords = implode( ' ', array_slice( $words, 0, 2 ) );
 			}
 		}
 
-		// LOGGING
 		self::log_activity( 'Debug Extraction', "Slug: '$slug' | Title: '$meta_title' | Image Key: '$image_keywords'", 'info' );
 
-		// 5. FETCH IMAGE FROM UNSPLASH
-		$unsplash_url = '';
-		$unsplash_credit = '';
-		$unsplash_debug = 'Not Attempted';
-		$unsplash_key = get_option( 'wp_seo_automater_unsplash_key', '' );
-		
-		if ( ! empty( $unsplash_key ) && ! empty( $image_keywords ) ) {
-			// Call Unsplash
-			$endpoint = 'https://api.unsplash.com/search/photos';
-			$params = array(
-				'client_id' => $unsplash_key,
-				'query'     => $image_keywords,
-				'page'      => 1,
-				'per_page'  => 1,
-				'orientation' => 'landscape'
-			);
-			$api_url = add_query_arg( $params, $endpoint );
-			
-			$response = wp_remote_get( $api_url );
-			
-			if ( ! is_wp_error( $response ) ) {
-				$body = wp_remote_retrieve_body( $response );
-				$data = json_decode( $body, true );
-				
-				if ( isset( $data['results'][0] ) ) {
-					// Get Regular URL for web display/upload
-					$unsplash_url = $data['results'][0]['urls']['regular'];
-					// Get photographer credit
-					$user = $data['results'][0]['user'];
-					$unsplash_credit = 'Photo by ' . $user['name'] . ' on Unsplash';
-					$unsplash_debug = 'Success';
-					self::log_activity( 'Unsplash', "Found image for '$image_keywords': $unsplash_url", 'success' );
-				} else {
-					$unsplash_debug = 'No Results from API';
-					self::log_activity( 'Unsplash', "No images found for '$image_keywords'.", 'warning' );
-				}
-			} else {
-				$unsplash_debug = 'API Error: ' . $response->get_error_message();
-				self::log_activity( 'Unsplash Error', $response->get_error_message(), 'error' );
-			}
-		} elseif ( empty($unsplash_key) ) {
-			$unsplash_debug = 'Missing API Key';
-		} elseif ( empty($image_keywords) ) {
-			$unsplash_debug = 'No Keywords Extracted from AI';
-		}
+		$image_result = $this->fetch_unsplash_image_data( $image_keywords );
 
-		// HTML CONVERSION (For Body)
 		$html_content = $this->markdown_to_html( $content );
-
-		// 4. EXTRACT SCHEMA (JSON-LD)
-		// Schema often gets wrapped in code blocks in Markdown, so extracting from HTML is safer/easier if markdown parser handled valid blocks.
-		// Actually, let's extract from HTML to handle the <script> tags or <pre> blocks consistently.
-		// 4. EXTRACT SCHEMA (JSON-LD)
 		$extracted_schema = '';
-		
-		// Priority 1: <script> tag (most common if AI follows HTML instruction)
+
 		if ( preg_match( '/<script\s+type="application\/ld\+json"[^>]*>(.*?)<\/script>/is', $html_content, $matches ) ) {
 			$extracted_schema = trim( $matches[1] );
-			// Remove from content
 			$html_content = str_replace( $matches[0], '', $html_content );
-		} 
-		// Priority 2: Markdown Code Block (```json ... ```)
-		elseif ( preg_match( '/```json(.*?)```/is', $content, $matches ) ) { 
-			// Check if it looks like schema context
+		} elseif ( preg_match( '/```json(.*?)```/is', $content, $matches ) ) {
 			if ( strpos( $matches[1], '@context' ) !== false ) {
 				$extracted_schema = trim( $matches[1] );
-				// Clean potential weirdness
 			}
 		}
 
-		// CLEANUP: If schema extracted, ensure it's valid JSON
 		if ( ! empty( $extracted_schema ) ) {
-			// Decodes/Encodes to clean syntax errors if minor, or valid check
 			$decoded = json_decode( $extracted_schema );
 			if ( $decoded === null ) {
-				self::log_activity( 'Schema Warning', "Extracted schema was invalid JSON. Attempting cleanup.", 'warning' );
+				self::log_activity( 'Schema Warning', 'Extracted schema was invalid JSON. Attempting cleanup.', 'warning' );
 
-				// 1. Aggressive Trim: Find first { and last }
 				$start = strpos( $extracted_schema, '{' );
 				$end   = strrpos( $extracted_schema, '}' );
 
-				if ( $start !== false && $end !== false && $end > $start ) {
+				if ( false !== $start && false !== $end && $end > $start ) {
 					$extracted_schema = substr( $extracted_schema, $start, $end - $start + 1 );
 				}
 
-				// 2. Remove trailing commas (which are invalid in JSON but common in JS objects)
 				$extracted_schema = preg_replace( '/,\s*([\}\]])/s', '$1', $extracted_schema );
-
-				// Retry Decode
 				$decoded = json_decode( $extracted_schema );
 
-				if ( $decoded !== null ) {
-					self::log_activity( 'Schema Fixed', "Schema cleanup successful.", 'success' );
+				if ( null !== $decoded ) {
+					self::log_activity( 'Schema Fixed', 'Schema cleanup successful.', 'success' );
 				} else {
-					self::log_activity( 'Schema Error', "Schema cleanup failed. JSON Error: " . json_last_error_msg(), 'error' );
+					self::log_activity( 'Schema Error', 'Schema cleanup failed. JSON Error: ' . json_last_error_msg(), 'error' );
 				}
 			}
 		}
 
-		// 5. EXTRACT CONTENT BODY (Surgical Slicing on HTML)
-		
-		// A. Find Start (H1)
 		$h1_start_pos = stripos( $html_content, '<h1' );
 		$extracted_title = '';
-		
-		if ( $h1_start_pos !== false ) {
+
+		if ( false !== $h1_start_pos ) {
 			if ( preg_match( '/<h1.*?>(.*?)<\/h1>/is', $html_content, $matches, PREG_OFFSET_CAPTURE ) ) {
 				$extracted_title = strip_tags( $matches[1][0] );
-				// MATCH FOUND: The matches[0] contains the full <h1...>Text</h1> string and its offset.
-				// We want to start the content AFTER this tag.
-				$full_h1_string = $matches[0][0]; // The text "<h1...>...</h1>"
+				$full_h1_string = $matches[0][0];
 				$h1_end_pos = $h1_start_pos + strlen( $full_h1_string );
-				
+
 				$html_content = substr( $html_content, $h1_end_pos );
 			} else {
-				// Fallback if regex failed but strpos passed (weird edge case), just cut from start
 				$html_content = substr( $html_content, $h1_start_pos );
 			}
 		} else {
-			// Fallback: Remove top metadata lines manually from HTML if no H1
-			$html_content = preg_replace( '/^Phase \d+.*?(?=\n)/is', '', $html_content ); 
+			$html_content = preg_replace( '/^Phase \d+.*?(?=\n)/is', '', $html_content );
 		}
 
-		// B. Find End (Stop Phrases)
 		$stop_phrases = array(
 			'Phase 2:',
 			'Phase 3:',
@@ -297,36 +255,31 @@ class WP_SEO_Automater_Admin {
 			'___',
 		);
 		$cutoff_pos = strlen( $html_content );
-		
+
 		foreach ( $stop_phrases as $phrase ) {
 			$pos = stripos( $html_content, $phrase );
-			if ( $pos !== false && $pos < $cutoff_pos ) {
+			if ( false !== $pos && $pos < $cutoff_pos ) {
 				$cutoff_pos = $pos;
 			}
 		}
-		
-		// C. Slice it
-		$html_content = substr( $html_content, 0, $cutoff_pos );
-		
-		// Final Polish
-		$html_content = trim( $html_content );
 
+		$html_content = trim( substr( $html_content, 0, $cutoff_pos ) );
 
-		wp_send_json_success( array(
-			'content' => $html_content,
-			'slug'    => $slug,
-			'title'   => $extracted_title,
-			'schema'  => $extracted_schema,
-			'meta_title' => $meta_title,
-			'meta_desc'  => $meta_desc,
-			'image_url'  => $unsplash_url,
-			'image_credit' => $unsplash_credit,
-			'debug_info' => array(
-				'keywords' => $image_keywords,
-				'unsplash_status' => $unsplash_debug,
-				'has_key' => !empty($unsplash_key)
-			)
-		));
+		return array(
+			'content'      => $html_content,
+			'slug'         => $slug,
+			'title'        => $extracted_title,
+			'schema'       => $extracted_schema,
+			'meta_title'   => $meta_title,
+			'meta_desc'    => $meta_desc,
+			'image_url'    => $image_result['url'],
+			'image_credit' => $image_result['credit'],
+			'debug_info'   => array(
+				'keywords'        => $image_keywords,
+				'unsplash_status' => $image_result['status'],
+				'has_key'         => $image_result['has_key'],
+			),
+		);
 	}
 
 	/**
@@ -632,6 +585,66 @@ class WP_SEO_Automater_Admin {
 		// Keep last 200
 		$logs = array_slice( $logs, 0, 200 );
 		update_option( 'wp_seo_automater_logs', $logs );
+	}
+
+	/**
+	 * Fetch Unsplash image data for the generated image keywords.
+	 *
+	 * @since 1.3.0
+	 * @param string $image_keywords Extracted image keywords.
+	 * @return array URL, credit, and debug status.
+	 */
+	private function fetch_unsplash_image_data( $image_keywords ) {
+		$unsplash_key = get_option( 'wp_seo_automater_unsplash_key', '' );
+		$result = array(
+			'url'     => '',
+			'credit'  => '',
+			'status'  => 'Not Attempted',
+			'has_key' => ! empty( $unsplash_key ),
+		);
+
+		if ( empty( $unsplash_key ) ) {
+			$result['status'] = 'Missing API Key';
+			return $result;
+		}
+
+		if ( empty( $image_keywords ) ) {
+			$result['status'] = 'No Keywords Extracted from AI';
+			return $result;
+		}
+
+		$endpoint = 'https://api.unsplash.com/search/photos';
+		$params = array(
+			'client_id'   => $unsplash_key,
+			'query'       => $image_keywords,
+			'page'        => 1,
+			'per_page'    => 1,
+			'orientation' => 'landscape',
+		);
+		$api_url = add_query_arg( $params, $endpoint );
+		$response = wp_remote_get( $api_url );
+
+		if ( is_wp_error( $response ) ) {
+			$result['status'] = 'API Error: ' . $response->get_error_message();
+			self::log_activity( 'Unsplash Error', $response->get_error_message(), 'error' );
+			return $result;
+		}
+
+		$body = wp_remote_retrieve_body( $response );
+		$data = json_decode( $body, true );
+
+		if ( isset( $data['results'][0] ) ) {
+			$result['url'] = $data['results'][0]['urls']['regular'];
+			$result['credit'] = 'Photo by ' . $data['results'][0]['user']['name'] . ' on Unsplash';
+			$result['status'] = 'Success';
+			self::log_activity( 'Unsplash', "Found image for '$image_keywords': {$result['url']}", 'success' );
+			return $result;
+		}
+
+		$result['status'] = 'No Results from API';
+		self::log_activity( 'Unsplash', "No images found for '$image_keywords'.", 'warning' );
+
+		return $result;
 	}
 
 	/**

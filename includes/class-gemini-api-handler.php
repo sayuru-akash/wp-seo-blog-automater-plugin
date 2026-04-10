@@ -98,7 +98,9 @@ class Gemini_API_Handler {
 			['role' => 'model', 'parts' => [['text' => $generated_text]]]
 		];
 
-		while ( strpos( $generated_text, '[PAUSING FOR CONTINUATION]' ) !== false && $loop_count < $max_loops ) {
+		$should_continue = strpos( $generated_text, '[PAUSING FOR CONTINUATION]' ) !== false;
+
+		while ( $should_continue && $loop_count < $max_loops ) {
 			$loop_count++;
 			WP_SEO_Automater_Admin::log_activity( 'Continuation', "Loop #$loop_count triggered due to pause marker.", 'info' );
 			
@@ -123,6 +125,7 @@ class Gemini_API_Handler {
 			
 			// Append to full text
 			$generated_text .= "\n" . $next_chunk;
+			$should_continue = strpos( $next_chunk, '[PAUSING FOR CONTINUATION]' ) !== false;
 		}
 
 		// Final cleanup: Remove the [PAUSING...] markers
@@ -142,7 +145,7 @@ class Gemini_API_Handler {
 	 * @param string $master_prompt The system/master prompt.
 	 * @return string Complete prompt for AI.
 	 */
-	private function construct_prompt( $title, $keywords, $master_prompt ) {
+	protected function construct_prompt( $title, $keywords, $master_prompt ) {
 		$user_instruction = "\n\n=== TASK ===\n";
 		$user_instruction .= "Topic/Working Title: " . $title . "\n";
 		$user_instruction .= "Target Keywords: " . $keywords . "\n";
@@ -162,7 +165,7 @@ class Gemini_API_Handler {
 	 * @param array|null  $history     Chat history for continuation requests.
 	 * @return array|WP_Error API response data or error.
 	 */
-	private function make_api_request( $prompt_text = null, $history = null ) {
+	protected function make_api_request( $prompt_text = null, $history = null ) {
 		$url = $this->base_url . $this->model_id . ':generateContent?key=' . $this->api_key;
 
 		$body = [
@@ -214,7 +217,7 @@ class Gemini_API_Handler {
 	 * @param array $response_data Decoded API response.
 	 * @return string Extracted text content.
 	 */
-	private function extract_text_from_response( $response_data ) {
+	protected function extract_text_from_response( $response_data ) {
 		if ( isset( $response_data['candidates'][0]['content']['parts'][0]['text'] ) ) {
 			return $response_data['candidates'][0]['content']['parts'][0]['text'];
 		}

@@ -143,6 +143,50 @@ wp plugin install wp-seo-blog-automater.zip --activate
 
 ---
 
+## Local Verification
+
+The repository now includes CLI verification scripts that exercise the same preview payload used by the admin editor box.
+
+### Setup
+
+1. Copy `.env.example` to `.env`
+2. Add your keys:
+   - `WP_SEO_AUTOMATER_GEMINI_KEY`
+   - `WP_SEO_AUTOMATER_UNSPLASH_KEY` (optional, but required to verify image fetching)
+3. Adjust the default Lumiere Optique title/keywords in `.env` if needed
+
+### Commands
+
+```bash
+php tests/run-fixture-preview.php
+php tests/run-gemini-continuation.php
+php tests/run-live-preview.php
+```
+
+### What each script checks
+
+- `php tests/run-fixture-preview.php`
+  - Verifies one-part and merged two-part raw model outputs
+  - Confirms the editor payload keeps the article body, CTA, slug, meta fields, and schema
+  - Confirms assistant-style trailing chatter is removed before it reaches the box
+- `php tests/run-gemini-continuation.php`
+  - Simulates Gemini continuation behavior
+  - Confirms the initial chunk and continuation chunk are stitched together once
+  - Confirms the old over-continuation loop does not recur
+- `php tests/run-live-preview.php`
+  - Calls Gemini live using the title/keywords from `.env`
+  - Produces the exact structured payload consumed by `admin/js/admin.js`
+  - Saves the payload to `tests/output/live-preview.json` for inspection
+  - Reports image keyword extraction and Unsplash status
+
+### Notes
+
+- These scripts are a manual verification harness, not a formal automated test suite.
+- `tests/run-live-preview.php` fails fast if the Gemini key is missing.
+- If the Unsplash key is omitted, the preview still verifies content parsing and reports `Missing API Key` for image fetching.
+
+---
+
 ## 🏗️ Architecture
 
 ### File Structure
@@ -163,6 +207,12 @@ wp-seo-blog-automater/
 ├── includes/
 │   ├── class-wp-seo-automater-admin.php  # Main admin class
 │   └── class-gemini-api-handler.php      # Gemini API handler
+├── tests/
+│   ├── fixtures/               # Raw Gemini-like fixture responses
+│   ├── lib/                    # CLI verification bootstrap/shims
+│   ├── run-fixture-preview.php # Fixture-driven preview payload checks
+│   ├── run-gemini-continuation.php # Continuation loop verification
+│   └── run-live-preview.php    # Live Gemini/Unsplash preview verification
 ├── languages/                  # Translation files (POT/PO/MO)
 ├── wp-seo-blog-automater.php  # Main plugin file
 ├── uninstall.php              # Uninstall cleanup

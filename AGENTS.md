@@ -18,7 +18,7 @@ WP SEO Blog Automater is a WordPress plugin that generates long-form SEO posts i
 - `scripts/`: release/version utilities used by local validation and GitHub Actions.
 - `.github/workflows/`: version-aware build and release workflow.
 - `.githooks/`: local `pre-push` hook that only runs release validation when the plugin version changes.
-- `tests/`: ad hoc debug scripts, not a formal automated test suite.
+- `tests/`: manual verification harness and debug scripts. Includes fixture-driven preview checks, Gemini continuation simulation, and an env-driven live preview script.
 - `dist/`: packaged release output.
 - `.agents/skills/`: local Codex skill material; useful context, but not part of the distributable plugin.
 
@@ -30,6 +30,7 @@ WP SEO Blog Automater is a WordPress plugin that generates long-form SEO posts i
 - Logging is first-class and used across generation, image fetches, continuation loops, and update checks. New behavior should keep the existing pattern of recording meaningful steps with `WP_SEO_Automater_Admin::log_activity()` instead of failing silently.
 - The updater path is independent from wordpress.org. `WP_SEO_Automater_GitHub_Updater` hooks `pre_set_site_transient_update_plugins` and `plugins_api`, reads the latest GitHub release, compares tag version to `WP_SEO_AUTOMATER_VERSION`, and supplies a downloadable ZIP package. Post-install logic clears both plugin-specific and WordPress update caches so stale update notices do not persist.
 - Release packaging is version-driven from the plugin header file. `scripts/get-version.php` reads the plugin header and version constant, `build.sh` and `build.bat` derive artifact names from that value, and `scripts/release-build-check.sh` performs syntax checks, builds the ZIP, and validates archive contents. The GitHub workflow only publishes a release when the pushed range actually changes the plugin version.
+- Local verification now has a dedicated CLI path in `tests/`. `tests/run-fixture-preview.php` validates the preview payload against saved raw responses, `tests/run-gemini-continuation.php` validates chunk stitching behavior, and `tests/run-live-preview.php` runs a live Gemini request and writes the exact box payload to `tests/output/live-preview.json`.
 
 ## Conventions
 
@@ -43,12 +44,13 @@ WP SEO Blog Automater is a WordPress plugin that generates long-form SEO posts i
 - Follow existing WordPress sanitization/escaping style. Sanitize request input as early as possible, escape on output in partials, and use `WP_Error` for recoverable failures that need to surface to AJAX responses.
 - Preserve existing response shapes consumed by `admin/js/admin.js`. Frontend behavior expects fields such as `content`, `slug`, `schema`, `meta_title`, `meta_desc`, `image_url`, `image_credit`, and `debug_info`.
 - The JavaScript layer is jQuery-based and imperative. Match the existing style when making small edits rather than partially rewriting flows into a different frontend pattern.
-- `tests/` currently contains manual/debug scripts. Do not describe this repository as having a reliable automated test suite unless that changes.
+- `tests/` is still a manual/env-driven verification harness, not a reliable automated test suite. Describe it that way unless a real automated runner is added.
 
 ## Working Agreements
 
 - Prefer minimal, targeted changes. This plugin has a few dense controller files, so avoid broad refactors unless the task explicitly requires them.
 - When changing generation or publishing behavior, trace the full flow across PHP handler, parsed response shape, and `admin/js/admin.js` before editing. Most regressions here are contract mismatches between server and admin UI.
+- When touching generation parsing or continuation behavior, run `php tests/run-fixture-preview.php` and `php tests/run-gemini-continuation.php`. If API keys are available, also run `php tests/run-live-preview.php` to inspect the exact payload that will populate the editor box.
 - When changing updater behavior, reason about both caches: the plugin transient (`wp_seo_automater_github_release`) and WordPress plugin update cache (`update_plugins`).
 - When preparing a release-related change, run `./scripts/release-build-check.sh` locally. For package-only output, run `./build.sh`.
 - Keep distribution boundaries intact. Files under `.github/`, `.githooks/`, `.agents/`, `tests/`, and build helper docs should not end up in the packaged plugin ZIP.
