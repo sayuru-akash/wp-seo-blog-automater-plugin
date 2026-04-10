@@ -187,7 +187,7 @@ class WP_SEO_Automater_Admin {
 
 		self::log_activity( 'Debug Extraction', "Slug: '$slug' | Title: '$meta_title' | Image Key: '$image_keywords'", 'info' );
 
-		$image_result = $this->fetch_unsplash_image_data( $image_keywords );
+		$image_result = $this->fetch_unsplash_image_data( $image_keywords, $meta_title );
 
 		$html_content = $this->markdown_to_html( $content );
 		$extracted_schema = '';
@@ -278,6 +278,8 @@ class WP_SEO_Automater_Admin {
 				'keywords'        => $image_keywords,
 				'unsplash_status' => $image_result['status'],
 				'has_key'         => $image_result['has_key'],
+				'image_query_used' => $image_result['query_used'],
+				'image_query_attempts' => $image_result['queries_tried'],
 			),
 		);
 	}
@@ -594,13 +596,15 @@ class WP_SEO_Automater_Admin {
 	 * @param string $image_keywords Extracted image keywords.
 	 * @return array URL, credit, and debug status.
 	 */
-	private function fetch_unsplash_image_data( $image_keywords ) {
+	private function fetch_unsplash_image_data( $image_keywords, $context_title = '' ) {
 		$unsplash_key = get_option( 'wp_seo_automater_unsplash_key', '' );
 		$result = array(
-			'url'     => '',
-			'credit'  => '',
-			'status'  => 'Not Attempted',
-			'has_key' => ! empty( $unsplash_key ),
+			'url'          => '',
+			'credit'       => '',
+			'status'       => 'Not Attempted',
+			'has_key'      => ! empty( $unsplash_key ),
+			'query_used'   => '',
+			'queries_tried' => array(),
 		);
 
 		if ( empty( $unsplash_key ) ) {
@@ -613,38 +617,153 @@ class WP_SEO_Automater_Admin {
 			return $result;
 		}
 
+		$queries = $this->build_unsplash_query_candidates( $image_keywords, $context_title );
+
+		foreach ( $queries as $query ) {
+			foreach ( array( 'landscape', '' ) as $orientation ) {
+				$attempt_label = $query . ( '' !== $orientation ? ' [' . $orientation . ']' : ' [any]' );
+				$result['queries_tried'][] = $attempt_label;
+				$response = $this->search_unsplash_image( $query, $unsplash_key, $orientation );
+
+				if ( is_wp_error( $response ) ) {
+					$result['status'] = 'API Error: ' . $response->get_error_message();
+					self::log_activity( 'Unsplash Error', $response->get_error_message(), 'error' );
+					return $result;
+				}
+
+				if ( isset( $response['results'][0] ) ) {
+					$result['url'] = $response['results'][0]['urls']['regular'];
+					$result['credit'] = 'Photo by ' . $response['results'][0]['user']['name'] . ' on Unsplash';
+					$result['status'] = 'Success';
+					$result['query_used'] = $query;
+					self::log_activity( 'Unsplash', "Found image for '$query' using " . ( '' !== $orientation ? $orientation : 'any' ) . " orientation: {$result['url']}", 'success' );
+					return $result;
+				}
+			}
+		}
+
+		$result['status'] = 'No Results from API';
+		self::log_activity( 'Unsplash', "No images found after trying: " . implode( ', ', $result['queries_tried'] ), 'warning' );
+
+		return $result;
+	}
+
+	/**
+	 * Build progressively broader Unsplash search queries.
+	 *
+	 * @since 1.3.0
+	 * @param string $image_keywords Extracted image keywords.
+	 * @param string $context_title  Meta/title context from the generated article.
+	 * @return array Candidate queries ordered from specific to broad.
+	 */
+	private function build_unsplash_query_candidates( $image_keywords, $context_title = '' ) {
+		$normalized = strtolower( trim( preg_replace( '/\s+/', ' ', preg_replace( '/[^a-z0-9\s-]+/i', ' ', $image_keywords ) ) ) );
+		$normalized_context = strtolower( trim( preg_replace( '/\s+/', ' ', preg_replace( '/[^a-z0-9\s-]+/i', ' ', $context_title ) ) ) );
+		$queries = array();
+		$eyewear_terms = array( 'glasses', 'eyeglasses', 'eyewear', 'frames', 'spectacles' );
+
+		$add_query = static function ( $query ) use ( &$queries ) {
+			$query = trim( preg_replace( '/\s+/', ' ', $query ) );
+			if ( '' !== $query && ! in_array( $query, $queries, true ) ) {
+				$queries[] = $query;
+			}
+		};
+
+		$add_query( $normalized );
+
+		$synonym_map = array(
+			'glasses'    => 'eyeglasses',
+			'eyeglasses' => 'glasses',
+			'frames'     => 'eyeglasses',
+			'eyewear'    => 'eyeglasses',
+			'spectacles' => 'eyeglasses',
+		);
+
+		foreach ( $synonym_map as $from => $to ) {
+			if ( preg_match( '/\b' . preg_quote( $from, '/' ) . '\b/i', $normalized ) ) {
+				$add_query( preg_replace( '/\b' . preg_quote( $from, '/' ) . '\b/i', $to, $normalized ) );
+			}
+		}
+
+		$words = preg_split( '/\s+/', $normalized );
+		if ( is_array( $words ) && count( $words ) > 1 ) {
+			$add_query( end( $words ) );
+			$add_query( implode( ' ', array_slice( $words, -2 ) ) );
+		}
+
+		$is_eyewear_query = false;
+		foreach ( $eyewear_terms as $term ) {
+			if ( preg_match( '/\b' . preg_quote( $term, '/' ) . '\b/i', $normalized ) ) {
+				$is_eyewear_query = true;
+				break;
+			}
+		}
+
+		if ( $is_eyewear_query ) {
+			$add_query( 'luxury eyeglasses' );
+			$add_query( 'designer eyewear' );
+			$add_query( 'eyeglasses' );
+		} elseif ( '' !== $normalized_context ) {
+			$context_words = preg_split( '/\s+/', $normalized_context );
+			if ( is_array( $context_words ) ) {
+				foreach ( $context_words as $index => $word ) {
+					if ( ! in_array( $word, $eyewear_terms, true ) ) {
+						continue;
+					}
+
+					$start = max( 0, $index - 2 );
+					$context_phrase = implode( ' ', array_slice( $context_words, $start, $index - $start + 1 ) );
+					$add_query( $context_phrase );
+
+					$start = max( 0, $index - 1 );
+					$context_phrase = implode( ' ', array_slice( $context_words, $start, $index - $start + 1 ) );
+					$add_query( $context_phrase );
+
+					$add_query( $word );
+				}
+			}
+
+			$add_query( 'luxury eyeglasses' );
+			$add_query( 'designer eyewear' );
+		}
+
+		if ( ! in_array( 'eyeglasses', $queries, true ) ) {
+			$add_query( 'eyeglasses' );
+		}
+
+		return array_slice( $queries, 0, 6 );
+	}
+
+	/**
+	 * Search Unsplash for a single query/orientation combination.
+	 *
+	 * @since 1.3.0
+	 * @param string $query Search query.
+	 * @param string $unsplash_key Unsplash API key.
+	 * @param string $orientation Orientation filter.
+	 * @return array|WP_Error
+	 */
+	private function search_unsplash_image( $query, $unsplash_key, $orientation = 'landscape' ) {
 		$endpoint = 'https://api.unsplash.com/search/photos';
 		$params = array(
-			'client_id'   => $unsplash_key,
-			'query'       => $image_keywords,
-			'page'        => 1,
-			'per_page'    => 1,
-			'orientation' => 'landscape',
+			'client_id' => $unsplash_key,
+			'query'     => $query,
+			'page'      => 1,
+			'per_page'  => 1,
 		);
+
+		if ( '' !== $orientation ) {
+			$params['orientation'] = $orientation;
+		}
+
 		$api_url = add_query_arg( $params, $endpoint );
 		$response = wp_remote_get( $api_url );
 
 		if ( is_wp_error( $response ) ) {
-			$result['status'] = 'API Error: ' . $response->get_error_message();
-			self::log_activity( 'Unsplash Error', $response->get_error_message(), 'error' );
-			return $result;
+			return $response;
 		}
 
-		$body = wp_remote_retrieve_body( $response );
-		$data = json_decode( $body, true );
-
-		if ( isset( $data['results'][0] ) ) {
-			$result['url'] = $data['results'][0]['urls']['regular'];
-			$result['credit'] = 'Photo by ' . $data['results'][0]['user']['name'] . ' on Unsplash';
-			$result['status'] = 'Success';
-			self::log_activity( 'Unsplash', "Found image for '$image_keywords': {$result['url']}", 'success' );
-			return $result;
-		}
-
-		$result['status'] = 'No Results from API';
-		self::log_activity( 'Unsplash', "No images found for '$image_keywords'.", 'warning' );
-
-		return $result;
+		return json_decode( wp_remote_retrieve_body( $response ), true );
 	}
 
 	/**

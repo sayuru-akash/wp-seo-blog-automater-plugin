@@ -1,336 +1,118 @@
 # Contributing to WP SEO Blog Automater
 
-First off, thank you for considering contributing to WP SEO Blog Automater! It's people like you that make this plugin better for everyone.
+Thanks for considering contributing! Whether it's a bug report, feature idea, or code patch, all contributions are welcome.
 
-## 🎯 Where to Start
+## Quick Start
 
-- **Bug Reports**: Found a bug? Open an issue with details
-- **Feature Requests**: Have an idea? Share it in the issues
-- **Code Contributions**: Fork, code, and submit a pull request
-- **Documentation**: Help improve our docs
-- **Translations**: Help translate the plugin
+1. **Fork** the repository
+2. **Clone** your fork locally
+3. **Create a branch** for your changes: `git checkout -b fix-something`
+4. **Make your changes** following the existing code style
+5. **Test** your changes locally
+6. **Submit a pull request** with a clear description
 
-## 📋 Development Setup
-
-### Prerequisites
-
-- PHP 7.4 or higher
-- WordPress 5.8 or higher
-- Composer (optional, for development dependencies)
-- Node.js and npm (optional, for asset compilation)
-
-### Local Development
+## Development Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/codezela/wp-seo-blog-automater.git
+# Clone your fork
+git clone https://github.com/YOUR_USERNAME/wp-seo-blog-automater-plugin.git
 
-# Create a symlink in your WordPress plugins directory
-ln -s /path/to/wp-seo-blog-automater /path/to/wordpress/wp-content/plugins/
-
-# Activate the plugin in WordPress
+# Symlink to your WordPress plugins directory (or just copy)
+ln -s /path/to/wp-seo-blog-automater-plugin /path/to/wordpress/wp-content/plugins/
 ```
 
-## 🔧 Coding Standards
+That's it. No build step needed - this is plain PHP, CSS, and jQuery.
 
-### WordPress Coding Standards
+## What to Work On
 
-We follow the [WordPress Coding Standards](https://developer.wordpress.org/coding-standards/):
+- **Bug fixes** - Check the [issues](../../issues) for bugs marked `good first issue`
+- **Features** - Open an issue first to discuss before coding
+- **Documentation** - Typos, clarity improvements, examples
 
-- Use tabs for indentation
-- Space after control structures
-- Yoda conditions for comparisons
-- Proper inline documentation
+## Code Style
 
-### PHP Standards
+We follow basic WordPress conventions:
 
+- **PHP**: Use tabs for indentation (WordPress standard)
+- **PHP**: Prefix everything with `wp_seo_automater_` (functions) or `WP_SEO_AUTOMATER_` (constants)
+- **PHP**: Sanitize inputs early, escape output late
+- **PHP**: Use nonces and `current_user_can()` checks for AJAX handlers
+- **JS**: Match the existing jQuery style in `admin/js/admin.js`
+- **CSS**: Use the existing CSS variables in `admin/css/style.css`
+
+Example:
 ```php
-// Good
-if ( $condition ) {
-    do_something();
-}
-
-// Good - Yoda conditions
-if ( 'value' === $variable ) {
-    do_something();
-}
-
-// Good - Documentation
-/**
- * Function description.
- *
- * @param string $param Parameter description.
- * @return bool Return description.
- */
-function my_function( $param ) {
-    // Function code
+// Good - follows existing patterns
+function wp_seo_automater_my_feature() {
+    // Check permissions first
+    if ( ! current_user_can( 'manage_options' ) ) {
+        return;
+    }
+    
+    // Sanitize input
+    $title = sanitize_text_field( $_POST['title'] );
+    
+    // ... your logic
+    
+    // Escape output
+    echo '<h1>' . esc_html( $title ) . '</h1>';
 }
 ```
 
-### JavaScript Standards
+## Testing Your Changes
 
-- Use ES5 for compatibility
-- jQuery for DOM manipulation
-- Strict mode
-- Proper error handling
+Since this plugin has manual verification scripts (not a formal test suite), please:
 
-### CSS Standards
+1. **Test the actual feature** you changed in WordPress admin
+2. **Check browser console** for JavaScript errors
+3. **Run the local verification scripts** if you have API keys:
+   ```bash
+   php tests/run-fixture-preview.php
+   php tests/run-gemini-continuation.php
+   ```
+4. **Test with WP_DEBUG enabled** in your `wp-config.php`:
+   ```php
+   define( 'WP_DEBUG', true );
+   define( 'WP_DEBUG_LOG', true );
+   ```
 
-- Use CSS custom properties (variables)
-- Mobile-first responsive design
-- BEM-like naming for components
-- No !important unless absolutely necessary
+## Commit Messages
 
-## 🔒 Security Best Practices
-
-### Required for All Code
-
-- **Nonces**: Use WordPress nonces for form submissions
-- **Capability Checks**: Always verify user permissions
-- **Input Sanitization**: Sanitize all user input
-- **Output Escaping**: Escape all output
-- **Prepared Statements**: Use $wpdb->prepare() for queries
-
-### Example
-
-```php
-// Verify nonce
-check_ajax_referer( 'wp_seo_automater_nonce', 'nonce' );
-
-// Check capabilities
-if ( ! current_user_can( 'manage_options' ) ) {
-    wp_send_json_error( __( 'Permission denied.', 'wp-seo-blog-automater' ) );
-}
-
-// Sanitize input
-$title = sanitize_text_field( $_POST['title'] );
-
-// Escape output
-echo '<h1>' . esc_html( $title ) . '</h1>';
-```
-
-## 📝 Commit Messages
-
-### Format
+Clear, descriptive messages are appreciated. No strict format required, but something like:
 
 ```
-type(scope): subject
+Fix image fetch when Unsplash returns empty results
 
-body
-
-footer
+The image fetch would fail silently when Unsplash had no results.
+Now it logs a clear message and continues without an image.
 ```
 
-### Types
+Or just `Fix typo in settings page` - that's fine too for small stuff.
 
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation changes
-- `style`: Code style changes (formatting, etc.)
-- `refactor`: Code refactoring
-- `test`: Adding or updating tests
-- `chore`: Maintenance tasks
+## Pull Requests
 
-### Examples
+**For small fixes** (typos, simple bugs):
+- Just open the PR with a brief description
 
-```
-feat(generator): add bulk content generation support
+**For larger changes** (new features, refactors):
+- Open an issue first to discuss
+- Describe what you changed and why
+- Mention any breaking changes
 
-Implemented ability to generate multiple articles at once.
-Users can now upload CSV with topics and keywords.
+Don't worry about:
+- ❌ Updating CHANGELOG.md (maintainer handles releases)
+- ❌ Formal PR templates (just describe your change)
+- ❌ Testing on 5 different browsers (Chrome/Firefox is enough)
 
-Closes #123
-```
+## Need Help?
 
-```
-fix(api): handle timeout errors gracefully
+- Open an issue with your question
+- Tag it with `question`
 
-Added proper error handling for API timeout scenarios.
-Shows user-friendly message instead of generic error.
+## License
 
-Fixes #456
-```
-
-## 🧪 Testing
-
-### Manual Testing Checklist
-
-- [ ] Test in WordPress 5.8+
-- [ ] Test in PHP 7.4 and 8.0+
-- [ ] Test with Yoast SEO active
-- [ ] Test with Rank Math active
-- [ ] Test with no SEO plugin
-- [ ] Test in Chrome, Firefox, Safari
-- [ ] Test mobile responsiveness
-- [ ] Test with WP_DEBUG enabled
-
-### Error Checking
-
-```php
-// Enable debugging in wp-config.php
-define( 'WP_DEBUG', true );
-define( 'WP_DEBUG_LOG', true );
-define( 'WP_DEBUG_DISPLAY', false );
-```
-
-## 📚 Documentation
-
-### Inline Documentation
-
-- Use PHPDoc format for all functions
-- Include @since tags
-- Document parameters and returns
-- Add examples for complex functions
-
-### User Documentation
-
-- Update README.md for user-facing changes
-- Add screenshots for UI changes
-- Update CHANGELOG.md
-
-## 🌐 Internationalization
-
-### Text Domain
-
-Always use `wp-seo-blog-automater` text domain:
-
-```php
-// Correct
-__( 'Text to translate', 'wp-seo-blog-automater' );
-_e( 'Text to translate', 'wp-seo-blog-automater' );
-esc_html__( 'Text to translate', 'wp-seo-blog-automater' );
-
-// Incorrect - missing text domain
-__( 'Text to translate' );
-```
-
-### Translation Functions
-
-- `__()` - Returns translated string
-- `_e()` - Echoes translated string
-- `esc_html__()` - Returns escaped translated string
-- `esc_attr__()` - Returns attribute-escaped translated string
-- `_n()` - Plural forms
-
-## 🚀 Pull Request Process
-
-### Before Submitting
-
-1. Update documentation
-2. Add/update tests if applicable
-3. Update CHANGELOG.md
-4. Ensure code follows standards
-5. Test thoroughly
-
-### PR Template
-
-```markdown
-## Description
-
-Brief description of changes
-
-## Type of Change
-
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
-- [ ] Documentation update
-
-## Testing
-
-- [ ] Tested in WordPress 5.8+
-- [ ] Tested in PHP 7.4+
-- [ ] Tested with SEO plugins
-
-## Checklist
-
-- [ ] Code follows project standards
-- [ ] Documentation updated
-- [ ] CHANGELOG.md updated
-- [ ] No console errors
-- [ ] Mobile responsive
-```
-
-### Review Process
-
-1. Maintainer reviews code
-2. Automated checks run
-3. Request changes if needed
-4. Merge when approved
-
-## 🐛 Bug Reports
-
-### Good Bug Report Includes
-
-- Clear title
-- Steps to reproduce
-- Expected behavior
-- Actual behavior
-- Screenshots (if applicable)
-- Environment details:
-  - WordPress version
-  - PHP version
-  - Active theme/plugins
-  - Browser (for UI issues)
-
-### Template
-
-```markdown
-**Bug Description**
-Clear description of the bug
-
-**Steps to Reproduce**
-
-1. Go to...
-2. Click on...
-3. See error...
-
-**Expected Behavior**
-What should happen
-
-**Actual Behavior**
-What actually happens
-
-**Environment**
-
-- WordPress: 6.0
-- PHP: 8.0
-- Plugin Version: 1.0.4
-- Browser: Chrome 120
-
-**Screenshots**
-If applicable
-```
-
-## 💡 Feature Requests
-
-### Good Feature Request Includes
-
-- Clear use case
-- Problem it solves
-- Proposed solution (optional)
-- Alternative solutions considered
-
-## 📬 Contact
-
-- **Email**: info@codezela.com
-- **Website**: https://codezela.com
-- **Issues**: GitHub Issues
-
-## 📄 License
-
-By contributing, you agree that your contributions will be licensed under the GPL-2.0+ License.
+By contributing, you agree your contributions will be licensed under GPL-2.0+ (same as WordPress).
 
 ---
 
-## Recognition
-
-Contributors will be recognized in:
-
-- README.md contributors section
-- CHANGELOG.md for specific contributions
-- Plugin credits page (future feature)
-
-Thank you for contributing to WP SEO Blog Automater! 🎉
-
-**- The Codezela Technologies Team**
+Thanks for helping make this plugin better! 🎉
