@@ -5,6 +5,27 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.6] - 2026-04-10
+
+### ⚡ Manual Update Check Release
+
+Patch release focused on making the in-plugin update check reflect the latest GitHub release immediately.
+
+### Fixed
+
+- 🔄 **Synchronous Manual Update Check**: The "Check Updates Now" button now forces a real GitHub fetch instead of only scheduling a background check
+- 📣 **Immediate Plugins Page Refresh**: After a manual check, the plugin now rebuilds the WordPress `update_plugins` transient so the Installed Plugins screen can show the update right away
+
+### Technical
+
+- Updated plugin version constants and release metadata to `1.3.6`
+- Kept the updater source on GitHub `releases/latest`; latest published release remains the only release channel
+
+### Verification
+
+- `php -l includes/class-wp-seo-automater-admin.php`
+- `./scripts/release-build-check.sh`
+
 ## [1.3.5] - 2026-04-10
 
 ### 🔧 Generation Reliability Release

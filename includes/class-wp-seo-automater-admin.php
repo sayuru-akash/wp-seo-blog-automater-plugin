@@ -511,7 +511,7 @@ class WP_SEO_Automater_Admin {
 		// Get fresh release data
 		if ( class_exists( 'WP_SEO_Automater_GitHub_Updater' ) ) {
 			$updater = new WP_SEO_Automater_GitHub_Updater( WP_SEO_AUTOMATER_BASENAME, WP_SEO_AUTOMATER_VERSION );
-			$release = $updater->get_github_release();
+			$release = $updater->get_github_release( true );
 			
 			if ( is_wp_error( $release ) ) {
 				self::log_activity( 'Update Check', 'Failed to fetch update from GitHub: ' . $release->get_error_message(), 'error' );
@@ -534,6 +534,18 @@ class WP_SEO_Automater_Admin {
 			}
 
 			$update_available = version_compare( $latest_version, $current_version, '>' );
+
+			// Force WordPress to rebuild the plugin update transient now that we have
+			// a fresh GitHub release cached, so the Plugins page reflects the result
+			// immediately after the manual check.
+			if ( function_exists( 'wp_update_plugins' ) ) {
+				wp_update_plugins();
+			} elseif ( file_exists( ABSPATH . 'wp-admin/includes/update.php' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/update.php';
+				if ( function_exists( 'wp_update_plugins' ) ) {
+					wp_update_plugins();
+				}
+			}
 			
 			self::log_activity( 
 				'Update Check', 
