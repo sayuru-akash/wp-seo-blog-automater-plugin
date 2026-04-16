@@ -5,6 +5,28 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.11] - 2026-04-16
+
+### 🧩 System Info Author Fix
+
+Patch release focused on fixing author rendering in the System Info page.
+
+### Fixed
+
+- 🔗 **Author Display Cleanup**: The System Info page now strips embedded author HTML from plugin metadata before rendering, preventing broken nested anchor output
+- 🧼 **Clean Author Link**: Author now renders as a single correct link using `AuthorURI` when available
+
+### Technical
+
+- Updated plugin version constants and release metadata to `1.3.11`
+- Kept the fix isolated to the System Info template
+
+### Verification
+
+- `php -l admin/partials/system-info-display.php`
+- `php -l wp-seo-blog-automater.php`
+- `./scripts/release-build-check.sh`
+
 ## [1.3.10] - 2026-04-16
 
 ### 🖼️ Manual Image Keyword Release

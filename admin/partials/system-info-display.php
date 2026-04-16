@@ -13,6 +13,11 @@ defined( 'ABSPATH' ) || exit;
 // Get plugin data
 $plugin_data = get_plugin_data( WP_SEO_AUTOMATER_FILE );
 $current_version = WP_SEO_AUTOMATER_VERSION;
+$author_name = '';
+
+if ( ! empty( $plugin_data['Author'] ) ) {
+    $author_name = trim( wp_strip_all_tags( html_entity_decode( $plugin_data['Author'], ENT_QUOTES, 'UTF-8' ) ) );
+}
 
 // Check for latest version from GitHub
 $transient_key = 'wp_seo_automater_github_release';
@@ -208,9 +213,13 @@ $checks = array(
             <div class="wp-seo-info-item">
                 <span class="wp-seo-info-label"><?php esc_html_e( 'Author', 'wp-seo-blog-automater' ); ?></span>
                 <span class="wp-seo-info-value">
-                    <a href="<?php echo esc_url( $plugin_data['AuthorURI'] ); ?>" target="_blank" rel="noopener">
-                        <?php echo esc_html( $plugin_data['Author'] ); ?>
-                    </a>
+                    <?php if ( ! empty( $plugin_data['AuthorURI'] ) ) : ?>
+                        <a href="<?php echo esc_url( $plugin_data['AuthorURI'] ); ?>" target="_blank" rel="noopener">
+                            <?php echo esc_html( $author_name ); ?>
+                        </a>
+                    <?php else : ?>
+                        <?php echo esc_html( $author_name ); ?>
+                    <?php endif; ?>
                 </span>
             </div>
             
