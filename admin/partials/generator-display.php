@@ -98,9 +98,24 @@ defined( 'ABSPATH' ) || exit;
                     <img id="result_image_preview" src="" style="max-width: 100%; height: auto; display: none; border-radius: 8px; border: 1px solid #ddd;">
                     <p id="result_image_credit" style="font-size: 12px; color: #666; font-style: italic;"></p>
                 </div>
+                <div class="wp-seo-image-search-row">
+                    <div class="wp-seo-image-search-field">
+                        <label class="wp-seo-label" for="result_image_keywords">
+                            <?php esc_html_e( 'Image Search Keywords', 'wp-seo-blog-automater' ); ?>
+                        </label>
+                        <input
+                            type="text"
+                            id="result_image_keywords"
+                            class="wp-seo-input"
+                            placeholder="<?php esc_attr_e( 'e.g. titanium eyeglasses, optical boutique', 'wp-seo-blog-automater' ); ?>"
+                        >
+                    </div>
+                </div>
+                <p class="description">
+                    <?php esc_html_e( 'Edit these keywords manually if you want a different image direction, then click Refresh Image.', 'wp-seo-blog-automater' ); ?>
+                </p>
                 <p id="image-refresh-message" class="description" style="display: none;"></p>
                 <input type="hidden" id="result_image_id">
-                <input type="hidden" id="result_image_keywords">
                 <input type="hidden" id="result_used_image_ids" value="[]">
                 <input type="hidden" id="result_image_url">
             </div>

@@ -5,6 +5,32 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.10] - 2026-04-16
+
+### 🖼️ Manual Image Keyword Release
+
+Patch release focused on giving the generator more direct control over Unsplash image searches.
+
+### Added
+
+- 🔎 **Manual Image Search Keywords Field**: Added an editable keyword input directly under `Featured Image (Unsplash)` in the generator preview
+- 🔄 **Refresh Uses Manual Keywords**: The existing `Refresh Image` action now uses the manual keyword value when you override the AI-provided image search terms
+
+### Improved
+
+- 🧭 **Clearer Image Direction Control**: Users can now steer the featured image search without regenerating the article
+- ✅ **Validation Guard**: Refresh now prompts for image keywords if the field is empty instead of sending a blank search
+
+### Technical
+
+- Updated plugin version constants and release metadata to `1.3.10`
+- Added small generator layout styling for the new image keyword control
+
+### Verification
+
+- `php -l admin/partials/generator-display.php`
+- `./scripts/release-build-check.sh`
+
 ## [1.3.9] - 2026-04-10
 
 ### 🛠️ Google Sitemap Fix Release

@@ -210,6 +210,12 @@ jQuery(document).ready(function ($) {
       return;
     }
 
+    if (!imageKeywords) {
+      alert("Enter image search keywords before refreshing the image.");
+      $("#result_image_keywords").trigger("focus");
+      return;
+    }
+
     var $btn = $(this);
     var originalText = $btn.find(".btn-text").text();
 

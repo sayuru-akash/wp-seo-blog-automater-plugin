@@ -228,6 +228,14 @@ body {
   margin-bottom: 0;
 }
 
+.wp-seo-image-search-row {
+  margin-bottom: 0.75rem;
+}
+
+.wp-seo-image-search-field {
+  max-width: 520px;
+}
+
 .wp-seo-input,
 .wp-seo-textarea {
   width: 100%;
