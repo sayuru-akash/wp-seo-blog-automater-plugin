@@ -5,6 +5,29 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.14] - 2026-04-16
+
+### ✂️ Continuation Reliability Fix
+
+Patch release focused on preventing silently truncated articles from being treated as complete output.
+
+### Fixed
+
+- 🧵 **Token-Limit Continuation Handling**: Generation now requests a continuation not only when the custom `[PAUSING FOR CONTINUATION]` marker is present, but also when Gemini reports a token-limit finish reason
+- 🛡️ **Mid-Article Cutoff Prevention**: Prevents production cases where content could stop mid-heading, mid-paragraph, or before the FAQ/schema if the model hit output limits without printing the pause marker
+
+### Technical
+
+- Updated plugin version constants and release metadata to `1.3.14`
+- Added finish-reason-aware continuation logic in the Gemini handler
+- Expanded the continuation test harness to cover both pause-marker and token-limit scenarios
+
+### Verification
+
+- `php -l includes/class-gemini-api-handler.php`
+- `php tests/run-gemini-continuation.php`
+- `./scripts/release-build-check.sh`
+
 ## [1.3.13] - 2026-04-16
 
 ### 🔗 Markdown Link HTML Fix

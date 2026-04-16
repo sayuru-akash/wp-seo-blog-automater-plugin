@@ -88,7 +88,8 @@ class Gemini_API_Handler {
 		}
 
 		$generated_text = $this->extract_text_from_response( $response );
-		WP_SEO_Automater_Admin::log_activity( 'API Response', "Received initial chunk (" . strlen($generated_text) . " chars)", 'success' );
+		$finish_reason = $this->get_finish_reason_from_response( $response );
+		WP_SEO_Automater_Admin::log_activity( 'API Response', "Received initial chunk (" . strlen($generated_text) . " chars, finish reason: " . ( $finish_reason ? $finish_reason : 'unknown' ) . ')', 'success' );
 
 		// Check for continuation trigger
 		$max_loops = 3; 
@@ -98,11 +99,11 @@ class Gemini_API_Handler {
 			['role' => 'model', 'parts' => [['text' => $generated_text]]]
 		];
 
-		$should_continue = strpos( $generated_text, '[PAUSING FOR CONTINUATION]' ) !== false;
+		$should_continue = $this->should_continue_generation( $generated_text, $response );
 
 		while ( $should_continue && $loop_count < $max_loops ) {
 			$loop_count++;
-			WP_SEO_Automater_Admin::log_activity( 'Continuation', "Loop #$loop_count triggered due to pause marker.", 'info' );
+			WP_SEO_Automater_Admin::log_activity( 'Continuation', "Loop #$loop_count triggered due to continuation signal.", 'info' );
 			
 			$fail_safe_prompt = 'Continue exactly where you left off. Output only the remaining article content and final schema. Do not repeat prior text, add recap notes, mention previous responses, offer a new task, or include CMS insertion instructions.';
 			
@@ -118,20 +119,54 @@ class Gemini_API_Handler {
 			}
 
 			$next_chunk = $this->extract_text_from_response( $next_response );
-			WP_SEO_Automater_Admin::log_activity( 'API Response', "Received continuation chunk (" . strlen($next_chunk) . " chars)", 'success' );
+			$next_finish_reason = $this->get_finish_reason_from_response( $next_response );
+			WP_SEO_Automater_Admin::log_activity( 'API Response', "Received continuation chunk (" . strlen($next_chunk) . " chars, finish reason: " . ( $next_finish_reason ? $next_finish_reason : 'unknown' ) . ')', 'success' );
 			
 			// Update history with new chunk
 			$history[] = ['role' => 'model', 'parts' => [['text' => $next_chunk]]];
 			
 			// Append to full text
 			$generated_text .= "\n" . $next_chunk;
-			$should_continue = strpos( $next_chunk, '[PAUSING FOR CONTINUATION]' ) !== false;
+			$should_continue = $this->should_continue_generation( $next_chunk, $next_response );
 		}
 
 		// Final cleanup: Remove the [PAUSING...] markers
 		$final_clean_text = str_replace( '[PAUSING FOR CONTINUATION]', '', $generated_text );
 
 		return $final_clean_text;
+	}
+
+	/**
+	 * Decide whether the model output needs another continuation request.
+	 *
+	 * @since 1.3.13
+	 * @param string $chunk Generated text chunk.
+	 * @param array  $response Full Gemini response payload.
+	 * @return bool
+	 */
+	protected function should_continue_generation( $chunk, $response ) {
+		if ( false !== strpos( $chunk, '[PAUSING FOR CONTINUATION]' ) ) {
+			return true;
+		}
+
+		$finish_reason = $this->get_finish_reason_from_response( $response );
+
+		return in_array( $finish_reason, array( 'MAX_TOKENS', 'FINISH_REASON_MAX_TOKENS' ), true );
+	}
+
+	/**
+	 * Extract the primary finish reason from a Gemini API response.
+	 *
+	 * @since 1.3.13
+	 * @param array $response_data Decoded Gemini response.
+	 * @return string
+	 */
+	protected function get_finish_reason_from_response( $response_data ) {
+		if ( isset( $response_data['candidates'][0]['finishReason'] ) && is_string( $response_data['candidates'][0]['finishReason'] ) ) {
+			return $response_data['candidates'][0]['finishReason'];
+		}
+
+		return '';
 	}
 
 	/**
