@@ -289,6 +289,14 @@ class WP_SEO_Automater_Admin {
 
 		$title = sanitize_text_field( $_POST['title'] );
 		$keywords = sanitize_text_field( $_POST['keywords'] );
+
+		$timeout = apply_filters( 'wp_seo_automater_generation_timeout', Gemini_API_Handler::DEFAULT_GENERATION_TIMEOUT );
+		$timeout = max( 60, (int) $timeout );
+
+		if ( function_exists( 'set_time_limit' ) ) {
+			@set_time_limit( $timeout + 30 );
+		}
+
 		$result = $this->generate_preview_data( $title, $keywords );
 
 		if ( is_wp_error( $result ) ) {
@@ -2222,9 +2230,10 @@ class WP_SEO_Automater_Admin {
 		);
 
 		wp_localize_script( 'wp-seo-automater-admin-js', 'wpSeoAutomater', array(
-			'ajax_url' => admin_url( 'admin-ajax.php' ),
-			'nonce'    => wp_create_nonce( 'wp_seo_automater_nonce' ),
-			'admin_url' => admin_url(),
+			'ajax_url'              => admin_url( 'admin-ajax.php' ),
+			'nonce'                 => wp_create_nonce( 'wp_seo_automater_nonce' ),
+			'admin_url'             => admin_url(),
+			'generation_timeout_ms' => apply_filters( 'wp_seo_automater_generation_timeout', Gemini_API_Handler::DEFAULT_GENERATION_TIMEOUT ) * 1000,
 		));
 	}
 

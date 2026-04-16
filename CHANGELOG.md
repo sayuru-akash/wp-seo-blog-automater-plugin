@@ -5,6 +5,29 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.16] - 2026-04-16
+
+### ⏱️ Generation Timeout Alignment Fix
+
+Patch release focused on reducing false timeout failures during long article generation.
+
+### Fixed
+
+- ⏱️ **Long Generation Requests**: Increased the generation timeout budget so long prompts and continuation chunks are less likely to fail with a premature timeout
+- 🔄 **Frontend and Backend Timeout Mismatch**: Aligned the browser AJAX timeout, server-side Gemini HTTP timeout, and PHP execution window so generation uses one consistent timeout value
+
+### Technical
+
+- Updated plugin version constants and release metadata to `1.3.16`
+- Added a shared generation timeout setting path for the admin UI and Gemini handler
+- Extended the AJAX generation handler to raise PHP execution time for long-running requests
+
+### Verification
+
+- `php -l includes/class-gemini-api-handler.php`
+- `php -l includes/class-wp-seo-automater-admin.php`
+- `./scripts/release-build-check.sh`
+
 ## [1.3.15] - 2026-04-16
 
 ### 🔗 Raw URL Link Parsing Fix

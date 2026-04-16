@@ -23,6 +23,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Gemini_API_Handler {
 
 	/**
+	 * Default timeout for article generation requests, in seconds.
+	 *
+	 * @since 1.3.15
+	 * @var int
+	 */
+	const DEFAULT_GENERATION_TIMEOUT = 300;
+
+	/**
 	 * Gemini API Key.
 	 *
 	 * @since 1.0.0
@@ -134,6 +142,18 @@ class Gemini_API_Handler {
 		$final_clean_text = str_replace( '[PAUSING FOR CONTINUATION]', '', $generated_text );
 
 		return $final_clean_text;
+	}
+
+	/**
+	 * Get the effective timeout for Gemini generation requests.
+	 *
+	 * @since 1.3.15
+	 * @return int
+	 */
+	public function get_generation_timeout() {
+		$timeout = (int) apply_filters( 'wp_seo_automater_generation_timeout', self::DEFAULT_GENERATION_TIMEOUT );
+
+		return max( 60, $timeout );
 	}
 
 	/**
@@ -278,7 +298,7 @@ class Gemini_API_Handler {
 		$args = [
 			'body'    => json_encode( $body ),
 			'headers' => [ 'Content-Type' => 'application/json' ],
-			'timeout' => 120, // Long timeout for generation
+			'timeout' => $this->get_generation_timeout(),
 			'method'  => 'POST'
 		];
 

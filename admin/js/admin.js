@@ -9,6 +9,9 @@
 jQuery(document).ready(function ($) {
   "use strict";
 
+  var generationTimeoutMs =
+    parseInt(wpSeoAutomater.generation_timeout_ms, 10) || 300000;
+
   function getUsedImageIds() {
     var raw = $("#result_used_image_ids").val() || "[]";
 
@@ -117,7 +120,7 @@ jQuery(document).ready(function ($) {
         title: title,
         keywords: keywords,
       },
-      timeout: 120000, // 2 minutes timeout
+      timeout: generationTimeoutMs,
       success: function (response) {
         $(".wp-seo-loader").hide();
         $btn.prop("disabled", false);
