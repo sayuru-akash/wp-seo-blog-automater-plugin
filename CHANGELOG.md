@@ -5,6 +5,27 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.13] - 2026-04-16
+
+### 🔗 Markdown Link HTML Fix
+
+Patch release focused on making generated article links render correctly in the editor box.
+
+### Fixed
+
+- 🔗 **Markdown Links to HTML**: Converted Markdown-style links like `[anchor](https://example.com)` into proper HTML anchor tags during preview parsing so generated content stays consistent with the rest of the HTML article body
+
+### Technical
+
+- Updated plugin version constants and release metadata to `1.3.13`
+- Extended the lightweight markdown-to-HTML conversion used by the shared preview payload path
+
+### Verification
+
+- `php -l includes/class-wp-seo-automater-admin.php`
+- `php tests/run-fixture-preview.php`
+- `./scripts/release-build-check.sh`
+
 ## [1.3.12] - 2026-04-16
 
 ### 📐 Image Control Layout Tweak

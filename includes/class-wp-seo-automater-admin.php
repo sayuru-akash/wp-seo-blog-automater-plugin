@@ -2081,6 +2081,22 @@ class WP_SEO_Automater_Admin {
 		
 		// Bold
 		$text = preg_replace( '/\*\*(.*?)\*\*/', '<strong>$1</strong>', $text );
+
+		// Markdown links
+		$text = preg_replace_callback(
+			'/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/i',
+			static function ( $matches ) {
+				$link_text = esc_html( $matches[1] );
+				$link_url = esc_url( $matches[2] );
+
+				if ( empty( $link_url ) ) {
+					return $matches[0];
+				}
+
+				return '<a href="' . $link_url . '">' . $link_text . '</a>';
+			},
+			$text
+		);
 		
 		return $text;
 	}
