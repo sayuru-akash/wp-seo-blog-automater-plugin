@@ -5,6 +5,28 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.15] - 2026-04-16
+
+### 🔗 Raw URL Link Parsing Fix
+
+Patch release focused on one remaining malformed link shape in generated article content.
+
+### Fixed
+
+- 🔗 **Bracketed Raw URLs to HTML**: Converted malformed bracketed URLs like `[https://example.com/ ]` into proper HTML anchor tags during preview parsing so they no longer leak into the editor box as plain text
+
+### Technical
+
+- Updated plugin version constants and release metadata to `1.3.15`
+- Extended the shared markdown-to-HTML converter to normalize bracketed raw URLs
+- Added a fixture coverage case for this exact malformed link pattern
+
+### Verification
+
+- `php -l includes/class-wp-seo-automater-admin.php`
+- `php tests/run-fixture-preview.php`
+- `./scripts/release-build-check.sh`
+
 ## [1.3.14] - 2026-04-16
 
 ### ✂️ Continuation Reliability Fix

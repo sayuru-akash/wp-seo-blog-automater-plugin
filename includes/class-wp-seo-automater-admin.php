@@ -2097,6 +2097,22 @@ class WP_SEO_Automater_Admin {
 			},
 			$text
 		);
+
+		// Bracketed raw URLs such as [https://example.com/] that some model
+		// outputs emit instead of full Markdown links.
+		$text = preg_replace_callback(
+			'/\[(https?:\/\/[^\]\s]+)\s*\]/i',
+			static function ( $matches ) {
+				$link_url = esc_url( trim( $matches[1] ) );
+
+				if ( empty( $link_url ) ) {
+					return $matches[0];
+				}
+
+				return '<a href="' . $link_url . '">' . esc_html( $link_url ) . '</a>';
+			},
+			$text
+		);
 		
 		return $text;
 	}

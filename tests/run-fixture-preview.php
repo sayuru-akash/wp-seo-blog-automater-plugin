@@ -24,6 +24,14 @@ $fixtures = array(
 		'expected_title'=> 'Designer Eyewear in Arizona: A Luxury Buying Guide from Lumiere Optique',
 		'expected_image_keywords' => 'luxury eyeglasses',
 	),
+	array(
+		'name'          => 'bracketed-raw-url-link',
+		'file'          => __DIR__ . '/fixtures/bracketed-raw-url-link.txt',
+		'expected_slug' => 'office-cleaning-melbourne-corporate',
+		'expected_title'=> 'Office Cleaning Service Melbourne: A Corporate Facility Guide',
+		'expected_image_keywords' => 'office cleaning',
+		'content_must_contain' => '<a href="https://omintagroup.com.au/preventing-cross-contamination-in-the-workplace/">https://omintagroup.com.au/preventing-cross-contamination-in-the-workplace/</a>',
+	),
 );
 
 foreach ( $fixtures as $fixture ) {
@@ -41,6 +49,13 @@ foreach ( $fixtures as $fixture ) {
 	wp_seo_automater_test_assert( false !== strpos( $payload['content'], 'Book Your Appointment: (480) 699-1885 | Visit Us in Scottsdale, AZ' ), "{$fixture['name']}: CTA missing from content payload." );
 	wp_seo_automater_test_assert( false === stripos( $payload['content'], '<h1' ), "{$fixture['name']}: H1 should not remain in content payload." );
 	wp_seo_automater_test_assert( $fixture['expected_image_keywords'] === $payload['debug_info']['keywords'], "{$fixture['name']}: image keyword normalization failed." );
+
+	if ( isset( $fixture['content_must_contain'] ) ) {
+		wp_seo_automater_test_assert(
+			false !== strpos( $payload['content'], $fixture['content_must_contain'] ),
+			"{$fixture['name']}: expected converted HTML link missing."
+		);
+	}
 
 	foreach ( wp_seo_automater_test_forbidden_phrases() as $phrase ) {
 		wp_seo_automater_test_assert( false === stripos( $payload['content'], $phrase ), "{$fixture['name']}: forbidden phrase leaked into content payload." );

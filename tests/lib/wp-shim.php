@@ -33,6 +33,24 @@ if ( ! function_exists( '__' ) ) {
 	}
 }
 
+if ( ! function_exists( 'esc_html' ) ) {
+	function esc_html( $text ) {
+		return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );
+	}
+}
+
+if ( ! function_exists( 'esc_url' ) ) {
+	function esc_url( $url ) {
+		$url = filter_var( trim( (string) $url ), FILTER_SANITIZE_URL );
+
+		if ( false === filter_var( $url, FILTER_VALIDATE_URL ) ) {
+			return '';
+		}
+
+		return $url;
+	}
+}
+
 if ( ! function_exists( 'is_wp_error' ) ) {
 	function is_wp_error( $thing ) {
 		return $thing instanceof WP_Error;
