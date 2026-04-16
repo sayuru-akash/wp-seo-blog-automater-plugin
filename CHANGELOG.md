@@ -5,6 +5,28 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.18] - 2026-04-16
+
+### 🧮 System Info Status Accuracy Fix
+
+Patch release focused on correcting misleading status badges in the System Info page.
+
+### Fixed
+
+- 🧮 **Correct Badge Labels**: `info` status rows now render as `Info` instead of being mislabeled as `Error`
+- 💾 **Accurate Memory Evaluation**: PHP and WordPress memory limits are now parsed and compared numerically so healthy values like `512M` are shown correctly while low values like `40M` are still warned about
+
+### Technical
+
+- Updated plugin version constants and release metadata to `1.3.18`
+- Added human-readable memory parsing for PHP and WordPress memory limit values
+- Corrected System Info badge label mapping for `success`, `warning`, `info`, and `error`
+
+### Verification
+
+- `php -l admin/partials/system-info-display.php`
+- `./scripts/release-build-check.sh`
+
 ## [1.3.17] - 2026-04-16
 
 ### 🩺 Generation Error Visibility And Runtime Diagnostics

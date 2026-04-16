@@ -37,10 +37,51 @@ $php_memory_limit = ini_get( 'memory_limit' );
 $php_max_execution_time = (int) ini_get( 'max_execution_time' );
 $wp_memory_limit = defined( 'WP_MEMORY_LIMIT' ) ? WP_MEMORY_LIMIT : __( 'Not defined', 'wp-seo-blog-automater' );
 $wp_max_memory_limit = defined( 'WP_MAX_MEMORY_LIMIT' ) ? WP_MAX_MEMORY_LIMIT : __( 'Not defined', 'wp-seo-blog-automater' );
+$recommended_memory_bytes = 256 * 1024 * 1024;
+
+if ( ! function_exists( 'wp_seo_automater_hr_to_bytes' ) ) {
+    function wp_seo_automater_hr_to_bytes( $value ) {
+        $value = trim( (string) $value );
+
+        if ( '' === $value ) {
+            return 0;
+        }
+
+        if ( '-1' === $value ) {
+            return -1;
+        }
+
+        if ( function_exists( 'wp_convert_hr_to_bytes' ) ) {
+            return (int) wp_convert_hr_to_bytes( $value );
+        }
+
+        $unit = strtolower( substr( $value, -1 ) );
+        $bytes = (float) $value;
+
+        switch ( $unit ) {
+            case 'g':
+                $bytes *= 1024;
+                // no break
+            case 'm':
+                $bytes *= 1024;
+                // no break
+            case 'k':
+                $bytes *= 1024;
+        }
+
+        return (int) $bytes;
+    }
+}
 
 $memory_unlimited = ( '-1' === $php_memory_limit );
 $execution_unlimited = ( 0 === $php_max_execution_time );
 $execution_status = 'success';
+$php_memory_limit_bytes = wp_seo_automater_hr_to_bytes( $php_memory_limit );
+$wp_memory_limit_bytes = wp_seo_automater_hr_to_bytes( $wp_memory_limit );
+$wp_max_memory_limit_bytes = wp_seo_automater_hr_to_bytes( $wp_max_memory_limit );
+$php_memory_status = $memory_unlimited || $php_memory_limit_bytes >= $recommended_memory_bytes ? 'success' : 'warning';
+$wp_memory_status = $wp_memory_limit_bytes >= $recommended_memory_bytes ? 'success' : 'warning';
+$wp_max_memory_status = $wp_max_memory_limit_bytes >= $recommended_memory_bytes ? 'success' : 'warning';
 
 if ( ! $execution_unlimited && $php_max_execution_time < $generation_timeout ) {
     $execution_status = 'warning';
@@ -99,17 +140,17 @@ $checks = array(
     'PHP memory_limit' => array(
         'value' => $memory_unlimited ? __( 'Unlimited (-1)', 'wp-seo-blog-automater' ) : $php_memory_limit,
         'required' => '256M+ recommended',
-        'status' => $memory_unlimited ? 'success' : 'info'
+        'status' => $php_memory_status
     ),
     'WP_MEMORY_LIMIT' => array(
         'value' => $wp_memory_limit,
         'required' => '256M+ recommended',
-        'status' => 'info'
+        'status' => $wp_memory_status
     ),
     'WP_MAX_MEMORY_LIMIT' => array(
         'value' => $wp_max_memory_limit,
         'required' => 'Should allow heavy admin requests',
-        'status' => 'info'
+        'status' => $wp_max_memory_status
     ),
     'cURL Extension' => array(
         'value' => $curl_available ? __( 'Available', 'wp-seo-blog-automater' ) : __( 'Unavailable', 'wp-seo-blog-automater' ),
@@ -239,7 +280,15 @@ $checks = array(
                         <td><?php echo esc_html( $check['required'] ); ?></td>
                         <td>
                             <span class="wp-seo-badge <?php echo esc_attr( $check['status'] ); ?>">
-                                <?php echo esc_html( ucfirst( $check['status'] === 'success' ? 'OK' : ( $check['status'] === 'warning' ? 'Warning' : 'Error' ) ) ); ?>
+                                <?php
+                                $status_labels = array(
+                                    'success' => __( 'OK', 'wp-seo-blog-automater' ),
+                                    'warning' => __( 'Warning', 'wp-seo-blog-automater' ),
+                                    'info'    => __( 'Info', 'wp-seo-blog-automater' ),
+                                    'error'   => __( 'Error', 'wp-seo-blog-automater' ),
+                                );
+                                echo esc_html( isset( $status_labels[ $check['status'] ] ) ? $status_labels[ $check['status'] ] : __( 'Info', 'wp-seo-blog-automater' ) );
+                                ?>
                             </span>
                         </td>
                     </tr>
