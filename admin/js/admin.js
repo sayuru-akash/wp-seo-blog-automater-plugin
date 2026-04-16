@@ -12,6 +12,53 @@ jQuery(document).ready(function ($) {
   var generationTimeoutMs =
     parseInt(wpSeoAutomater.generation_timeout_ms, 10) || 300000;
 
+  function extractAjaxErrorMessage(jqXHR, textStatus, fallbackMessage) {
+    if (textStatus === "timeout") {
+      return "Request timed out. The AI may need more time. Please try again.";
+    }
+
+    if (jqXHR && jqXHR.responseJSON) {
+      if (typeof jqXHR.responseJSON.data === "string" && jqXHR.responseJSON.data) {
+        return jqXHR.responseJSON.data;
+      }
+
+      if (
+        jqXHR.responseJSON.data &&
+        typeof jqXHR.responseJSON.data.message === "string" &&
+        jqXHR.responseJSON.data.message
+      ) {
+        return jqXHR.responseJSON.data.message;
+      }
+
+      if (
+        typeof jqXHR.responseJSON.message === "string" &&
+        jqXHR.responseJSON.message
+      ) {
+        return jqXHR.responseJSON.message;
+      }
+    }
+
+    if (jqXHR && typeof jqXHR.responseText === "string" && jqXHR.responseText) {
+      var responseText = $("<div>").html(jqXHR.responseText).text().trim();
+      responseText = responseText.replace(/\s+/g, " ");
+
+      if (responseText) {
+        return responseText.substring(0, 300);
+      }
+    }
+
+    if (jqXHR && jqXHR.status) {
+      return (
+        (fallbackMessage || "System Error. Please try again.") +
+        " (HTTP " +
+        jqXHR.status +
+        ")"
+      );
+    }
+
+    return fallbackMessage || "System Error. Please try again.";
+  }
+
   function getUsedImageIds() {
     var raw = $("#result_used_image_ids").val() || "[]";
 
@@ -186,11 +233,11 @@ jQuery(document).ready(function ($) {
         $btn.prop("disabled", false);
         $btn.find(".btn-text").text(originalText);
 
-        var errorMsg = "System Error. Please try again.";
-        if (textStatus === "timeout") {
-          errorMsg =
-            "Request timed out. The AI may need more time. Please try again.";
-        }
+        var errorMsg = extractAjaxErrorMessage(
+          jqXHR,
+          textStatus,
+          "System Error. Please try again.",
+        );
         alert(errorMsg);
         console.error("AJAX error:", textStatus, errorThrown);
       },
@@ -259,9 +306,11 @@ jQuery(document).ready(function ($) {
         $btn.find(".btn-text").text(originalText);
         $("#image-refresh-message")
           .text(
-            textStatus === "timeout"
-              ? "Image refresh timed out. Please try again."
-              : "Image refresh failed. Please try again.",
+            extractAjaxErrorMessage(
+              jqXHR,
+              textStatus,
+              "Image refresh failed. Please try again.",
+            ),
           )
           .show();
       },
@@ -335,11 +384,11 @@ jQuery(document).ready(function ($) {
       error: function (jqXHR, textStatus, errorThrown) {
         $btn.html(originalHtml).prop("disabled", false);
 
-        var errorMsg =
-          "Network Error. Please check your connection and try again.";
-        if (textStatus === "timeout") {
-          errorMsg = "Publish timed out. Please try again.";
-        }
+        var errorMsg = extractAjaxErrorMessage(
+          jqXHR,
+          textStatus,
+          "Network Error. Please check your connection and try again.",
+        );
         alert(errorMsg);
         console.error("AJAX error:", textStatus, errorThrown);
       },

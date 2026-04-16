@@ -31,6 +31,24 @@ if ( $github_data && isset( $github_data->tag_name ) ) {
     $update_available = version_compare( $current_version, $latest_version, '<' );
 }
 
+$generation_timeout = (int) apply_filters( 'wp_seo_automater_generation_timeout', Gemini_API_Handler::DEFAULT_GENERATION_TIMEOUT );
+$generation_timeout = max( 60, $generation_timeout );
+$php_memory_limit = ini_get( 'memory_limit' );
+$php_max_execution_time = (int) ini_get( 'max_execution_time' );
+$wp_memory_limit = defined( 'WP_MEMORY_LIMIT' ) ? WP_MEMORY_LIMIT : __( 'Not defined', 'wp-seo-blog-automater' );
+$wp_max_memory_limit = defined( 'WP_MAX_MEMORY_LIMIT' ) ? WP_MAX_MEMORY_LIMIT : __( 'Not defined', 'wp-seo-blog-automater' );
+
+$memory_unlimited = ( '-1' === $php_memory_limit );
+$execution_unlimited = ( 0 === $php_max_execution_time );
+$execution_status = 'success';
+
+if ( ! $execution_unlimited && $php_max_execution_time < $generation_timeout ) {
+    $execution_status = 'warning';
+}
+
+$curl_available = function_exists( 'curl_version' );
+$allow_url_fopen = (bool) ini_get( 'allow_url_fopen' );
+
 // System checks
 $checks = array(
     'PHP Version' => array(
@@ -67,6 +85,41 @@ $checks = array(
         'value' => get_option( 'wp_seo_automater_google_service_account_json' ) ? 'Configured' : 'Not Set',
         'required' => 'Required for Google bulk actions',
         'status' => get_option( 'wp_seo_automater_google_service_account_json' ) ? 'success' : 'warning'
+    ),
+    'Plugin Generation Timeout' => array(
+        'value' => $generation_timeout . 's',
+        'required' => 'Recommended: 300s+',
+        'status' => $generation_timeout >= 300 ? 'success' : 'warning'
+    ),
+    'PHP max_execution_time' => array(
+        'value' => $execution_unlimited ? __( 'Unlimited (0)', 'wp-seo-blog-automater' ) : $php_max_execution_time . 's',
+        'required' => sprintf( __( 'At least %ss, or unlimited', 'wp-seo-blog-automater' ), $generation_timeout ),
+        'status' => $execution_status
+    ),
+    'PHP memory_limit' => array(
+        'value' => $memory_unlimited ? __( 'Unlimited (-1)', 'wp-seo-blog-automater' ) : $php_memory_limit,
+        'required' => '256M+ recommended',
+        'status' => $memory_unlimited ? 'success' : 'info'
+    ),
+    'WP_MEMORY_LIMIT' => array(
+        'value' => $wp_memory_limit,
+        'required' => '256M+ recommended',
+        'status' => 'info'
+    ),
+    'WP_MAX_MEMORY_LIMIT' => array(
+        'value' => $wp_max_memory_limit,
+        'required' => 'Should allow heavy admin requests',
+        'status' => 'info'
+    ),
+    'cURL Extension' => array(
+        'value' => $curl_available ? __( 'Available', 'wp-seo-blog-automater' ) : __( 'Unavailable', 'wp-seo-blog-automater' ),
+        'required' => __( 'Recommended', 'wp-seo-blog-automater' ),
+        'status' => $curl_available ? 'success' : 'warning'
+    ),
+    'allow_url_fopen' => array(
+        'value' => $allow_url_fopen ? __( 'Enabled', 'wp-seo-blog-automater' ) : __( 'Disabled', 'wp-seo-blog-automater' ),
+        'required' => __( 'Optional fallback', 'wp-seo-blog-automater' ),
+        'status' => $allow_url_fopen ? 'info' : 'warning'
     ),
 );
 ?>
@@ -151,6 +204,23 @@ $checks = array(
     <!-- System Requirements -->
     <div class="wp-seo-card">
         <h2><?php esc_html_e( 'System Status', 'wp-seo-blog-automater' ); ?></h2>
+
+        <div class="wp-seo-notice <?php echo ( 'warning' === $execution_status ) ? 'wp-seo-notice-warning' : 'wp-seo-notice-info'; ?>">
+            <p>
+                <strong><?php esc_html_e( 'Generation Runtime Check:', 'wp-seo-blog-automater' ); ?></strong>
+                <?php if ( 'warning' === $execution_status ) : ?>
+                    <?php
+                    printf(
+                        esc_html__( 'PHP max_execution_time is lower than the plugin generation timeout (%1$ss vs %2$ss). Long article generation can still fail at the host level.', 'wp-seo-blog-automater' ),
+                        esc_html( (string) $php_max_execution_time ),
+                        esc_html( (string) $generation_timeout )
+                    );
+                    ?>
+                <?php else : ?>
+                    <?php esc_html_e( 'PHP execution time looks compatible with the current plugin generation timeout.', 'wp-seo-blog-automater' ); ?>
+                <?php endif; ?>
+            </p>
+        </div>
         
         <table class="wp-seo-table widefat">
             <thead>

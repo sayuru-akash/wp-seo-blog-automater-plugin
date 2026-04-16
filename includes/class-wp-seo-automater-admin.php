@@ -297,7 +297,12 @@ class WP_SEO_Automater_Admin {
 			@set_time_limit( $timeout + 30 );
 		}
 
-		$result = $this->generate_preview_data( $title, $keywords );
+		try {
+			$result = $this->generate_preview_data( $title, $keywords );
+		} catch ( Throwable $e ) {
+			self::log_activity( 'Generation Exception', 'Title: ' . $title . ' - ' . $e->getMessage(), 'error' );
+			wp_send_json_error( __( 'Generation failed on the server. Check Activity Logs and System Info for PHP limits.', 'wp-seo-blog-automater' ) );
+		}
 
 		if ( is_wp_error( $result ) ) {
 			self::log_activity( 'Generation Failed', "Title: $title - Error: " . $result->get_error_message(), 'error' );

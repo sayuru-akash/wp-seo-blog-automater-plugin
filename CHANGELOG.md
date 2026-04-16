@@ -5,6 +5,31 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.17] - 2026-04-16
+
+### 🩺 Generation Error Visibility And Runtime Diagnostics
+
+Patch release focused on reducing blind generic failures and exposing the runtime limits that affect long generation requests.
+
+### Fixed
+
+- 🩺 **Better AJAX Error Messages**: The generator now surfaces actual server error messages when available instead of collapsing most failures into a generic `System Error. Please try again.`
+- 🧯 **Catchable Server Exceptions**: Generation AJAX now catches server-side exceptions and returns a clean JSON error response instead of falling through to an opaque transport failure
+- 📊 **System Info Runtime Checks**: The System Info page now shows PHP execution time, memory-related limits, plugin generation timeout, and HTTP/runtime capability checks with warnings when the host configuration is too tight for long article generation
+
+### Technical
+
+- Updated plugin version constants and release metadata to `1.3.17`
+- Added frontend error extraction from JSON and response bodies for generation and publish flows
+- Added runtime diagnostics for `max_execution_time`, memory limits, cURL, and `allow_url_fopen`
+
+### Verification
+
+- `php -l includes/class-wp-seo-automater-admin.php`
+- `php -l admin/partials/system-info-display.php`
+- `node --check admin/js/admin.js`
+- `./scripts/release-build-check.sh`
+
 ## [1.3.16] - 2026-04-16
 
 ### ⏱️ Generation Timeout Alignment Fix
