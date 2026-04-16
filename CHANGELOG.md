@@ -5,6 +5,25 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.12] - 2026-04-16
+
+### 📐 Image Control Layout Tweak
+
+Patch release focused on improving the placement of the manual image keyword control in the generator.
+
+### Improved
+
+- 🖼️ **Closer Image Controls**: Moved the manual `Image Search Keywords` field above the image preview so it sits closer to the `Refresh Image` action and feels more directly connected to image selection
+
+### Technical
+
+- Updated plugin version constants and release metadata to `1.3.12`
+- Kept the change isolated to the generator template layout
+
+### Verification
+
+- `php -l admin/partials/generator-display.php`
+
 ## [1.3.11] - 2026-04-16
 
 ### 🧩 System Info Author Fix
