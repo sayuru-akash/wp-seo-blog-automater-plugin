@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: WP SEO Blog Automater 1.4.2\n"
+"Project-Id-Version: WP SEO Blog Automater 1.4.3\n"
 "Report-Msgid-Bugs-To: info@codezela.com\n"
-"POT-Creation-Date: 2026-08-03 04:13+0530\n"
+"POT-Creation-Date: 2026-08-03 04:21+0530\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,534 +16,6 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-#: includes/class-wp-seo-automater-media-alt-text.php:67
-msgid "The selected media item no longer exists."
-msgstr ""
-
-#: includes/class-wp-seo-automater-media-alt-text.php:71
-msgid "Only image attachments can receive AI image text."
-msgstr ""
-
-#: includes/class-wp-seo-automater-media-alt-text.php:76
-msgid ""
-"This image is already being analyzed. Wait for that request to finish, then "
-"try again."
-msgstr ""
-
-#: includes/class-wp-seo-automater-media-alt-text.php:214
-msgid "WordPress could not read this attachment as a valid image."
-msgstr ""
-
-#: includes/class-wp-seo-automater-media-alt-text.php:252
-msgid ""
-"The image file is not available locally and could not be retrieved safely "
-"from its media URL."
-msgstr ""
-
-#: includes/class-wp-seo-automater-media-alt-text.php:257
-msgid "WordPress could not create a temporary image file for analysis."
-msgstr ""
-
-#: includes/class-wp-seo-automater-media-alt-text.php:280
-msgid "The offloaded media file could not be downloaded for analysis."
-msgstr ""
-
-#: includes/class-wp-seo-automater-media-alt-text.php:284
-msgid ""
-"This offloaded image is too large to download safely for Gemini analysis. "
-"Optimize the source image first."
-msgstr ""
-
-#: includes/class-wp-seo-automater-media-alt-text.php:311
-msgid ""
-"WordPress could not prepare this image for Gemini analysis. Install or "
-"enable an image editor such as Imagick or GD."
-msgstr ""
-
-#: includes/class-wp-seo-automater-media-alt-text.php:342
-msgid ""
-"This image could not be reduced to a safe size for Gemini analysis. Try "
-"optimizing the original upload first."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:83
-#: includes/class-wp-seo-automater-admin.php:2296
-#: includes/class-wp-seo-automater-admin.php:2297
-msgid "Settings"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:144
-msgid "Submit to IndexNow"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:145
-msgid "Resubmit Sitemap to Google"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:146
-msgid "Check Google Index Status"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:164
-#: includes/class-wp-seo-automater-admin.php:205
-#: includes/class-wp-seo-automater-admin.php:2437
-msgid "Generate AI image SEO text"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:204
-#: includes/class-wp-seo-automater-admin.php:2438
-msgid "Regenerate AI image SEO text"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:208
-msgid "AI image SEO text"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:214
-msgid ""
-"Uses Gemini to replace this image's alt text, caption, and description with "
-"one factual, SEO-safe description."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:237
-msgid ""
-"AI image SEO text uses a one-at-a-time progress queue. Enable JavaScript and "
-"run the Media Library action again."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:254
-msgid "You do not have permission to update this image."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:303
-msgid "Bulk action denied"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:304
-msgid "You do not have permission to use the plugin indexing actions."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:373
-#: includes/class-wp-seo-automater-admin.php:2276
-msgid "WP SEO Blog Automater"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:385
-msgid ""
-"Additional results were omitted from this notice. See Activity Logs for the "
-"full summary."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:420
-#: includes/class-wp-seo-automater-admin.php:645
-#: includes/class-wp-seo-automater-admin.php:703
-msgid "Permission denied."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:437
-msgid ""
-"Generation failed on the server. Check Activity Logs and System Info for PHP "
-"limits."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:905
-msgid "You do not have permission to check for updates."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:924
-#, php-format
-msgid "Failed to check for updates: %s"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:936
-msgid "Could not determine latest version from GitHub."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:971
-#, php-format
-msgid ""
-"Update available! Version %s is ready to install. Go to the Plugins page to "
-"update."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:974
-msgid "You are running the latest version!"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:978
-msgid "GitHub Updater class not found."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1022
-#: includes/class-wp-seo-automater-admin.php:1034
-msgid "IndexNow submission failed"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1023
-msgid "No published public URLs were available to submit."
-msgstr ""
-
-#. translators: %s: IndexNow key file URL
-#: includes/class-wp-seo-automater-admin.php:1043
-#, php-format
-msgid "Verification file served by the plugin: %s"
-msgstr ""
-
-#. translators: %d: HTTP status code
-#: includes/class-wp-seo-automater-admin.php:1048
-#, php-format
-msgid "IndexNow endpoint accepted the batch with HTTP %d."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1067
-msgid "IndexNow submission completed"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1094
-#: includes/class-wp-seo-automater-admin.php:1106
-msgid "Google sitemap submission failed"
-msgstr ""
-
-#. translators: %s: sitemap URL
-#: includes/class-wp-seo-automater-admin.php:1128
-#, php-format
-msgid "Submitted sitemap: %s"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1145
-msgid "Google sitemap submission completed"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1174
-msgid "Google index check failed"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1175
-msgid "No published public URLs were available to inspect."
-msgstr ""
-
-#. translators: 1: post title, 2: error message
-#: includes/class-wp-seo-automater-admin.php:1192
-#, php-format
-msgid "%1$s: API error: %2$s"
-msgstr ""
-
-#. translators: 1: post title, 2: status label, 3: coverage state
-#: includes/class-wp-seo-automater-admin.php:1207
-#, php-format
-msgid "%1$s: %2$s | %3$s"
-msgstr ""
-
-#. translators: %s: last crawl time
-#: includes/class-wp-seo-automater-admin.php:1216
-#, php-format
-msgid "Last crawl: %s"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1238
-msgid "Google index status check completed"
-msgstr ""
-
-#. translators: 1: total inspected, 2: on Google count, 3: needs attention count, 4: error count
-#: includes/class-wp-seo-automater-admin.php:1241
-#, php-format
-msgid ""
-"Inspected %1$d URLs. On Google: %2$d. Needs attention: %3$d. API errors: "
-"%4$d."
-msgstr ""
-
-#. translators: 1: remaining item count, 2: processing limit
-#: includes/class-wp-seo-automater-admin.php:1271
-#, php-format
-msgid ""
-"Skipped %1$d additional items because this action processes up to %2$d URLs "
-"per run."
-msgstr ""
-
-#. translators: %d: post ID
-#: includes/class-wp-seo-automater-admin.php:1283
-#, php-format
-msgid "Skipped ID %d because the post could not be loaded."
-msgstr ""
-
-#. translators: 1: post title, 2: post status
-#: includes/class-wp-seo-automater-admin.php:1292
-#, php-format
-msgid "Skipped \"%1$s\" because it is %2$s, not published."
-msgstr ""
-
-#. translators: %s: post title
-#: includes/class-wp-seo-automater-admin.php:1302
-#, php-format
-msgid "Skipped \"%s\" because its post type is not publicly viewable."
-msgstr ""
-
-#. translators: %s: post title
-#: includes/class-wp-seo-automater-admin.php:1312
-#, php-format
-msgid "Skipped \"%s\" because a public permalink was not available."
-msgstr ""
-
-#. translators: %s: post title
-#: includes/class-wp-seo-automater-admin.php:1322
-#, php-format
-msgid "Skipped \"%s\" because its URL host does not match the site host."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1379
-msgid "IndexNow key is not configured. Save or generate one in Settings first."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1389
-msgid "Could not determine the site host for IndexNow submission."
-msgstr ""
-
-#. translators: 1: HTTP status code, 2: API response message
-#: includes/class-wp-seo-automater-admin.php:1422
-#, php-format
-msgid "IndexNow returned HTTP %1$d. %2$s"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1467
-msgid "Google service account JSON is not configured in Settings."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1475
-msgid ""
-"Google service account JSON is invalid. It must include client_email and "
-"private_key."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1524
-msgid "OpenSSL is required to authenticate with Google Search Console."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1548
-msgid ""
-"Failed to sign the Google service account assertion. Check the private key "
-"JSON."
-msgstr ""
-
-#. translators: 1: HTTP status code, 2: API response message
-#: includes/class-wp-seo-automater-admin.php:1580
-#, php-format
-msgid "Google token request failed with HTTP %1$d. %2$s"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1685
-msgid ""
-"No sitemap URLs were configured and no default sitemap endpoint was "
-"reachable. Add sitemap URLs in Settings first."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1722
-msgid "Google did not return index status data for this URL."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1727
-msgid "Unknown status"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1730
-msgid "URL is on Google"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1732
-msgid "URL is excluded from Google"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1734
-msgid "URL has indexing errors"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1746
-msgid "Coverage state unavailable"
-msgstr ""
-
-#. translators: 1: HTTP status code, 2: API response message
-#: includes/class-wp-seo-automater-admin.php:1791
-#, php-format
-msgid "Google Search Console returned HTTP %1$d. %2$s"
-msgstr ""
-
-#. translators: %s: HTTP method
-#: includes/class-wp-seo-automater-admin.php:1857
-#, php-format
-msgid "HTTP method %s is not supported in this environment."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:1884
-msgid "No additional error details were returned."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2277
-msgid "Blog Automater"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2287
-#: includes/class-wp-seo-automater-admin.php:2288
-msgid "Generator"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2305
-msgid "Activity Logs"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2306
-msgid "Logs"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2314
-#: includes/class-wp-seo-automater-admin.php:2315
-#: admin/partials/system-info-display.php:170
-msgid "System Info"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2439
-msgid ""
-"Select one or more images first. In grid view, use Bulk Select before "
-"choosing images."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2440
-msgid ""
-"This will replace the alt text, caption, and description of each selected "
-"image. Continue?"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2441
-msgid "Generating AI image SEO text..."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2442
-msgid "AI image SEO text generation complete."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2443
-msgid "Retry failed images"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2444
-msgid "Generated"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2445
-msgid "Failed"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2446
-msgid "Skipped"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2447
-#, php-format
-msgid "Image %1$d of %2$d."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2448
-msgid "The image could not be analyzed."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2449
-msgid "The request failed before Gemini could analyze this image."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2469
-msgid "Master Prompt reset to default."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2487
-msgid ""
-"Image SEO model was not saved. Use a valid Gemini model ID containing "
-"letters, numbers, dots, underscores, or hyphens."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2516
-msgid ""
-"IndexNow key was not saved. Use 8-128 characters containing letters, "
-"numbers, or hyphens only."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2531
-msgid ""
-"Google Search Console property was not saved. Domain properties must look "
-"like sc-domain:example.com."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2541
-msgid ""
-"Google Search Console property was not saved. Use a full URL prefix such as "
-"https://example.com/ or a sc-domain property."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2554
-msgid ""
-"Google service account JSON was not saved. It must be valid JSON and include "
-"client_email plus private_key."
-msgstr ""
-
-#. translators: %s: invalid sitemap URLs
-#: includes/class-wp-seo-automater-admin.php:2592
-#, php-format
-msgid "Some sitemap URLs were ignored because they were invalid: %s"
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2611
-msgid "Settings saved successfully."
-msgstr ""
-
-#: includes/class-wp-seo-automater-admin.php:2617
-msgid ""
-"A new IndexNow key was generated and saved. The plugin now serves the "
-"verification file automatically."
-msgstr ""
-
-#: includes/class-gemini-api-handler.php:96
-#: includes/class-gemini-api-handler.php:304
-#: includes/class-gemini-api-handler.php:423
-msgid "Gemini API Key is missing. Please configure it in settings."
-msgstr ""
-
-#: includes/class-gemini-api-handler.php:100
-msgid "The image file is no longer available for analysis."
-msgstr ""
-
-#: includes/class-gemini-api-handler.php:106
-msgid "This image type cannot be sent to Gemini for analysis."
-msgstr ""
-
-#: includes/class-gemini-api-handler.php:111
-msgid "WordPress could not read the image data for Gemini analysis."
-msgstr ""
-
-#: includes/class-gemini-api-handler.php:225
-msgid "The configured Gemini image model is not available for this API key."
-msgstr ""
-
-#: includes/class-gemini-api-handler.php:230
-#, php-format
-msgid "Gemini image analysis failed (HTTP %1$d): %2$s"
-msgstr ""
-
-#: includes/class-gemini-api-handler.php:235
-msgid "Gemini returned an unreadable image-analysis response."
-msgstr ""
-
-#: includes/class-gemini-api-handler.php:264
-msgid ""
-"Gemini returned image text in an invalid format. No image metadata was "
-"changed; please try again."
-msgstr ""
-
-#: includes/class-gemini-api-handler.php:277
-msgid "Gemini did not return usable image text. Please try again."
-msgstr ""
-
-#: includes/class-gemini-api-handler.php:534
-#, php-format
-msgid "Gemini API Error (%d): %s"
-msgstr ""
 
 #: admin/partials/settings-display.php:16
 msgctxt "Settings page title"
@@ -964,6 +436,12 @@ msgstr ""
 msgid "Optional fallback"
 msgstr ""
 
+#: admin/partials/system-info-display.php:170
+#: includes/class-wp-seo-automater-admin.php:2314
+#: includes/class-wp-seo-automater-admin.php:2315
+msgid "System Info"
+msgstr ""
+
 #: admin/partials/system-info-display.php:171
 msgid "Plugin version, updates, and system status"
 msgstr ""
@@ -1141,4 +619,526 @@ msgstr ""
 
 #: admin/partials/system-info-display.php:363
 msgid "Powered by"
+msgstr ""
+
+#: includes/class-wp-seo-automater-media-alt-text.php:67
+msgid "The selected media item no longer exists."
+msgstr ""
+
+#: includes/class-wp-seo-automater-media-alt-text.php:71
+msgid "Only image attachments can receive AI image text."
+msgstr ""
+
+#: includes/class-wp-seo-automater-media-alt-text.php:76
+msgid ""
+"This image is already being analyzed. Wait for that request to finish, then "
+"try again."
+msgstr ""
+
+#: includes/class-wp-seo-automater-media-alt-text.php:214
+msgid "WordPress could not read this attachment as a valid image."
+msgstr ""
+
+#: includes/class-wp-seo-automater-media-alt-text.php:252
+msgid ""
+"The image file is not available locally and could not be retrieved safely "
+"from its media URL."
+msgstr ""
+
+#: includes/class-wp-seo-automater-media-alt-text.php:257
+msgid "WordPress could not create a temporary image file for analysis."
+msgstr ""
+
+#: includes/class-wp-seo-automater-media-alt-text.php:280
+msgid "The offloaded media file could not be downloaded for analysis."
+msgstr ""
+
+#: includes/class-wp-seo-automater-media-alt-text.php:284
+msgid ""
+"This offloaded image is too large to download safely for Gemini analysis. "
+"Optimize the source image first."
+msgstr ""
+
+#: includes/class-wp-seo-automater-media-alt-text.php:311
+msgid ""
+"WordPress could not prepare this image for Gemini analysis. Install or "
+"enable an image editor such as Imagick or GD."
+msgstr ""
+
+#: includes/class-wp-seo-automater-media-alt-text.php:342
+msgid ""
+"This image could not be reduced to a safe size for Gemini analysis. Try "
+"optimizing the original upload first."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:83
+#: includes/class-wp-seo-automater-admin.php:2296
+#: includes/class-wp-seo-automater-admin.php:2297
+msgid "Settings"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:144
+msgid "Submit to IndexNow"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:145
+msgid "Resubmit Sitemap to Google"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:146
+msgid "Check Google Index Status"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:164
+#: includes/class-wp-seo-automater-admin.php:205
+#: includes/class-wp-seo-automater-admin.php:2437
+msgid "Generate AI image SEO text"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:204
+#: includes/class-wp-seo-automater-admin.php:2438
+msgid "Regenerate AI image SEO text"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:208
+msgid "AI image SEO text"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:214
+msgid ""
+"Uses Gemini to replace this image's alt text, caption, and description with "
+"one factual, SEO-safe description."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:237
+msgid ""
+"AI image SEO text uses a one-at-a-time progress queue. Enable JavaScript and "
+"run the Media Library action again."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:254
+msgid "You do not have permission to update this image."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:303
+msgid "Bulk action denied"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:304
+msgid "You do not have permission to use the plugin indexing actions."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:373
+#: includes/class-wp-seo-automater-admin.php:2276
+msgid "WP SEO Blog Automater"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:385
+msgid ""
+"Additional results were omitted from this notice. See Activity Logs for the "
+"full summary."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:420
+#: includes/class-wp-seo-automater-admin.php:645
+#: includes/class-wp-seo-automater-admin.php:703
+msgid "Permission denied."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:437
+msgid ""
+"Generation failed on the server. Check Activity Logs and System Info for PHP "
+"limits."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:905
+msgid "You do not have permission to check for updates."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:924
+#, php-format
+msgid "Failed to check for updates: %s"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:936
+msgid "Could not determine latest version from GitHub."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:971
+#, php-format
+msgid ""
+"Update available! Version %s is ready to install. Go to the Plugins page to "
+"update."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:974
+msgid "You are running the latest version!"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:978
+msgid "GitHub Updater class not found."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1022
+#: includes/class-wp-seo-automater-admin.php:1034
+msgid "IndexNow submission failed"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1023
+msgid "No published public URLs were available to submit."
+msgstr ""
+
+#. translators: %s: IndexNow key file URL
+#: includes/class-wp-seo-automater-admin.php:1043
+#, php-format
+msgid "Verification file served by the plugin: %s"
+msgstr ""
+
+#. translators: %d: HTTP status code
+#: includes/class-wp-seo-automater-admin.php:1048
+#, php-format
+msgid "IndexNow endpoint accepted the batch with HTTP %d."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1067
+msgid "IndexNow submission completed"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1094
+#: includes/class-wp-seo-automater-admin.php:1106
+msgid "Google sitemap submission failed"
+msgstr ""
+
+#. translators: %s: sitemap URL
+#: includes/class-wp-seo-automater-admin.php:1128
+#, php-format
+msgid "Submitted sitemap: %s"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1145
+msgid "Google sitemap submission completed"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1174
+msgid "Google index check failed"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1175
+msgid "No published public URLs were available to inspect."
+msgstr ""
+
+#. translators: 1: post title, 2: error message
+#: includes/class-wp-seo-automater-admin.php:1192
+#, php-format
+msgid "%1$s: API error: %2$s"
+msgstr ""
+
+#. translators: 1: post title, 2: status label, 3: coverage state
+#: includes/class-wp-seo-automater-admin.php:1207
+#, php-format
+msgid "%1$s: %2$s | %3$s"
+msgstr ""
+
+#. translators: %s: last crawl time
+#: includes/class-wp-seo-automater-admin.php:1216
+#, php-format
+msgid "Last crawl: %s"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1238
+msgid "Google index status check completed"
+msgstr ""
+
+#. translators: 1: total inspected, 2: on Google count, 3: needs attention count, 4: error count
+#: includes/class-wp-seo-automater-admin.php:1241
+#, php-format
+msgid ""
+"Inspected %1$d URLs. On Google: %2$d. Needs attention: %3$d. API errors: "
+"%4$d."
+msgstr ""
+
+#. translators: 1: remaining item count, 2: processing limit
+#: includes/class-wp-seo-automater-admin.php:1271
+#, php-format
+msgid ""
+"Skipped %1$d additional items because this action processes up to %2$d URLs "
+"per run."
+msgstr ""
+
+#. translators: %d: post ID
+#: includes/class-wp-seo-automater-admin.php:1283
+#, php-format
+msgid "Skipped ID %d because the post could not be loaded."
+msgstr ""
+
+#. translators: 1: post title, 2: post status
+#: includes/class-wp-seo-automater-admin.php:1292
+#, php-format
+msgid "Skipped \"%1$s\" because it is %2$s, not published."
+msgstr ""
+
+#. translators: %s: post title
+#: includes/class-wp-seo-automater-admin.php:1302
+#, php-format
+msgid "Skipped \"%s\" because its post type is not publicly viewable."
+msgstr ""
+
+#. translators: %s: post title
+#: includes/class-wp-seo-automater-admin.php:1312
+#, php-format
+msgid "Skipped \"%s\" because a public permalink was not available."
+msgstr ""
+
+#. translators: %s: post title
+#: includes/class-wp-seo-automater-admin.php:1322
+#, php-format
+msgid "Skipped \"%s\" because its URL host does not match the site host."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1379
+msgid "IndexNow key is not configured. Save or generate one in Settings first."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1389
+msgid "Could not determine the site host for IndexNow submission."
+msgstr ""
+
+#. translators: 1: HTTP status code, 2: API response message
+#: includes/class-wp-seo-automater-admin.php:1422
+#, php-format
+msgid "IndexNow returned HTTP %1$d. %2$s"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1467
+msgid "Google service account JSON is not configured in Settings."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1475
+msgid ""
+"Google service account JSON is invalid. It must include client_email and "
+"private_key."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1524
+msgid "OpenSSL is required to authenticate with Google Search Console."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1548
+msgid ""
+"Failed to sign the Google service account assertion. Check the private key "
+"JSON."
+msgstr ""
+
+#. translators: 1: HTTP status code, 2: API response message
+#: includes/class-wp-seo-automater-admin.php:1580
+#, php-format
+msgid "Google token request failed with HTTP %1$d. %2$s"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1685
+msgid ""
+"No sitemap URLs were configured and no default sitemap endpoint was "
+"reachable. Add sitemap URLs in Settings first."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1722
+msgid "Google did not return index status data for this URL."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1727
+msgid "Unknown status"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1730
+msgid "URL is on Google"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1732
+msgid "URL is excluded from Google"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1734
+msgid "URL has indexing errors"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1746
+msgid "Coverage state unavailable"
+msgstr ""
+
+#. translators: 1: HTTP status code, 2: API response message
+#: includes/class-wp-seo-automater-admin.php:1791
+#, php-format
+msgid "Google Search Console returned HTTP %1$d. %2$s"
+msgstr ""
+
+#. translators: %s: HTTP method
+#: includes/class-wp-seo-automater-admin.php:1857
+#, php-format
+msgid "HTTP method %s is not supported in this environment."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:1884
+msgid "No additional error details were returned."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2277
+msgid "Blog Automater"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2287
+#: includes/class-wp-seo-automater-admin.php:2288
+msgid "Generator"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2305
+msgid "Activity Logs"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2306
+msgid "Logs"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2439
+msgid ""
+"Select one or more images first. In grid view, use Bulk Select before "
+"choosing images."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2440
+msgid ""
+"This will replace the alt text, caption, and description of each selected "
+"image. Continue?"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2441
+msgid "Generating AI image SEO text..."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2442
+msgid "AI image SEO text generation complete."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2443
+msgid "Retry failed images"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2444
+msgid "Generated"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2445
+msgid "Failed"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2446
+msgid "Skipped"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2447
+#, php-format
+msgid "Image %1$d of %2$d."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2448
+msgid "The image could not be analyzed."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2449
+msgid "The request failed before Gemini could analyze this image."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2469
+msgid "Master Prompt reset to default."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2487
+msgid ""
+"Image SEO model was not saved. Use a valid Gemini model ID containing "
+"letters, numbers, dots, underscores, or hyphens."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2516
+msgid ""
+"IndexNow key was not saved. Use 8-128 characters containing letters, "
+"numbers, or hyphens only."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2531
+msgid ""
+"Google Search Console property was not saved. Domain properties must look "
+"like sc-domain:example.com."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2541
+msgid ""
+"Google Search Console property was not saved. Use a full URL prefix such as "
+"https://example.com/ or a sc-domain property."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2554
+msgid ""
+"Google service account JSON was not saved. It must be valid JSON and include "
+"client_email plus private_key."
+msgstr ""
+
+#. translators: %s: invalid sitemap URLs
+#: includes/class-wp-seo-automater-admin.php:2592
+#, php-format
+msgid "Some sitemap URLs were ignored because they were invalid: %s"
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2611
+msgid "Settings saved successfully."
+msgstr ""
+
+#: includes/class-wp-seo-automater-admin.php:2617
+msgid ""
+"A new IndexNow key was generated and saved. The plugin now serves the "
+"verification file automatically."
+msgstr ""
+
+#: includes/class-gemini-api-handler.php:96
+#: includes/class-gemini-api-handler.php:312
+#: includes/class-gemini-api-handler.php:431
+msgid "Gemini API Key is missing. Please configure it in settings."
+msgstr ""
+
+#: includes/class-gemini-api-handler.php:100
+msgid "The image file is no longer available for analysis."
+msgstr ""
+
+#: includes/class-gemini-api-handler.php:106
+msgid "This image type cannot be sent to Gemini for analysis."
+msgstr ""
+
+#: includes/class-gemini-api-handler.php:111
+msgid "WordPress could not read the image data for Gemini analysis."
+msgstr ""
+
+#: includes/class-gemini-api-handler.php:233
+msgid "The configured Gemini image model is not available for this API key."
+msgstr ""
+
+#: includes/class-gemini-api-handler.php:238
+#, php-format
+msgid "Gemini image analysis failed (HTTP %1$d): %2$s"
+msgstr ""
+
+#: includes/class-gemini-api-handler.php:243
+msgid "Gemini returned an unreadable image-analysis response."
+msgstr ""
+
+#: includes/class-gemini-api-handler.php:272
+msgid ""
+"Gemini returned image text in an invalid format. No image metadata was "
+"changed; please try again."
+msgstr ""
+
+#: includes/class-gemini-api-handler.php:285
+msgid "Gemini did not return usable image text. Please try again."
+msgstr ""
+
+#: includes/class-gemini-api-handler.php:542
+#, php-format
+msgid "Gemini API Error (%d): %s"
 msgstr ""

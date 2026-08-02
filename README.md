@@ -1,6 +1,6 @@
 # WP SEO Blog Automater
 
-[![Version](https://img.shields.io/badge/version-1.4.2-blue.svg)](https://github.com/codezela/wp-seo-blog-automater)
+[![Version](https://img.shields.io/badge/version-1.4.3-blue.svg)](https://github.com/codezela/wp-seo-blog-automater)
 [![WordPress](https://img.shields.io/badge/WordPress-5.8+-green.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.4+-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/license-GPL--2.0+-red.svg)](LICENSE)
@@ -189,7 +189,7 @@ The Media Library feature creates one concise, factual text and saves it unchang
 1. Go to **Media → Library**.
 2. For one image, open **Attachment Details** and click **Generate AI image SEO text**. Click it again to regenerate.
 3. In list view, select image rows and choose **Generate AI image SEO text** from **Bulk actions**.
-4. In grid view, choose **Bulk Select**, select image tiles, then click **Generate AI image SEO text** in the media toolbar.
+4. In grid view, choose **Bulk Select**, select image tiles, then click **Generate AI image SEO text** below the Media Library filters. The action remains visible while Bulk Select is active.
 
 Bulk processing runs one attachment at a time, shows live progress, continues after failures, and offers **Retry failed images**. It does not alter the original upload. If an image is large, animated, unsupported, or offloaded, the plugin safely creates or downloads a temporary analysis copy where WordPress can do so; otherwise it reports the affected item without changing its existing metadata.
 

@@ -225,18 +225,30 @@
 	}
 
 	function ensureGridButton() {
-		var $toolbar = $( "#wp-media-grid .media-toolbar-secondary" ).first();
-		if ( ! $toolbar.length ) {
-			$toolbar = $( "#wp-media-grid .media-toolbar-primary" ).first();
+		var $grid = $( "#wp-media-grid" ).first();
+		if ( ! $grid.length ) {
+			return;
 		}
 
-		if ( ! $toolbar.length || $toolbar.find( ".wp-seo-media-alt-grid-button" ).length ) {
+		var $host = $( ".wp-seo-media-alt-grid-controls" ).first();
+		if ( ! $host.length ) {
+			var $filter = $grid.prevAll( ".wp-filter" ).first();
+			$host = $( '<div class="wp-seo-media-alt-grid-controls"></div>' );
+
+			if ( $filter.length ) {
+				$host.insertAfter( $filter );
+			} else {
+				$host.insertBefore( $grid );
+			}
+		}
+
+		if ( $host.find( ".wp-seo-media-alt-grid-button" ).length ) {
 			return;
 		}
 
 		$( '<button type="button" class="button button-secondary wp-seo-media-alt-grid-button"></button>' )
 			.text( config.i18n.gridButton )
-			.appendTo( $toolbar );
+			.appendTo( $host );
 	}
 
 	function selectedBulkAction( $form ) {
@@ -266,7 +278,7 @@
 		var $button = $( this );
 		processQueue( selectedGridIds(), {
 			confirm: true,
-			$host: $button.closest( ".media-toolbar" ),
+			$host: $button.closest( ".wp-seo-media-alt-grid-controls" ),
 			$buttons: $button
 		} );
 	} );

@@ -13,8 +13,13 @@
 	font-style: italic;
 }
 
-.wp-seo-media-alt-grid-button {
-	margin-left: 8px !important;
+.wp-seo-media-alt-grid-controls {
+	clear: both;
+	margin: 12px 0;
+}
+
+.wp-seo-media-alt-grid-controls .wp-seo-media-alt-grid-button {
+	margin: 0;
 }
 
 .wp-seo-media-alt-progress {

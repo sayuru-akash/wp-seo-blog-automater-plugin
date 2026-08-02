@@ -5,6 +5,16 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.3] - 2026-08-03
+
+### Fixed
+
+- **Persistent Grid Bulk Action**: The Media Library grid action now renders in a plugin-owned control area beneath the filters instead of a WordPress toolbar that Bulk Select replaces. It stays visible after entering Bulk Select mode and continues to process the selected image tiles.
+
+### Verification
+
+- Validated JavaScript syntax and the complete `1.4.3` release package.
+
 ## [1.4.2] - 2026-08-03
 
 ### Fixed
