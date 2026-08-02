@@ -5,6 +5,17 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.4] - 2026-08-03
+
+### Fixed
+
+- **Persistent Retry Progress**: Retrying failed image items now reuses the visible progress notice instead of deleting it and trying to insert the replacement after a detached element. Retry progress remains visible, and a new retry action appears only if items fail again.
+- **Clean Notice States**: Progress notices now clear stale success, warning, and error classes before each queue run.
+
+### Verification
+
+- Added `node tests/run-media-alt-text-js-check.js` to guard the retry queue wiring against this detached-notice regression.
+
 ## [1.4.3] - 2026-08-03
 
 ### Fixed

@@ -1,6 +1,6 @@
 # WP SEO Blog Automater
 
-[![Version](https://img.shields.io/badge/version-1.4.3-blue.svg)](https://github.com/codezela/wp-seo-blog-automater)
+[![Version](https://img.shields.io/badge/version-1.4.4-blue.svg)](https://github.com/codezela/wp-seo-blog-automater)
 [![WordPress](https://img.shields.io/badge/WordPress-5.8+-green.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.4+-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/license-GPL--2.0+-red.svg)](LICENSE)
@@ -214,6 +214,7 @@ php tests/run-fixture-preview.php
 php tests/run-gemini-continuation.php
 php tests/run-image-alt-text.php
 php tests/run-live-image-alt.php
+node tests/run-media-alt-text-js-check.js
 php tests/run-live-preview.php
 ```
 
@@ -232,6 +233,8 @@ php tests/run-live-preview.php
 - `php tests/run-live-image-alt.php`
   - Sends the local `images/logo.png` fixture to the configured Gemini image model through the production request path
   - Reports the candidate response format and normalized image text without printing the API key
+- `node tests/run-media-alt-text-js-check.js`
+  - Guards the Media Library retry flow against removing its progress notice before the next queue starts
 - `php tests/run-live-preview.php`
   - Calls Gemini live using the title/keywords from `.env`
   - Produces the exact structured payload consumed by `admin/js/admin.js`
@@ -276,6 +279,7 @@ wp-seo-blog-automater/
 │   ├── run-gemini-continuation.php # Continuation loop verification
 │   ├── run-image-alt-text.php # Image-text generation contract verification
 │   ├── run-live-image-alt.php # Live Gemini image-text verification
+│   ├── run-media-alt-text-js-check.js # Retry queue regression check
 │   └── run-live-preview.php    # Live Gemini/Unsplash preview verification
 ├── languages/                  # Translation files (POT/PO/MO)
 ├── wp-seo-blog-automater.php  # Main plugin file

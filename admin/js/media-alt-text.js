@@ -55,7 +55,18 @@
 		return uniqueIds( ids );
 	}
 
-	function createProgressBox( $host ) {
+	function resetProgressBox( $box ) {
+		$box.removeClass( "notice-success notice-error notice-warning" ).addClass( "notice-info" );
+		$box.find( ".wp-seo-media-alt-progress-summary, .wp-seo-media-alt-progress-detail, .wp-seo-media-alt-progress-actions" ).empty();
+
+		return $box;
+	}
+
+	function createProgressBox( $host, $reusableBox ) {
+		if ( $reusableBox && $reusableBox.length && $.contains( document, $reusableBox[ 0 ] ) ) {
+			return resetProgressBox( $reusableBox );
+		}
+
 		var $existing = $( ".wp-seo-media-alt-progress" ).first();
 		if ( $existing.length ) {
 			$existing.remove();
@@ -72,7 +83,7 @@
 			$( "#wpbody-content" ).prepend( $box );
 		}
 
-		return $box;
+		return resetProgressBox( $box );
 	}
 
 	function renderProgress( $box, state, detail ) {
@@ -80,7 +91,7 @@
 		var total = state.ids.length;
 		var summary = config.i18n.processing + " " + complete + "/" + total + ". " + state.generated + " " + config.i18n.generated + ", " + state.failed + " " + config.i18n.failed + ", " + state.skipped + " " + config.i18n.skipped + ".";
 
-		$box.removeClass( "notice-success notice-error" ).addClass( "notice-info" );
+		$box.removeClass( "notice-success notice-error notice-warning" ).addClass( "notice-info" );
 		$box.find( ".wp-seo-media-alt-progress-summary" ).text( summary );
 		$box.find( ".wp-seo-media-alt-progress-detail" ).text( detail || "" );
 	}
@@ -148,7 +159,7 @@
 			skipped: 0,
 			failedIds: []
 		};
-		var $box = createProgressBox( options.$host );
+		var $box = createProgressBox( options.$host, options.$progressBox );
 		var $buttons = options.$buttons || $();
 
 		$buttons.prop( "disabled", true ).addClass( "is-busy" );
@@ -157,7 +168,7 @@
 		function finish() {
 			var message = config.i18n.complete + " " + state.generated + " " + config.i18n.generated + ", " + state.failed + " " + config.i18n.failed + ", " + state.skipped + " " + config.i18n.skipped + ".";
 
-			$box.removeClass( "notice-info notice-error" ).addClass( state.failed ? "notice-warning" : "notice-success" );
+			$box.removeClass( "notice-info notice-error notice-warning notice-success" ).addClass( state.failed ? "notice-warning" : "notice-success" );
 			$box.find( ".wp-seo-media-alt-progress-summary" ).text( message );
 			$buttons.prop( "disabled", false ).removeClass( "is-busy" );
 
@@ -166,7 +177,7 @@
 				$retry.on( "click", function () {
 					processQueue( state.failedIds, {
 						confirm: false,
-						$host: $box,
+						$progressBox: $box,
 						$buttons: $retry
 					} );
 				} );
