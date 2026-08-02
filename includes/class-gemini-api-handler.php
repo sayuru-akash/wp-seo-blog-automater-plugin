@@ -23,6 +23,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Gemini_API_Handler {
 
 	/**
+	 * Stable model used for multimodal image-to-text analysis.
+	 *
+	 * @since 1.4.0
+	 * @var string
+	 */
+	const DEFAULT_IMAGE_ALT_MODEL = 'gemini-2.5-flash';
+
+	/**
 	 * Default timeout for article generation requests, in seconds.
 	 *
 	 * @since 1.3.15
@@ -63,7 +71,197 @@ class Gemini_API_Handler {
 	 */
 	public function __construct( $api_key = null, $model_id = null ) {
 		$this->api_key = $api_key ? $api_key : get_option( 'wp_seo_automater_gemini_key', '' );
-		$this->model_id = $model_id ? $model_id : get_option( 'wp_seo_automater_gemini_model', 'gemini-pro-latest' );
+		$this->model_id = $model_id ? $model_id : get_option( 'wp_seo_automater_gemini_model', self::DEFAULT_IMAGE_ALT_MODEL );
+	}
+
+	/**
+	 * Generate concise, factual image text from a local image file.
+	 *
+	 * @since 1.4.0
+	 * @param string $image_path Local path to a compact analysis image.
+	 * @param string $mime_type Image MIME type.
+	 * @param array  $context Website and attachment context.
+	 * @return string|WP_Error
+	 */
+	public function generate_image_alt_text( $image_path, $mime_type, $context = array() ) {
+		if ( empty( $this->api_key ) ) {
+			return new WP_Error( 'missing_key', __( 'Gemini API Key is missing. Please configure it in settings.', 'wp-seo-blog-automater' ) );
+		}
+
+		if ( ! is_string( $image_path ) || ! is_readable( $image_path ) ) {
+			return new WP_Error( 'missing_image_file', __( 'The image file is no longer available for analysis.', 'wp-seo-blog-automater' ) );
+		}
+
+		$allowed_mimes = array( 'image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif' );
+		$mime_type     = strtolower( trim( (string) $mime_type ) );
+		if ( ! in_array( $mime_type, $allowed_mimes, true ) ) {
+			return new WP_Error( 'unsupported_image_type', __( 'This image type cannot be sent to Gemini for analysis.', 'wp-seo-blog-automater' ) );
+		}
+
+		$image_data = file_get_contents( $image_path );
+		if ( false === $image_data || '' === $image_data ) {
+			return new WP_Error( 'image_read_failed', __( 'WordPress could not read the image data for Gemini analysis.', 'wp-seo-blog-automater' ) );
+		}
+
+		$response = $this->make_image_api_request(
+			$this->get_image_alt_text_prompt( $context ),
+			$image_data,
+			$mime_type
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		$alt_text = self::normalize_image_alt_text( $this->extract_text_from_response( $response ) );
+		if ( is_wp_error( $alt_text ) ) {
+			return $alt_text;
+		}
+
+		return $alt_text;
+	}
+
+	/**
+	 * Build the instruction set for factual, accessible, SEO-safe image text.
+	 *
+	 * @since 1.4.0
+	 * @param array $context Website and attachment context.
+	 * @return string
+	 */
+	protected function get_image_alt_text_prompt( $context ) {
+		$context = is_array( $context ) ? $context : array();
+		$lines   = array();
+
+		foreach ( array( 'site_name', 'site_tagline', 'site_url', 'brand_context', 'attachment_title', 'parent_title', 'parent_context' ) as $key ) {
+			if ( ! empty( $context[ $key ] ) && is_scalar( $context[ $key ] ) ) {
+				$lines[] = str_replace( '_', ' ', $key ) . ': ' . trim( (string) $context[ $key ] );
+			}
+		}
+
+		return "You are the senior accessibility editor and image SEO specialist for a WordPress website. Analyze the supplied image itself first, then use the website context only to disambiguate visible subjects, products, locations, or branding.\n\n"
+			. "Return exactly one JSON object in this shape: {\"alt_text\":\"...\"}. Do not return Markdown, a code fence, an explanation, or additional keys.\n\n"
+			. "Write one concise, natural-language alternative text suitable for a WordPress image. It will be copied unchanged into the image alt text, caption, and description fields.\n\n"
+			. "Quality rules:\n"
+			. "- Describe the meaningful visible subject, action, setting, and any essential visible text.\n"
+			. "- Be factual. Do not invent people, locations, products, benefits, events, or brand names that are not clearly visible or supported by the supplied site context.\n"
+			. "- Use site/brand context to identify a logo or product only when it is clearly relevant; never guess a logo from context alone.\n"
+			. "- Prefer 8 to 18 words, normally 60 to 125 characters, and never exceed 125 characters.\n"
+			. "- Avoid filler such as 'image of', 'picture of', 'photo of', file names, camera details, hashtags, quotations, HTML, and keyword stuffing.\n"
+			. "- Do not repeat the surrounding article title unless it genuinely clarifies the visible image.\n"
+			. "- Use the language implied by the website context when clear; otherwise use English.\n"
+			. "- If the image is a logo, describe the visible logo and brand only when the brand is legible or contextually confirmed.\n"
+			. "- If the image is decorative but still selected for generation, provide the most useful concise visual description rather than empty text.\n\n"
+			. "Website and attachment context:\n"
+			. ( empty( $lines ) ? 'No additional context was provided.' : implode( "\n", $lines ) );
+	}
+
+	/**
+	 * Send an image-plus-text request to Gemini's generateContent endpoint.
+	 *
+	 * @since 1.4.0
+	 * @param string $prompt Instructions and context.
+	 * @param string $image_data Raw image bytes.
+	 * @param string $mime_type Image MIME type.
+	 * @return array|WP_Error
+	 */
+	protected function make_image_api_request( $prompt, $image_data, $mime_type ) {
+		$url = $this->base_url . $this->model_id . ':generateContent?key=' . $this->api_key;
+		$body = array(
+			'contents' => array(
+				array(
+					'role'  => 'user',
+					'parts' => array(
+						array( 'text' => $prompt ),
+						array(
+							'inline_data' => array(
+								'mime_type' => $mime_type,
+								'data'      => base64_encode( $image_data ),
+							),
+						),
+					),
+				),
+			),
+			'generationConfig' => array(
+				'temperature'      => 0.2,
+				'maxOutputTokens'  => 128,
+				'responseMimeType' => 'application/json',
+				'responseSchema'   => array(
+					'type'       => 'OBJECT',
+					'properties' => array(
+						'alt_text' => array(
+							'type'        => 'STRING',
+							'description' => 'A concise factual image alt text.',
+						),
+					),
+					'required'   => array( 'alt_text' ),
+				),
+			),
+		);
+
+		$response = wp_remote_post(
+			$url,
+			array(
+				'body'    => wp_json_encode( $body ),
+				'headers' => array( 'Content-Type' => 'application/json' ),
+				'timeout' => max( 30, (int) apply_filters( 'wp_seo_automater_image_alt_timeout', 90 ) ),
+				'method'  => 'POST',
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		$code = wp_remote_retrieve_response_code( $response );
+		if ( 200 !== $code ) {
+			$body_error = wp_remote_retrieve_body( $response );
+			return new WP_Error( 'image_alt_api_error', sprintf( __( 'Gemini image analysis failed (HTTP %1$d): %2$s', 'wp-seo-blog-automater' ), $code, $body_error ) );
+		}
+
+		$decoded = json_decode( wp_remote_retrieve_body( $response ), true );
+		if ( ! is_array( $decoded ) ) {
+			return new WP_Error( 'image_alt_invalid_response', __( 'Gemini returned an unreadable image-analysis response.', 'wp-seo-blog-automater' ) );
+		}
+
+		return $decoded;
+	}
+
+	/**
+	 * Extract and normalize a model response into a usable WordPress field.
+	 *
+	 * @since 1.4.0
+	 * @param string $response_text Gemini text response.
+	 * @return string|WP_Error
+	 */
+	public static function normalize_image_alt_text( $response_text ) {
+		$response_text = trim( (string) $response_text );
+		if ( preg_match( '/^```(?:json)?\s*(.*?)\s*```$/is', $response_text, $matches ) ) {
+			$response_text = trim( $matches[1] );
+		}
+
+		$decoded = json_decode( $response_text, true );
+		if ( is_array( $decoded ) && isset( $decoded['alt_text'] ) ) {
+			$response_text = $decoded['alt_text'];
+		}
+
+		$response_text = strip_tags( (string) $response_text );
+		$response_text = trim( preg_replace( '/\s+/', ' ', $response_text ), " \t\n\r\0\x0B\"'`" );
+
+		if ( function_exists( 'sanitize_text_field' ) ) {
+			$response_text = sanitize_text_field( $response_text );
+		}
+
+		if ( '' === $response_text ) {
+			return new WP_Error( 'empty_image_alt_text', __( 'Gemini did not return usable image text. Please try again.', 'wp-seo-blog-automater' ) );
+		}
+
+		if ( function_exists( 'mb_substr' ) ) {
+			$response_text = mb_substr( $response_text, 0, 125 );
+		} else {
+			$response_text = substr( $response_text, 0, 125 );
+		}
+
+		return trim( $response_text );
 	}
 
 
@@ -327,9 +525,17 @@ class Gemini_API_Handler {
 	 * @return string Extracted text content.
 	 */
 	protected function extract_text_from_response( $response_data ) {
-		if ( isset( $response_data['candidates'][0]['content']['parts'][0]['text'] ) ) {
-			return $response_data['candidates'][0]['content']['parts'][0]['text'];
+		if ( empty( $response_data['candidates'][0]['content']['parts'] ) || ! is_array( $response_data['candidates'][0]['content']['parts'] ) ) {
+			return '';
 		}
-		return '';
+
+		$text_parts = array();
+		foreach ( $response_data['candidates'][0]['content']['parts'] as $part ) {
+			if ( isset( $part['text'] ) && is_string( $part['text'] ) ) {
+				$text_parts[] = $part['text'];
+			}
+		}
+
+		return implode( '', $text_parts );
 	}
 }

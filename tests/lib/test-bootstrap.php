@@ -18,7 +18,8 @@ defined( 'WP_SEO_AUTOMATER_BASENAME' ) || define( 'WP_SEO_AUTOMATER_BASENAME', '
 defined( 'WP_SEO_AUTOMATER_FILE' ) || define( 'WP_SEO_AUTOMATER_FILE', $repo_root . '/wp-seo-blog-automater.php' );
 
 update_option( 'wp_seo_automater_gemini_key', wp_seo_automater_env( 'WP_SEO_AUTOMATER_GEMINI_KEY', '' ) );
-update_option( 'wp_seo_automater_gemini_model', wp_seo_automater_env( 'WP_SEO_AUTOMATER_GEMINI_MODEL', 'gemini-pro-latest' ) );
+update_option( 'wp_seo_automater_gemini_model', wp_seo_automater_env( 'WP_SEO_AUTOMATER_GEMINI_MODEL', 'gemini-2.5-flash' ) );
+update_option( 'wp_seo_automater_image_alt_model', wp_seo_automater_env( 'WP_SEO_AUTOMATER_IMAGE_ALT_MODEL', 'gemini-2.5-flash' ) );
 update_option( 'wp_seo_automater_unsplash_key', wp_seo_automater_env( 'WP_SEO_AUTOMATER_UNSPLASH_KEY', '' ) );
 update_option( 'wp_seo_automater_logs', array() );
 

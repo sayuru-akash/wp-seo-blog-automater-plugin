@@ -74,7 +74,41 @@ defined( 'ABSPATH' ) || exit;
                     placeholder="gemini-pro-latest"
                 >
                 <p class="description">
-                    <?php esc_html_e( 'Model options: gemini-pro-latest, gemini-1.5-pro, gemini-2.0-flash-exp', 'wp-seo-blog-automater' ); ?>
+                    <?php esc_html_e( 'Used for article generation. Gemini 2.5 Flash is the recommended general-purpose default for new installs.', 'wp-seo-blog-automater' ); ?>
+                </p>
+            </div>
+
+            <div class="wp-seo-form-group">
+                <label class="wp-seo-label" for="image_alt_model_id">
+                    <?php esc_html_e( 'Image SEO Model ID', 'wp-seo-blog-automater' ); ?>
+                </label>
+                <input
+                    type="text"
+                    id="image_alt_model_id"
+                    name="image_alt_model_id"
+                    class="wp-seo-input"
+                    value="<?php echo esc_attr( $image_alt_model ); ?>"
+                    placeholder="gemini-2.5-flash"
+                >
+                <p class="description">
+                    <?php esc_html_e( 'Used only for Media Library image analysis. The default Gemini 2.5 Flash accepts image input and returns fast, high-quality text using the same Gemini API key above.', 'wp-seo-blog-automater' ); ?>
+                </p>
+            </div>
+
+            <div class="wp-seo-form-group">
+                <label class="wp-seo-label" for="image_alt_site_context">
+                    <?php esc_html_e( 'Website and Brand Context for Image SEO', 'wp-seo-blog-automater' ); ?>
+                </label>
+                <textarea
+                    id="image_alt_site_context"
+                    name="image_alt_site_context"
+                    class="wp-seo-textarea"
+                    rows="5"
+                    maxlength="1200"
+                    placeholder="<?php esc_attr_e( 'Optional: describe your business, audience, products, service area, and confirmed brand names or logos...', 'wp-seo-blog-automater' ); ?>"
+                ><?php echo esc_textarea( $image_alt_site_context ); ?></textarea>
+                <p class="description">
+                    <?php esc_html_e( 'Sent only with AI image-text requests together with the site name, tagline, URL, and attached post context. It helps Gemini identify visible logos and products accurately; do not include secrets or private customer data.', 'wp-seo-blog-automater' ); ?>
                 </p>
             </div>
 

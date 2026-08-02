@@ -1,6 +1,6 @@
 # WP SEO Blog Automater
 
-[![Version](https://img.shields.io/badge/version-1.3.18-blue.svg)](https://github.com/codezela/wp-seo-blog-automater)
+[![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)](https://github.com/codezela/wp-seo-blog-automater)
 [![WordPress](https://img.shields.io/badge/WordPress-5.8+-green.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.4+-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/license-GPL--2.0+-red.svg)](LICENSE)
@@ -20,6 +20,7 @@ Developed by [**Codezela Technologies**](https://codezela.com)
 - **🎯 Complete SEO Automation** - Generates meta titles, descriptions, URL slugs, and structured data (JSON-LD Schema)
 - **🔗 SEO Plugin Integration** - Native support for Yoast SEO and Rank Math with auto-detection
 - **📬 Search Engine Submission Tools** - Bulk-submit published posts/pages to IndexNow, resubmit sitemaps to Google, and inspect Google index status from the Posts and Pages screens
+- **🖼️ AI Media SEO Text** - Analyzes images in the Media Library and writes one factual, accessible text to the alt text, caption, and description fields
 - **📊 Activity Logging** - Comprehensive logging system for monitoring all generation activities
 - **⚙️ Customizable AI Prompts** - Full control over AI behavior with customizable master prompts
 
@@ -80,7 +81,13 @@ wp plugin install wp-seo-blog-automater.zip --activate
 
 - **Gemini API Key** (Required)
   - Get your free key from [Google AI Studio](https://aistudio.google.com/app/apikey)
-  - Supports all Gemini models: `gemini-pro-latest`, `gemini-1.5-pro`, `gemini-2.0-flash-exp`
+  - Used for both article generation and Media Library image analysis
+- **Image SEO Model ID** (Optional)
+  - Defaults to `gemini-2.5-flash`, the stable multimodal model used for image analysis
+  - Uses the same Gemini API key; it does not create or store a second credential
+- **Website and Brand Context for Image SEO** (Optional)
+  - Add confirmed business, product, audience, service-area, or brand details to help disambiguate visible logos and products
+  - The prompt treats pixels as primary evidence and does not identify a logo from context alone
 - **Unsplash Access Key** (Optional)
   - Required for automatic featured image integration
   - Get your key from [Unsplash Developers](https://unsplash.com/developers)
@@ -175,6 +182,17 @@ Once Search Engine Submission settings are configured, you can run bulk actions 
   - Uses the Google URL Inspection API to check the indexed status of up to 10 selected published public URLs per run
   - Results are shown in an admin notice and logged in the plugin activity log
 
+### AI Image SEO Text
+
+The Media Library feature creates one concise, factual text and saves it unchanged as the attachment alt text, caption, and description.
+
+1. Go to **Media → Library**.
+2. For one image, open **Attachment Details** and click **Generate AI image SEO text**. Click it again to regenerate.
+3. In list view, select image rows and choose **Generate AI image SEO text** from **Bulk actions**.
+4. In grid view, choose **Bulk Select**, select image tiles, then click **Generate AI image SEO text** in the media toolbar.
+
+Bulk processing runs one attachment at a time, shows live progress, continues after failures, and offers **Retry failed images**. It does not alter the original upload. If an image is large, animated, unsupported, or offloaded, the plugin safely creates or downloads a temporary analysis copy where WordPress can do so; otherwise it reports the affected item without changing its existing metadata.
+
 ---
 
 ## Local Verification
@@ -194,6 +212,7 @@ The repository now includes CLI verification scripts that exercise the same prev
 ```bash
 php tests/run-fixture-preview.php
 php tests/run-gemini-continuation.php
+php tests/run-image-alt-text.php
 php tests/run-live-preview.php
 ```
 
@@ -207,6 +226,8 @@ php tests/run-live-preview.php
   - Simulates Gemini continuation behavior
   - Confirms the initial chunk and continuation chunk are stitched together once
   - Confirms the old over-continuation loop does not recur
+- `php tests/run-image-alt-text.php`
+  - Verifies structured Gemini image-text response handling, sanitization, length limits, and the visual-evidence-first prompt contract
 - `php tests/run-live-preview.php`
   - Calls Gemini live using the title/keywords from `.env`
   - Produces the exact structured payload consumed by `admin/js/admin.js`
@@ -229,9 +250,11 @@ php tests/run-live-preview.php
 wp-seo-blog-automater/
 ├── admin/
 │   ├── css/
+│   │   ├── media-alt-text.css  # Media Library image-text UI styles
 │   │   └── style.css           # Admin UI styles
 │   ├── js/
-│   │   └── admin.js            # Admin JavaScript
+│   │   ├── admin.js            # Admin JavaScript
+│   │   └── media-alt-text.js   # Sequential Media Library queue UI
 │   └── partials/
 │       ├── generator-display.php  # Generator page
 │       ├── settings-display.php   # Settings page
@@ -240,12 +263,14 @@ wp-seo-blog-automater/
 │   └── logo.png                # Codezela Technologies logo
 ├── includes/
 │   ├── class-wp-seo-automater-admin.php  # Main admin class
-│   └── class-gemini-api-handler.php      # Gemini API handler
+│   ├── class-gemini-api-handler.php      # Gemini API handler
+│   └── class-wp-seo-automater-media-alt-text.php # Attachment image-text service
 ├── tests/
 │   ├── fixtures/               # Raw Gemini-like fixture responses
 │   ├── lib/                    # CLI verification bootstrap/shims
 │   ├── run-fixture-preview.php # Fixture-driven preview payload checks
 │   ├── run-gemini-continuation.php # Continuation loop verification
+│   ├── run-image-alt-text.php # Image-text generation contract verification
 │   └── run-live-preview.php    # Live Gemini/Unsplash preview verification
 ├── languages/                  # Translation files (POT/PO/MO)
 ├── wp-seo-blog-automater.php  # Main plugin file

@@ -51,6 +51,7 @@ class WP_SEO_Automater_Admin {
 		add_action( 'wp_ajax_wp_seo_generate_post', array( $this, 'ajax_generate_post' ) );
 		add_action( 'wp_ajax_wp_seo_publish_post', array( $this, 'ajax_publish_post' ) );
 		add_action( 'wp_ajax_wp_seo_refresh_image', array( $this, 'ajax_refresh_image' ) );
+		add_action( 'wp_ajax_wp_seo_generate_attachment_alt_text', array( $this, 'ajax_generate_attachment_alt_text' ) );
 		add_action( 'wp_ajax_check_updates_now', array( $this, 'ajax_check_updates_now' ) );
 
 		// Posts/pages bulk actions
@@ -58,7 +59,11 @@ class WP_SEO_Automater_Admin {
 		add_filter( 'bulk_actions-edit-page', array( $this, 'register_content_bulk_actions' ) );
 		add_filter( 'handle_bulk_actions-edit-post', array( $this, 'handle_content_bulk_actions' ), 10, 3 );
 		add_filter( 'handle_bulk_actions-edit-page', array( $this, 'handle_content_bulk_actions' ), 10, 3 );
+		add_filter( 'bulk_actions-upload', array( $this, 'register_media_bulk_actions' ) );
+		add_filter( 'handle_bulk_actions-upload', array( $this, 'handle_media_bulk_actions' ), 10, 3 );
+		add_filter( 'attachment_fields_to_edit', array( $this, 'add_attachment_ai_text_field' ), 10, 2 );
 		add_action( 'admin_notices', array( $this, 'render_bulk_action_notice' ) );
+		add_action( 'admin_notices', array( $this, 'render_media_bulk_action_notice' ) );
 		
 		// Add settings link on plugins page
 		add_filter( 'plugin_action_links_' . WP_SEO_AUTOMATER_BASENAME, array( $this, 'add_action_links' ) );
@@ -141,6 +146,134 @@ class WP_SEO_Automater_Admin {
 		$actions['wp_seo_automater_check_google_index'] = __( 'Check Google Index Status', 'wp-seo-blog-automater' );
 
 		return $actions;
+	}
+
+	/**
+	 * Register the media-list bulk action. JavaScript processes selected images
+	 * sequentially so a large selection never starts parallel Gemini requests.
+	 *
+	 * @since 1.4.0
+	 * @param array $actions Existing actions.
+	 * @return array
+	 */
+	public function register_media_bulk_actions( $actions ) {
+		if ( ! current_user_can( 'upload_files' ) ) {
+			return $actions;
+		}
+
+		$actions['wp_seo_automater_generate_image_text'] = __( 'Generate AI image SEO text', 'wp-seo-blog-automater' );
+
+		return $actions;
+	}
+
+	/**
+	 * Provide a clear fallback if a browser submits the media bulk action without
+	 * JavaScript, which is required for safe sequential processing and progress.
+	 *
+	 * @since 1.4.0
+	 * @param string $redirect_to Redirect URL.
+	 * @param string $action Action slug.
+	 * @param array  $attachment_ids Selected attachment IDs.
+	 * @return string
+	 */
+	public function handle_media_bulk_actions( $redirect_to, $action, $attachment_ids ) {
+		if ( 'wp_seo_automater_generate_image_text' !== $action ) {
+			return $redirect_to;
+		}
+
+		return add_query_arg( 'wp_seo_automater_media_requires_js', '1', $redirect_to );
+	}
+
+	/**
+	 * Add the per-image Generate/Regenerate action to attachment details screens.
+	 *
+	 * @since 1.4.0
+	 * @param array   $form_fields Attachment form fields.
+	 * @param WP_Post $post Attachment post.
+	 * @return array
+	 */
+	public function add_attachment_ai_text_field( $form_fields, $post ) {
+		if ( ! $post || ! wp_attachment_is_image( $post->ID ) || ! current_user_can( 'edit_post', $post->ID ) ) {
+			return $form_fields;
+		}
+
+		$has_text = '' !== trim( (string) get_post_meta( $post->ID, '_wp_attachment_image_alt', true ) )
+			|| '' !== trim( (string) $post->post_excerpt )
+			|| '' !== trim( (string) $post->post_content );
+		$button_label = $has_text
+			? __( 'Regenerate AI image SEO text', 'wp-seo-blog-automater' )
+			: __( 'Generate AI image SEO text', 'wp-seo-blog-automater' );
+
+		$form_fields['wp_seo_automater_ai_image_text'] = array(
+			'label' => __( 'AI image SEO text', 'wp-seo-blog-automater' ),
+			'input' => 'html',
+			'html'  => sprintf(
+				'<div class="wp-seo-media-alt-action"><button type="button" class="button button-secondary wp-seo-generate-image-text" data-attachment-id="%1$d">%2$s</button><span class="spinner"></span><p class="description">%3$s</p><p class="description wp-seo-media-alt-result" aria-live="polite"></p></div>',
+				(int) $post->ID,
+				esc_html( $button_label ),
+				esc_html__( 'Uses Gemini to replace this image\'s alt text, caption, and description with one factual, SEO-safe description.', 'wp-seo-blog-automater' )
+			),
+		);
+
+		return $form_fields;
+	}
+
+	/**
+	 * Render the JavaScript-required fallback notice for media bulk actions.
+	 *
+	 * @since 1.4.0
+	 * @return void
+	 */
+	public function render_media_bulk_action_notice() {
+		if ( ! is_admin() || empty( $_GET['wp_seo_automater_media_requires_js'] ) || ! function_exists( 'get_current_screen' ) ) {
+			return;
+		}
+
+		$screen = get_current_screen();
+		if ( ! $screen || 'upload' !== $screen->base ) {
+			return;
+		}
+
+		echo '<div class="notice notice-warning is-dismissible"><p>' . esc_html__( 'AI image SEO text uses a one-at-a-time progress queue. Enable JavaScript and run the Media Library action again.', 'wp-seo-blog-automater' ) . '</p></div>';
+	}
+
+	/**
+	 * Generate and apply SEO text to one attachment from the media interface.
+	 *
+	 * @since 1.4.0
+	 * @return void
+	 */
+	public function ajax_generate_attachment_alt_text() {
+		check_ajax_referer( 'wp_seo_automater_media_alt_text', 'nonce' );
+
+		$attachment_id = isset( $_POST['attachment_id'] ) ? absint( wp_unslash( $_POST['attachment_id'] ) ) : 0;
+		if ( ! $attachment_id || ! current_user_can( 'upload_files' ) || ! current_user_can( 'edit_post', $attachment_id ) ) {
+			wp_send_json_error(
+				array(
+					'code'    => 'forbidden',
+					'message' => __( 'You do not have permission to update this image.', 'wp-seo-blog-automater' ),
+				),
+				403
+			);
+		}
+
+		$service = new WP_SEO_Automater_Media_Alt_Text();
+		$result  = $service->generate_and_apply( $attachment_id );
+
+		if ( is_wp_error( $result ) ) {
+			self::log_activity( 'AI Image Text Error', sprintf( 'Attachment %1$d: %2$s', $attachment_id, $result->get_error_message() ), 'error' );
+			wp_send_json_error(
+				array(
+					'attachment_id' => $attachment_id,
+					'code'          => $result->get_error_code(),
+					'message'       => $result->get_error_message(),
+				),
+				400
+			);
+		}
+
+		self::log_activity( 'AI Image Text', sprintf( 'Generated image alt text for attachment %1$d using %2$s.', $attachment_id, $result['model'] ), 'success' );
+		wp_send_json_success( $result );
 	}
 
 	/**
@@ -2193,6 +2326,15 @@ class WP_SEO_Automater_Admin {
 	 * @param string $hook The current admin page hook.
 	 */
 	public function enqueue_styles( $hook ) {
+		if ( $this->is_media_attachment_screen( $hook ) ) {
+			wp_enqueue_style(
+				'wp-seo-automater-media-alt-text',
+				WP_SEO_AUTOMATER_URL . 'admin/css/media-alt-text.css',
+				array(),
+				WP_SEO_AUTOMATER_VERSION
+			);
+		}
+
 		// Only load on our plugin pages
 		if ( strpos( $hook, 'wp-seo-automater' ) === false ) {
 			return;
@@ -2222,6 +2364,10 @@ class WP_SEO_Automater_Admin {
 	 * @param string $hook The current admin page hook.
 	 */
 	public function enqueue_scripts( $hook ) {
+		if ( $this->is_media_attachment_screen( $hook ) ) {
+			$this->enqueue_media_alt_text_assets();
+		}
+
 		if ( strpos( $hook, 'wp-seo-automater' ) === false ) {
 			return;
 		}
@@ -2240,6 +2386,70 @@ class WP_SEO_Automater_Admin {
 			'admin_url'             => admin_url(),
 			'generation_timeout_ms' => apply_filters( 'wp_seo_automater_generation_timeout', Gemini_API_Handler::DEFAULT_GENERATION_TIMEOUT ) * 1000,
 		));
+	}
+
+	/**
+	 * Decide whether the current admin request can show attachment controls.
+	 *
+	 * @since 1.4.0
+	 * @param string $hook Current admin hook suffix.
+	 * @return bool
+	 */
+	private function is_media_attachment_screen( $hook ) {
+		if ( 'upload.php' === $hook ) {
+			return true;
+		}
+
+		if ( 'post.php' !== $hook || empty( $_GET['post'] ) ) {
+			return false;
+		}
+
+		return 'attachment' === get_post_type( absint( wp_unslash( $_GET['post'] ) ) );
+	}
+
+	/**
+	 * Load the Media Library queue UI and its localized strings.
+	 *
+	 * @since 1.4.0
+	 * @return void
+	 */
+	private function enqueue_media_alt_text_assets() {
+		if ( function_exists( 'wp_enqueue_media' ) ) {
+			wp_enqueue_media();
+		}
+
+		wp_enqueue_script(
+			'wp-seo-automater-media-alt-text',
+			WP_SEO_AUTOMATER_URL . 'admin/js/media-alt-text.js',
+			array( 'jquery', 'media-views', 'wp-util' ),
+			WP_SEO_AUTOMATER_VERSION,
+			true
+		);
+
+		wp_localize_script(
+			'wp-seo-automater-media-alt-text',
+			'wpSeoAutomaterMediaAlt',
+			array(
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'action'  => 'wp_seo_generate_attachment_alt_text',
+				'nonce'   => wp_create_nonce( 'wp_seo_automater_media_alt_text' ),
+				'i18n'    => array(
+					'gridButton'       => __( 'Generate AI image SEO text', 'wp-seo-blog-automater' ),
+					'regenerateButton' => __( 'Regenerate AI image SEO text', 'wp-seo-blog-automater' ),
+					'noImagesSelected' => __( 'Select one or more images first. In grid view, use Bulk Select before choosing images.', 'wp-seo-blog-automater' ),
+					'confirmOverwrite'  => __( 'This will replace the alt text, caption, and description of each selected image. Continue?', 'wp-seo-blog-automater' ),
+					'processing'       => __( 'Generating AI image SEO text...', 'wp-seo-blog-automater' ),
+					'complete'         => __( 'AI image SEO text generation complete.', 'wp-seo-blog-automater' ),
+					'retryFailed'      => __( 'Retry failed images', 'wp-seo-blog-automater' ),
+					'generated'        => __( 'Generated', 'wp-seo-blog-automater' ),
+					'failed'           => __( 'Failed', 'wp-seo-blog-automater' ),
+					'skipped'          => __( 'Skipped', 'wp-seo-blog-automater' ),
+					'imageProgress'    => __( 'Image %1$d of %2$d.', 'wp-seo-blog-automater' ),
+					'analysisError'    => __( 'The image could not be analyzed.', 'wp-seo-blog-automater' ),
+					'requestFailed'    => __( 'The request failed before Gemini could analyze this image.', 'wp-seo-blog-automater' ),
+				),
+			)
+		);
 	}
 
 	/**
@@ -2267,6 +2477,25 @@ class WP_SEO_Automater_Admin {
 
 			update_option( 'wp_seo_automater_gemini_key', sanitize_text_field( wp_unslash( $_POST['gemini_api_key'] ) ) );
 			update_option( 'wp_seo_automater_gemini_model', sanitize_text_field( wp_unslash( $_POST['gemini_model_id'] ) ) );
+
+			$image_alt_model = isset( $_POST['image_alt_model_id'] ) ? sanitize_text_field( wp_unslash( $_POST['image_alt_model_id'] ) ) : WP_SEO_Automater_Media_Alt_Text::DEFAULT_MODEL;
+			if ( preg_match( '/^[A-Za-z0-9._-]{1,100}$/', $image_alt_model ) ) {
+				update_option( 'wp_seo_automater_image_alt_model', $image_alt_model );
+			} else {
+				$settings_notices[] = array(
+					'type'    => 'error',
+					'message' => __( 'Image SEO model was not saved. Use a valid Gemini model ID containing letters, numbers, dots, underscores, or hyphens.', 'wp-seo-blog-automater' ),
+				);
+			}
+
+			$image_alt_site_context = isset( $_POST['image_alt_site_context'] ) ? sanitize_textarea_field( wp_unslash( $_POST['image_alt_site_context'] ) ) : '';
+			if ( function_exists( 'mb_substr' ) ) {
+				$image_alt_site_context = mb_substr( $image_alt_site_context, 0, 1200 );
+			} else {
+				$image_alt_site_context = substr( $image_alt_site_context, 0, 1200 );
+			}
+			update_option( 'wp_seo_automater_image_alt_site_context', $image_alt_site_context );
+
 			update_option( 'wp_seo_automater_unsplash_key', sanitize_text_field( wp_unslash( $_POST['unsplash_key'] ) ) );
 			update_option( 'wp_seo_automater_seo_plugin', sanitize_text_field( wp_unslash( $_POST['seo_plugin'] ) ) );
 			update_option( 'wp_seo_automater_master_prompt', wp_kses_post( wp_unslash( $_POST['master_prompt'] ) ) );
@@ -2392,7 +2621,9 @@ class WP_SEO_Automater_Admin {
 
 		$api_key = get_option( 'wp_seo_automater_gemini_key', '' );
 		$unsplash_key = get_option( 'wp_seo_automater_unsplash_key', '' );
-		$model_id = get_option( 'wp_seo_automater_gemini_model', 'gemini-pro-latest' );
+		$model_id = get_option( 'wp_seo_automater_gemini_model', Gemini_API_Handler::DEFAULT_IMAGE_ALT_MODEL );
+		$image_alt_model = get_option( 'wp_seo_automater_image_alt_model', WP_SEO_Automater_Media_Alt_Text::DEFAULT_MODEL );
+		$image_alt_site_context = get_option( 'wp_seo_automater_image_alt_site_context', '' );
 		$seo_plugin = get_option( 'wp_seo_automater_seo_plugin', 'auto' );
 		$master_prompt = get_option( 'wp_seo_automater_master_prompt', $this->get_default_master_prompt() );
 		$indexnow_key = get_option( 'wp_seo_automater_indexnow_key', '' );

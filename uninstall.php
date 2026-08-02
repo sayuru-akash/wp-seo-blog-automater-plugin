@@ -20,6 +20,8 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
  */
 delete_option( 'wp_seo_automater_gemini_key' );
 delete_option( 'wp_seo_automater_gemini_model' );
+delete_option( 'wp_seo_automater_image_alt_model' );
+delete_option( 'wp_seo_automater_image_alt_site_context' );
 delete_option( 'wp_seo_automater_unsplash_key' );
 delete_option( 'wp_seo_automater_seo_plugin' );
 delete_option( 'wp_seo_automater_master_prompt' );
@@ -38,8 +40,10 @@ if ( is_multisite() ) {
 	foreach ( $blog_ids as $blog_id ) {
 		switch_to_blog( $blog_id );
 		
-		delete_option( 'wp_seo_automater_gemini_key' );
-		delete_option( 'wp_seo_automater_gemini_model' );
+	delete_option( 'wp_seo_automater_gemini_key' );
+	delete_option( 'wp_seo_automater_gemini_model' );
+	delete_option( 'wp_seo_automater_image_alt_model' );
+	delete_option( 'wp_seo_automater_image_alt_site_context' );
 		delete_option( 'wp_seo_automater_unsplash_key' );
 		delete_option( 'wp_seo_automater_seo_plugin' );
 		delete_option( 'wp_seo_automater_master_prompt' );

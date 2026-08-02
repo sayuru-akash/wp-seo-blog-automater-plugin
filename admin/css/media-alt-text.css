@@ -1,0 +1,31 @@
+.wp-seo-media-alt-action .spinner {
+	float: none;
+	margin: 0 0 0 8px;
+}
+
+.wp-seo-media-alt-action .is-busy + .spinner,
+.wp-seo-media-alt-action .spinner.is-active {
+	visibility: visible;
+}
+
+.wp-seo-media-alt-result {
+	color: #1d2327;
+	font-style: italic;
+}
+
+.wp-seo-media-alt-grid-button {
+	margin-left: 8px !important;
+}
+
+.wp-seo-media-alt-progress {
+	clear: both;
+	margin: 12px 0 !important;
+}
+
+.wp-seo-media-alt-progress p {
+	margin: 0.45em 0;
+}
+
+.wp-seo-media-alt-progress-actions {
+	margin-top: 10px !important;
+}

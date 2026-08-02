@@ -5,6 +5,26 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-08-03
+
+### Added
+
+- **AI Media SEO Text**: Generate one concise, factual text for an image and save it as the WordPress attachment alt text, caption, and description.
+- **Individual Media Action**: Attachment Details now has a Generate/Regenerate control for a single image.
+- **Media Library Bulk Actions**: List view and grid view support selected-image generation with a sequential live-progress queue, failure continuation, and retry for failed items.
+- **Website-Aware Image Context**: Image requests include site name, tagline, URL, optional brand context, and attached-post context. The prompt keeps visual evidence primary and does not infer logos from context alone.
+
+### Reliability
+
+- Reuses the existing Gemini API key with `gemini-2.5-flash` as the configurable stable image-analysis default.
+- Protects duplicate attachment requests with a temporary lock, preserves originals, safely handles offloaded media, and creates constrained temporary JPEG derivatives only when needed.
+- Applies nonce, upload capability, and per-attachment edit permission checks to every generation request.
+
+### Verification
+
+- Added focused image-text response and prompt-contract coverage in `php tests/run-image-alt-text.php`.
+- Ran PHP lint, fixture preview, continuation, image-text checks, JavaScript syntax validation, archive validation, and the release build gate.
+
 ## [1.3.18] - 2026-04-16
 
 ### 🧮 System Info Status Accuracy Fix
