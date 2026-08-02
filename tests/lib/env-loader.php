@@ -37,6 +37,12 @@ if ( ! function_exists( 'wp_seo_automater_load_env' ) ) {
 			$value = trim( $parts[1] );
 			$value = trim( $value, "\"'" );
 
+			$existing_value = getenv( $key );
+			if ( false !== $existing_value && '' !== $existing_value ) {
+				$values[ $key ] = $existing_value;
+				continue;
+			}
+
 			$values[ $key ] = $value;
 			$_ENV[ $key ] = $value;
 			$_SERVER[ $key ] = $value;

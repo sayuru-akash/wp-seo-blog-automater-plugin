@@ -23,7 +23,7 @@ class WP_SEO_Automater_Media_Alt_Text {
 	 *
 	 * @var string
 	 */
-	const DEFAULT_MODEL = 'gemini-2.5-flash';
+	const DEFAULT_MODEL = 'gemini-3.6-flash';
 
 	/**
 	 * Keep the base64 request comfortably below Gemini's inline-data limit.
@@ -85,13 +85,27 @@ class WP_SEO_Automater_Media_Alt_Text {
 				return $prepared;
 			}
 
-			$model   = $this->get_model_id();
-			$handler = new Gemini_API_Handler( null, $model );
+			$model    = $this->get_model_id();
+			$handler  = new Gemini_API_Handler( null, $model );
 			$alt_text = $handler->generate_image_alt_text(
 				$prepared['path'],
 				$prepared['mime_type'],
 				$this->build_image_context( $attachment )
 			);
+
+			if ( is_wp_error( $alt_text ) && 'image_alt_model_unavailable' === $alt_text->get_error_code() && self::DEFAULT_MODEL !== $model ) {
+				$model    = self::DEFAULT_MODEL;
+				$handler  = new Gemini_API_Handler( null, $model );
+				$alt_text = $handler->generate_image_alt_text(
+					$prepared['path'],
+					$prepared['mime_type'],
+					$this->build_image_context( $attachment )
+				);
+
+				if ( ! is_wp_error( $alt_text ) ) {
+					update_option( 'wp_seo_automater_image_alt_model', $model );
+				}
+			}
 
 			if ( is_wp_error( $alt_text ) ) {
 				return $alt_text;

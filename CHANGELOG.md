@@ -5,6 +5,18 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.2] - 2026-08-03
+
+### Fixed
+
+- **Proven Gemini Image Request**: Increased the image-response budget from 128 to 512 tokens and sets current Flash models to minimal thinking. Current Flash models can otherwise finish early before emitting their required JSON, producing an invalid incomplete response.
+- **Current Model Recovery**: New installs use `gemini-3.6-flash` for article and Media Library image generation. If an existing image setting points to a model unavailable for the API key, image generation retries with the current default and saves it only after a successful response.
+- **Live Field Reliability**: Valid JSON is still required before image metadata changes; malformed model prose cannot overwrite the attachment fields.
+
+### Verification
+
+- Added `php tests/run-live-image-alt.php`, which exercised the production image request with a real API key and local logo fixture. Gemini returned valid JSON and a normalized logo description.
+
 ## [1.4.1] - 2026-08-03
 
 ### Fixed

@@ -8,6 +8,10 @@
 
 require_once __DIR__ . '/lib/test-bootstrap.php';
 
+wp_seo_automater_test_assert( 'gemini-3.6-flash' === Gemini_API_Handler::DEFAULT_IMAGE_ALT_MODEL, 'Image analysis must use the current Gemini Flash default.' );
+wp_seo_automater_test_assert( 512 === Gemini_API_Handler::IMAGE_ALT_MAX_OUTPUT_TOKENS, 'Image analysis must retain enough output budget for structured JSON.' );
+echo "[OK] Image analysis model and output budget\n";
+
 class WP_SEO_Automater_Fake_Image_Alt_Handler extends Gemini_API_Handler {
 	private $response;
 

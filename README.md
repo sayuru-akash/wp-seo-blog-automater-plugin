@@ -1,6 +1,6 @@
 # WP SEO Blog Automater
 
-[![Version](https://img.shields.io/badge/version-1.4.1-blue.svg)](https://github.com/codezela/wp-seo-blog-automater)
+[![Version](https://img.shields.io/badge/version-1.4.2-blue.svg)](https://github.com/codezela/wp-seo-blog-automater)
 [![WordPress](https://img.shields.io/badge/WordPress-5.8+-green.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.4+-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/license-GPL--2.0+-red.svg)](LICENSE)
@@ -83,7 +83,7 @@ wp plugin install wp-seo-blog-automater.zip --activate
   - Get your free key from [Google AI Studio](https://aistudio.google.com/app/apikey)
   - Used for both article generation and Media Library image analysis
 - **Image SEO Model ID** (Optional)
-  - Defaults to `gemini-2.5-flash`, the stable multimodal model used for image analysis
+  - Defaults to `gemini-3.6-flash`, the current stable multimodal model used for image analysis
   - Uses the same Gemini API key; it does not create or store a second credential
 - **Website and Brand Context for Image SEO** (Optional)
   - Add confirmed business, product, audience, service-area, or brand details to help disambiguate visible logos and products
@@ -213,6 +213,7 @@ The repository now includes CLI verification scripts that exercise the same prev
 php tests/run-fixture-preview.php
 php tests/run-gemini-continuation.php
 php tests/run-image-alt-text.php
+php tests/run-live-image-alt.php
 php tests/run-live-preview.php
 ```
 
@@ -228,6 +229,9 @@ php tests/run-live-preview.php
   - Confirms the old over-continuation loop does not recur
 - `php tests/run-image-alt-text.php`
   - Verifies structured Gemini image-text response handling, sanitization, length limits, and the visual-evidence-first prompt contract
+- `php tests/run-live-image-alt.php`
+  - Sends the local `images/logo.png` fixture to the configured Gemini image model through the production request path
+  - Reports the candidate response format and normalized image text without printing the API key
 - `php tests/run-live-preview.php`
   - Calls Gemini live using the title/keywords from `.env`
   - Produces the exact structured payload consumed by `admin/js/admin.js`
@@ -271,6 +275,7 @@ wp-seo-blog-automater/
 │   ├── run-fixture-preview.php # Fixture-driven preview payload checks
 │   ├── run-gemini-continuation.php # Continuation loop verification
 │   ├── run-image-alt-text.php # Image-text generation contract verification
+│   ├── run-live-image-alt.php # Live Gemini image-text verification
 │   └── run-live-preview.php    # Live Gemini/Unsplash preview verification
 ├── languages/                  # Translation files (POT/PO/MO)
 ├── wp-seo-blog-automater.php  # Main plugin file

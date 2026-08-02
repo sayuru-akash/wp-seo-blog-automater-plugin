@@ -74,7 +74,7 @@ defined( 'ABSPATH' ) || exit;
                     placeholder="gemini-pro-latest"
                 >
                 <p class="description">
-                    <?php esc_html_e( 'Used for article generation. Gemini 2.5 Flash is the recommended general-purpose default for new installs.', 'wp-seo-blog-automater' ); ?>
+                    <?php esc_html_e( 'Used for article generation. Gemini 3.6 Flash is the recommended general-purpose default for new installs.', 'wp-seo-blog-automater' ); ?>
                 </p>
             </div>
 
@@ -88,10 +88,10 @@ defined( 'ABSPATH' ) || exit;
                     name="image_alt_model_id"
                     class="wp-seo-input"
                     value="<?php echo esc_attr( $image_alt_model ); ?>"
-                    placeholder="gemini-2.5-flash"
+                    placeholder="gemini-3.6-flash"
                 >
                 <p class="description">
-                    <?php esc_html_e( 'Used only for Media Library image analysis. The default Gemini 2.5 Flash accepts image input and returns fast, high-quality text using the same Gemini API key above.', 'wp-seo-blog-automater' ); ?>
+                    <?php esc_html_e( 'Used only for Media Library image analysis. The default Gemini 3.6 Flash accepts image input and returns fast, high-quality text using the same Gemini API key above.', 'wp-seo-blog-automater' ); ?>
                 </p>
             </div>
 

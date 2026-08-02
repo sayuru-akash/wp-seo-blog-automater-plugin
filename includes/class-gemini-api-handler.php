@@ -28,7 +28,15 @@ class Gemini_API_Handler {
 	 * @since 1.4.0
 	 * @var string
 	 */
-	const DEFAULT_IMAGE_ALT_MODEL = 'gemini-2.5-flash';
+	const DEFAULT_IMAGE_ALT_MODEL = 'gemini-3.6-flash';
+
+	/**
+	 * Leave enough output budget for current Flash-model reasoning and JSON.
+	 *
+	 * @since 1.4.2
+	 * @var int
+	 */
+	const IMAGE_ALT_MAX_OUTPUT_TOKENS = 512;
 
 	/**
 	 * Default timeout for article generation requests, in seconds.
@@ -166,6 +174,28 @@ class Gemini_API_Handler {
 	 */
 	protected function make_image_api_request( $prompt, $image_data, $mime_type ) {
 		$url = $this->base_url . $this->model_id . ':generateContent?key=' . $this->api_key;
+		$generation_config = array(
+			'temperature'      => 0.2,
+			'maxOutputTokens'  => self::IMAGE_ALT_MAX_OUTPUT_TOKENS,
+			'responseMimeType' => 'application/json',
+			'responseSchema'   => array(
+				'type'       => 'OBJECT',
+				'properties' => array(
+					'alt_text' => array(
+						'type'        => 'STRING',
+						'description' => 'A concise factual image alt text.',
+					),
+				),
+				'required'   => array( 'alt_text' ),
+			),
+		);
+
+		if ( 0 === strpos( $this->model_id, 'gemini-3' ) || 'gemini-flash-latest' === $this->model_id ) {
+			$generation_config['thinkingConfig'] = array( 'thinkingLevel' => 'minimal' );
+		} elseif ( 0 === strpos( $this->model_id, 'gemini-2.5' ) ) {
+			$generation_config['thinkingConfig'] = array( 'thinkingBudget' => 0 );
+		}
+
 		$body = array(
 			'contents' => array(
 				array(
@@ -181,21 +211,7 @@ class Gemini_API_Handler {
 					),
 				),
 			),
-			'generationConfig' => array(
-				'temperature'      => 0.2,
-				'maxOutputTokens'  => 128,
-				'responseMimeType' => 'application/json',
-				'responseSchema'   => array(
-					'type'       => 'OBJECT',
-					'properties' => array(
-						'alt_text' => array(
-							'type'        => 'STRING',
-							'description' => 'A concise factual image alt text.',
-						),
-					),
-					'required'   => array( 'alt_text' ),
-				),
-			),
+			'generationConfig' => $generation_config,
 		);
 
 		$response = wp_remote_post(
@@ -213,6 +229,10 @@ class Gemini_API_Handler {
 		}
 
 		$code = wp_remote_retrieve_response_code( $response );
+		if ( 404 === $code ) {
+			return new WP_Error( 'image_alt_model_unavailable', __( 'The configured Gemini image model is not available for this API key.', 'wp-seo-blog-automater' ) );
+		}
+
 		if ( 200 !== $code ) {
 			$body_error = wp_remote_retrieve_body( $response );
 			return new WP_Error( 'image_alt_api_error', sprintf( __( 'Gemini image analysis failed (HTTP %1$d): %2$s', 'wp-seo-blog-automater' ), $code, $body_error ) );
