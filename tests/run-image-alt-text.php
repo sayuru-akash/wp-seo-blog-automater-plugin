@@ -34,8 +34,8 @@ $normalization_cases = array(
 		'input'    => "```json\n{\"alt_text\":\"Blue ceramic mug beside a notebook on a desk\"}\n```",
 		'expected' => 'Blue ceramic mug beside a notebook on a desk',
 	),
-	'plain-text-fallback' => array(
-		'input'    => '<strong>Gold company logo on a dark storefront sign</strong>',
+	'json-with-preamble' => array(
+		'input'    => 'Here is the requested response: {"alt_text":"Gold company logo on a dark storefront sign"}',
 		'expected' => 'Gold company logo on a dark storefront sign',
 	),
 );
@@ -47,7 +47,7 @@ foreach ( $normalization_cases as $label => $case ) {
 	echo "[OK] Image alt text normalization: {$label}\n";
 }
 
-$long_text = str_repeat( 'visible subject ', 20 );
+$long_text = '{"alt_text":"' . str_repeat( 'visible subject ', 20 ) . '"}';
 $truncated = Gemini_API_Handler::normalize_image_alt_text( $long_text );
 wp_seo_automater_test_assert( ! is_wp_error( $truncated ), 'Long image text should be safely truncated.' );
 wp_seo_automater_test_assert( strlen( $truncated ) <= 125, 'Image alt text exceeded the 125-character limit.' );
@@ -56,6 +56,16 @@ echo "[OK] Image alt text maximum length\n";
 $empty = Gemini_API_Handler::normalize_image_alt_text( '   ' );
 wp_seo_automater_test_assert( is_wp_error( $empty ), 'Empty model output must fail rather than overwrite attachment fields.' );
 echo "[OK] Empty image alt text rejected\n";
+
+$invalid_responses = array(
+	'Here is the JSON response',
+	'Here is the JSON response: {"alt_text":"truncated output',
+	'<strong>Plain text without the required JSON schema</strong>',
+);
+foreach ( $invalid_responses as $invalid_response ) {
+	wp_seo_automater_test_assert( is_wp_error( Gemini_API_Handler::normalize_image_alt_text( $invalid_response ) ), 'Invalid or incomplete model output must fail rather than overwrite attachment fields.' );
+}
+echo "[OK] Invalid JSON-like responses rejected\n";
 
 $fake_response = array(
 	'candidates' => array(

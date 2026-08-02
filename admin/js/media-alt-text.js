@@ -86,14 +86,37 @@
 	}
 
 	function updateVisibleAttachmentFields( attachmentId, data ) {
+		if ( window.wp && wp.media && wp.media.attachment ) {
+			var attachment = wp.media.attachment( attachmentId );
+			if ( attachment && attachment.set ) {
+				attachment.set( {
+					alt: data.alt_text,
+					caption: data.caption,
+					description: data.description
+				} );
+			}
+		}
+
 		$( '.wp-seo-generate-image-text[data-attachment-id="' + attachmentId + '"]' ).each( function () {
 			var $button = $( this );
-			var $scope = $button.closest( ".attachment-details, .compat-item, .media-modal, #poststuff" );
+			var $scope = $button.closest( ".attachment-details" );
+
+			if ( ! $scope.length ) {
+				$scope = $button.closest( ".media-modal" );
+			}
+
+			if ( ! $scope.length ) {
+				$scope = $button.closest( "#poststuff" );
+			}
+
+			if ( ! $scope.length ) {
+				$scope = $button.closest( ".compat-item" ).parent();
+			}
 
 			$button.text( config.i18n.regenerateButton );
-			$scope.find( '[data-setting="alt"] input, input[name*="[alt]"]' ).val( data.alt_text ).trigger( "change" );
-			$scope.find( '[data-setting="caption"] textarea, textarea[name*="[caption]"]' ).val( data.caption ).trigger( "change" );
-			$scope.find( '[data-setting="description"] textarea, textarea[name*="[description]"]' ).val( data.description ).trigger( "change" );
+			$scope.find( '[data-setting="alt"] input, input[name*="[image_alt]"]' ).val( data.alt_text ).trigger( "change" );
+			$scope.find( '[data-setting="caption"] textarea, textarea[name*="[post_excerpt]"]' ).val( data.caption ).trigger( "change" );
+			$scope.find( '[data-setting="description"] textarea, textarea[name*="[post_content]"]' ).val( data.description ).trigger( "change" );
 			$button.siblings( ".wp-seo-media-alt-result" ).text( data.alt_text );
 		} );
 	}

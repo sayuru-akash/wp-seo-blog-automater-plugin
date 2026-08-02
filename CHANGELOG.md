@@ -5,6 +5,17 @@ All notable changes to WP SEO Blog Automater will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2026-08-03
+
+### Fixed
+
+- **Invalid Image Text Protection**: Gemini output now must contain a complete JSON object with a string `alt_text` value before attachment metadata is updated. Incomplete responses such as `Here is the JSON...` are rejected and leave the existing alt text, caption, and description unchanged.
+- **Immediate Media Field Refresh**: Successful individual generation now updates the WordPress media attachment model and the live alt text, caption, and description controls without requiring a page refresh.
+
+### Verification
+
+- Expanded `php tests/run-image-alt-text.php` to reject incomplete JSON-like and plain-text model responses.
+
 ## [1.4.0] - 2026-08-03
 
 ### Added

@@ -227,7 +227,7 @@ class Gemini_API_Handler {
 	}
 
 	/**
-	 * Extract and normalize a model response into a usable WordPress field.
+	 * Extract a schema-valid model response into a usable WordPress field.
 	 *
 	 * @since 1.4.0
 	 * @param string $response_text Gemini text response.
@@ -240,9 +240,19 @@ class Gemini_API_Handler {
 		}
 
 		$decoded = json_decode( $response_text, true );
-		if ( is_array( $decoded ) && isset( $decoded['alt_text'] ) ) {
-			$response_text = $decoded['alt_text'];
+		if ( ! is_array( $decoded ) ) {
+			$json_start = strpos( $response_text, '{' );
+			$json_end   = strrpos( $response_text, '}' );
+			if ( false !== $json_start && false !== $json_end && $json_end > $json_start ) {
+				$decoded = json_decode( substr( $response_text, $json_start, $json_end - $json_start + 1 ), true );
+			}
 		}
+
+		if ( ! is_array( $decoded ) || ! isset( $decoded['alt_text'] ) || ! is_string( $decoded['alt_text'] ) ) {
+			return new WP_Error( 'invalid_image_alt_response', __( 'Gemini returned image text in an invalid format. No image metadata was changed; please try again.', 'wp-seo-blog-automater' ) );
+		}
+
+		$response_text = $decoded['alt_text'];
 
 		$response_text = strip_tags( (string) $response_text );
 		$response_text = trim( preg_replace( '/\s+/', ' ', $response_text ), " \t\n\r\0\x0B\"'`" );
